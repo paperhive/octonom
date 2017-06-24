@@ -1,0 +1,21 @@
+{
+  "name": "octonom",
+  "version": "1.0.0-alpha.1",
+  "description": "Object Document Mapper for any database",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ODM",
+    "ORM",
+    "document",
+    "object",
+    "model",
+    "collection",
+    "mongodb",
+    "couchdb"
+  ],
+  "author": "André Gaul <andre@paperhive.org>",
+  "license": "MIT"
+}
