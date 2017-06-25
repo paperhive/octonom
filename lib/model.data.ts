@@ -1,20 +1,38 @@
-import { discussionCollection, peopleCollection } from './collection.data';
-import { createModel } from './model';
+import { Model } from './model';
+
+interface IPersonAccount {
+  username: string;
+}
+
+export class PersonAccountModel extends Model<IPersonAccount> {
+  @Model.PropertySchema({type: 'string'})
+  public username: string;
+}
+
+interface IPerson {
+  name: string;
+  account?: IPersonAccount;
+}
+
+export class PersonModel extends Model<IPerson> {
+  @Model.PropertySchema({type: 'string'})
+  public name: string;
+
+  @Model.PropertySchema({type: 'model', model: PersonAccountModel})
+  public account?: PersonAccountModel | IPersonAccount;
+}
 
 interface IDiscussion {
   author: string | IPerson;
   title: string;
 }
 
-export const discussionModel = createModel<IDiscussion>({
-  author: {type: 'reference', collection: peopleCollection},
-  title: {type: 'string'},
-});
+export class DiscussionModel extends Model<IDiscussion> {
+  @Model.PropertySchema({type: 'reference', collection: undefined}) // TODO
+  public author: string | PersonModel;
 
-interface IPerson {
-  name: string;
+  @Model.PropertySchema({type: 'string'})
+  public title: string;
+
+  // public participants: string[] | PersonModel[];
 }
-
-export const personModel = createModel<IPerson>({
-  name: {type: 'string', collection: discussionCollection},
-});
