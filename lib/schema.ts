@@ -89,12 +89,9 @@ function set(schemaValue: SchemaValue, data: any, options?: ISchemaSetOptions) {
       return data.map(v => set(schemaValue.definition, v, options));
     }
 
-    case 'model': {
-      if (data === undefined) {
-        return schemaValue.required ? new schemaValue.model({}) : undefined;
-      }
-      return new schemaValue.model(data);
-    }
+    case 'model':
+      // handled by setter
+      return data;
 
     case 'object':
       return setObject(schemaValue.definition, {}, data, options);
@@ -132,9 +129,9 @@ export function setObject(schemaMap: ISchemaMap, target: object, data: object, o
     }
 
     if (dataKeys.indexOf(key) === -1) {
-      // console.log(key);
       return;
     }
+
 
     target[key] = set(schemaValue, data[key], options);
   });
@@ -171,7 +168,10 @@ export function getObject(schemaMap: SchemaMap, source: object, options?: ISchem
   const result = {};
   forEach(schemaMap, (schemaValue, key) => {
     if (source[key]) {
-      result[key] = get(schemaValue, source[key], options);
+      const value = get(schemaValue, source[key], options);
+      if (value !== undefined) {
+        result[key] = value;
+      }
     }
   });
   return result;

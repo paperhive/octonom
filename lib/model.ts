@@ -1,13 +1,11 @@
 import { cloneDeep, forEach } from 'lodash';
 
 import { getObject, ISchemaGetOptions, ISchemaSetOptions, SchemaMap, SchemaValue, setObject } from './schema';
+import { enumerable } from './utils';
 
-interface IModelSetOptions {
-  overwrite?: boolean;
-}
-
-interface IModelToObjectOptions {
-  unpopulate?: boolean;
+interface IModel {
+  constructor: typeof Model;
+  _setted: {[k: string]: object};
 }
 
 export class Model<T> {
@@ -18,14 +16,43 @@ export class Model<T> {
    * @param schema Schema definition
    */
   public static PropertySchema(schema: SchemaValue): PropertyDecorator {
-    return (target: object, key: string) => {
-      const constructor = target.constructor as typeof Model;
+    return (target: IModel, key: string) => {
+      const constructor = target.constructor;
       constructor._schema = cloneDeep(constructor._schema);
       constructor._schema[key] = schema;
+
+      // add setter for nested models
+      switch (schema.type) {
+        case 'model': {
+          Object.defineProperty(target, key, {
+            // tslint:disable-next-line:object-literal-shorthand
+            set: function(value) {
+              if (value === undefined) {
+                delete this._setted[key];
+              } else if (value instanceof schema.model) {
+                this._setted[key] = value;
+              } else {
+                this._setted[key] = new schema.model(value);
+              }
+            },
+            // tslint:disable-next-line:object-literal-shorthand
+            get: function() {
+              return this._setted[key];
+            },
+            enumerable: true,
+          });
+        }
+      }
     };
   }
 
+  // TODO: make this work
+  // @enumerable(false)
+  protected _setted = {};
+
   constructor(data?: Partial<T>) {
+    // TODO: remove (see @enumerable decorator)
+    Object.defineProperty(this, '_setted', {writable: true, enumerable: false});
     if (data) {
       this.set(data);
     }
