@@ -132,7 +132,6 @@ export function setObject(schemaMap: ISchemaMap, target: object, data: object, o
       return;
     }
 
-
     target[key] = set(schemaValue, data[key], options);
   });
 }
