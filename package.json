@@ -25,7 +25,9 @@
     "@types/chai-as-promised": "0.0.31",
     "@types/lodash": "^4.14.66",
     "@types/mocha": "^2.2.41",
+    "@types/mongodb": "^2.2.6",
     "@types/node": "^8.0.2",
+    "@types/node-uuid": "0.0.28",
     "chai": "^4.0.2",
     "chai-as-promised": "^7.0.0",
     "mocha": "^3.4.2",
@@ -35,6 +37,8 @@
     "typescript": "^2.3.4"
   },
   "dependencies": {
-    "lodash": "^4.17.4"
+    "lodash": "^4.17.4",
+    "mongodb": "^2.2.29",
+    "node-uuid": "^1.4.8"
   }
 }
