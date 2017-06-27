@@ -1,9 +1,9 @@
 import { Collection as DbCollection, Db, FindOneOptions } from 'mongodb';
 
 import { Collection } from './collection';
-import { Model } from './model';
+import { CollectionModel } from './collection-model';
 
-export class MongoCollection<T extends object, TModel extends Model<T>> extends Collection<T, TModel> {
+export class MongoCollection<T extends object, TModel extends CollectionModel<T>> extends Collection<T, TModel> {
   protected collection: DbCollection;
 
   public async insertOne(model: TModel) {

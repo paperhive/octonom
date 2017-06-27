@@ -8,6 +8,10 @@ interface IModel {
   _setted: {[k: string]: object};
 }
 
+interface IModelRoot {
+  getId(): string;
+}
+
 export abstract class Model<T> {
   public static _schema: SchemaMap = {};
 
@@ -57,8 +61,6 @@ export abstract class Model<T> {
       this.set(data);
     }
   }
-
-  public abstract getId();
 
   public set(data: Partial<T>, options?: ISchemaSetOptions) {
     const constructor = this.constructor as typeof Model;

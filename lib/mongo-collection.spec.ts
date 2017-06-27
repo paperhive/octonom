@@ -1,6 +1,6 @@
 import { Db, MongoClient } from 'mongodb';
 
-import { Model } from './model';
+import { CollectionModel } from './collection-model';
 import { MongoCollection } from './mongo-collection';
 import { generateId } from './utils';
 
@@ -10,11 +10,11 @@ describe('MongoCollection', () => {
     name: string;
   }
 
-  class CatModel extends Model<ICat> {
-    @Model.PropertySchema({type: 'string', default: generateId})
+  class CatModel extends CollectionModel<ICat> {
+    @CollectionModel.PropertySchema({type: 'string', default: generateId})
     public _id: string;
 
-    @Model.PropertySchema({type: 'string'})
+    @CollectionModel.PropertySchema({type: 'string'})
     public name: string;
 
     public getId() {

@@ -1,7 +1,10 @@
-import { Model } from './model';
+import { CollectionModel } from './collection-model';
 
-export abstract class Collection<T extends object, TModel extends Model<T>> {
-  constructor(protected name: string, protected model: new (data: any) => TModel) {}
+export abstract class Collection<T extends object, TModel extends CollectionModel<T>> {
+  constructor(
+    protected name: string,
+    protected model: new (data: any) => TModel,
+  ) {}
 
   public abstract async findById(id: string): Promise<TModel>;
 

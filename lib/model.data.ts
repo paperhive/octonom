@@ -1,4 +1,6 @@
+import { CollectionModel } from './collection-model';
 import { Model } from './model';
+import { generateId } from './utils';
 
 interface IPersonAccount {
   username: string;
@@ -14,12 +16,19 @@ export interface IPerson {
   account?: IPersonAccount;
 }
 
-export class PersonModel extends Model<IPerson> {
-  @Model.PropertySchema({type: 'string'})
+export class PersonModel extends CollectionModel<IPerson> {
+  @CollectionModel.PropertySchema({type: 'string', default: generateId})
+  public id: string;
+
+  @CollectionModel.PropertySchema({type: 'string'})
   public name: string;
 
-  @Model.PropertySchema({type: 'model', model: PersonAccountModel})
+  @CollectionModel.PropertySchema({type: 'model', model: PersonAccountModel})
   public account?: PersonAccountModel | IPersonAccount;
+
+  public getId() {
+    return this.id;
+  }
 }
 
 export interface IDiscussion {
@@ -27,7 +36,10 @@ export interface IDiscussion {
   title: string;
 }
 
-export class DiscussionModel extends Model<IDiscussion> {
+export class DiscussionModel extends CollectionModel<IDiscussion> {
+  @CollectionModel.PropertySchema({type: 'string', default: generateId})
+  public id: string;
+
   @Model.PropertySchema({type: 'reference', collection: undefined}) // TODO
   public author: string | PersonModel;
 
@@ -35,4 +47,8 @@ export class DiscussionModel extends Model<IDiscussion> {
   public title: string;
 
   // public participants: string[] | PersonModel[];
+
+  public getId() {
+    return this.id;
+  }
 }
