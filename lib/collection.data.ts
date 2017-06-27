@@ -1,5 +1,7 @@
 import { MongoCollection } from './collection';
-import { discussionModel, personModel } from './model.data';
+import { DiscussionModel, PersonModel } from './model.data';
 
-export const discussionCollection = new MongoCollection('discussions', discussionModel);
-export const peopleCollection = new MongoCollection('people', personModel);
+export const collections = {
+  discussions: new MongoCollection('discussions', DiscussionModel),
+  people: new MongoCollection('people', PersonModel),
+};

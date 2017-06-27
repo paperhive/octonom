@@ -1,7 +1,7 @@
-import { discussionCollection, peopleCollection } from './collection.data';
+import { collections } from './collection.data';
 
-describe('Collection', () => {
+describe('DiscussionCollection', () => {
   it('should do sth', () => {
-    console.log(new discussionCollection.model())
+    // console.log(collections.discussions);
   });
 });

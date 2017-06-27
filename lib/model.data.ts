@@ -9,7 +9,7 @@ export class PersonAccountModel extends Model<IPersonAccount> {
   public username: string;
 }
 
-interface IPerson {
+export interface IPerson {
   name: string;
   account?: IPersonAccount;
 }
@@ -22,7 +22,7 @@ export class PersonModel extends Model<IPerson> {
   public account?: PersonAccountModel | IPersonAccount;
 }
 
-interface IDiscussion {
+export interface IDiscussion {
   author: string | IPerson;
   title: string;
 }
