@@ -7,7 +7,7 @@ export class MongoCollection<T extends object, TModel extends Model<T>> extends 
   protected collection: DbCollection;
 
   public async insertOne(model: TModel) {
-    const doc = model.toObject({unpopulate: true});
+    const doc = this.toDb(model.toObject({unpopulate: true}));
     await this.collection.insertOne(doc);
   }
 
@@ -27,7 +27,7 @@ export class MongoCollection<T extends object, TModel extends Model<T>> extends 
     if (!doc) {
       return undefined;
     }
-    return new this.model(doc);
+    return new this.model(this.fromDb(doc));
   }
 
   public async init(db: Db) {
@@ -35,6 +35,10 @@ export class MongoCollection<T extends object, TModel extends Model<T>> extends 
   }
 
   public async update(model: TModel) {
-    return new this.model({});
+    const doc = this.toDb(model.toObject({unpopulate: true}));
+    const result = await this.collection.replaceOne({_id: model.getId()}, doc);
+    if (result.matchedCount === 0) {
+      throw new Error('document not found in collection');
+    }
   }
 }

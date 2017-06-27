@@ -59,7 +59,7 @@ describe('MongoCollection', () => {
   });
 
   describe('delete()', () => {
-    it('should throw if the model does not exist in the collection', async () => {
+    it('should throw if the cat does not exist in the collection', async () => {
       const cat = new CatModel(catObj);
       await expect(catCollection.delete(cat)).to.be.rejectedWith('document not found');
     });
@@ -74,7 +74,7 @@ describe('MongoCollection', () => {
   });
 
   describe('findById()', () => {
-    it('should return undefined if no document was found', async () => {
+    it('should return undefined if no cat was found', async () => {
       const cat = await catCollection.findById('foo');
       expect(cat).to.equal(undefined);
     });
@@ -89,7 +89,7 @@ describe('MongoCollection', () => {
   });
 
   describe('findOne()', () => {
-    it('should return undefined if no document was found', async () => {
+    it('should return undefined if no cat was found', async () => {
       const cat = await catCollection.findOne({_id: 'foo'});
       expect(cat).to.equal(undefined);
     });
@@ -100,6 +100,22 @@ describe('MongoCollection', () => {
       const foundCat = await catCollection.findOne({_id: '42'});
       expect(foundCat).to.be.instanceOf(CatModel);
       expect(foundCat.toObject()).to.eql(catObj);
+    });
+  });
+
+  describe('update()', () => {
+    it('should throw if the cat does not exist in the collection', async () => {
+      const cat = new CatModel(catObj);
+      await expect(catCollection.update(cat)).to.be.rejectedWith('document not found');
+    });
+
+    it('should update a cat', async () => {
+      const cat = new CatModel(catObj);
+      await catCollection.insertOne(cat);
+      cat.name = 'Kilf';
+      const updatedCat = await catCollection.update(cat);
+      const doc = await db.collection('cats').findOne({_id: '42'});
+      expect(doc).to.eql({_id: '42', name: 'Kilf'});
     });
   });
 });
