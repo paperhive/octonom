@@ -35,12 +35,21 @@ describe('MongoCollection', () => {
     await db.close();
   });
 
-  describe('init', () => {
+  describe('init()', () => {
     it('should create the collection', async () => {
       expect(catCollection).to.have.property('collection');
       const collections = await db.collections();
       expect(collections).to.be.an('array').and.have.lengthOf(1);
       expect(collections[0]).to.have.property('collectionName', 'cats');
+    });
+  });
+
+  describe('insertOne()', () => {
+    it('should insert a cat', async () => {
+      const cat = new CatModel({_id: '42', name: 'Yllim'});
+      await catCollection.insertOne(cat);
+      const doc = await db.collection('cats').findOne({_id: '42'});
+      expect(doc).to.eql({_id: '42', name: 'Yllim'});
     });
   });
 });

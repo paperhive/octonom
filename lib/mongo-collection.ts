@@ -8,7 +8,7 @@ export class MongoCollection<T extends object, TModel extends Model<T>> extends 
 
   public async insertOne(model: TModel) {
     const doc = model.toObject({unpopulate: true});
-
+    await this.collection.insertOne(doc);
   }
 
   public async delete(model: TModel) {
