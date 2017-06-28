@@ -49,12 +49,34 @@ describe('MongoCollection', () => {
     });
   });
 
+  describe('insertMany()', () => {
+    it('should insert cats', async () => {
+      const cats = [new CatModel(catObj), new CatModel({_id: '23', name: 'Kilf'})];
+      await catCollection.insertMany(cats);
+      const docs = await db.collection('cats').find({}).toArray();
+      expect(docs).to.deep.include(catObj);
+      expect(docs).to.deep.include({_id: '23', name: 'Kilf'});
+    });
+
+    it('should throw if id is duplicate', async () => {
+      const cats = [new CatModel(catObj), new CatModel(catObj)];
+      await expect(catCollection.insertMany(cats))
+        .to.be.rejectedWith('duplicate key');
+    });
+  });
+
   describe('insertOne()', () => {
     it('should insert a cat', async () => {
       const cat = new CatModel(catObj);
       await catCollection.insertOne(cat);
       const doc = await db.collection('cats').findOne({_id: '42'});
       expect(doc).to.eql(catObj);
+    });
+
+    it('should throw if id is duplicate', async () => {
+      db.collection('cats').insert(catObj);
+      await expect(catCollection.insertOne(new CatModel(catObj)))
+        .to.be.rejectedWith('duplicate key');
     });
   });
 
@@ -70,6 +92,21 @@ describe('MongoCollection', () => {
       await catCollection.delete(cat);
       const doc = await db.collection('cats').findOne({_id: '42'});
       expect(doc).to.equal(null);
+    });
+  });
+
+  describe('find()', () => {
+    it('should return empty array if no cat was found', async () => {
+      const cats = await catCollection.find({}).toArray();
+      expect(cats).to.be.an('array').and.have.lengthOf(0);
+    });
+
+    it('should find a cat', async () => {
+      await db.collection('cats').insertMany([catObj, {_id: '23', name: 'Kilf'}]);
+      const cats = await catCollection.find({_id: '23'}).toArray();
+      expect(cats).to.be.an('array').and.have.lengthOf(1);
+      expect(cats[0]).to.be.instanceOf(CatModel);
+      expect(cats[0].toObject()).to.eql({_id: '23', name: 'Kilf'});
     });
   });
 
