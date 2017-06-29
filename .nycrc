@@ -1,0 +1,17 @@
+{
+  "include": [
+    "lib/**/*.ts"
+  ],
+  "exclude": [
+    "**/*.spec.ts"
+  ],
+  "extension": [
+    ".ts"
+  ],
+  "reporter": [
+    "lcov",
+    "text",
+    "text-summary"
+  ],
+  "check-coverage": true
+}
