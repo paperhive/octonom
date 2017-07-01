@@ -2,11 +2,11 @@ import { createHash } from 'crypto';
 import { forEach } from 'lodash';
 import { v1 as uuidV1 } from 'node-uuid';
 
+// TODO: fix this decorator
+/*
 export function enumerable(value: boolean): PropertyDecorator {
   return (target: any, key: string) => {
-    // console.log(target);
-    const descriptor = Object.getOwnPropertyDescriptor(target.constructor, key) || {};
-    // console.log('desc', descriptor);
+    const descriptor = Object.getOwnPropertyDescriptor(target, key) || {};
 
     // writable is false by default, so we explicitly set it to true here
     if (descriptor.writable === undefined) {
@@ -15,10 +15,11 @@ export function enumerable(value: boolean): PropertyDecorator {
 
     if (descriptor.enumerable !== value) {
       descriptor.enumerable = value;
-      Object.defineProperty(target.constructor, key, descriptor);
+      Object.defineProperty(target, key, descriptor);
     }
   };
 }
+*/
 
 export function generateId(): string {
   // alternative 1
@@ -44,12 +45,10 @@ export function invertMap(map: {[k: string]: string}) {
 }
 
 export function rename(obj: object, map: {[k: string]: string}) {
-  forEach(map, (newKey, oldKey) => {
-    const value = obj[oldKey];
-    if (!value) {
-      return;
-    }
-    delete obj[oldKey];
-    obj[newKey] = value;
+  const newObj = {};
+  forEach(obj, (value, key) => {
+    const newKey = map[key] || key;
+    newObj[newKey] = value;
   });
+  return newObj;
 }
