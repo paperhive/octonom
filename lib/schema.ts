@@ -75,26 +75,36 @@ interface ISchemaMap {
 
 export type SchemaMap = ISchemaMap;
 
-export interface ISchemaSetOptions {
+export interface ISchemaSanitizeOptions {
   strict?: boolean;
   replace?: boolean;
 }
 
-function set(schemaValue: SchemaValue, data: any, options?: ISchemaSetOptions) {
+export function sanitize(schemaValue: SchemaValue, data: any, options?: ISchemaSanitizeOptions) {
   switch (schemaValue.type) {
     case 'array': {
+      // return empty array if no data given but a value is required
       if (data === undefined) {
         return schemaValue.required ? [] : undefined;
       }
-      return data.map(v => set(schemaValue.definition, v, options));
+      return data.map(v => sanitize(schemaValue.definition, v, options));
     }
 
     case 'model':
-      // handled by setter
-      return data;
+      if (data instanceof schemaValue.model) {
+        // already a model
+        return data;
+      } else {
+        // create new instance
+        return new schemaValue.model(data);
+      }
 
     case 'object':
-      return setObject(schemaValue.definition, {}, data, options);
+      // return empty object if no data given but a value is required
+      if (data === undefined) {
+        return schemaValue.required ? {} : undefined;
+      }
+      return setObjectSanitized(schemaValue.definition, {}, data, options);
 
     // case 'reference':
     //   return
@@ -103,6 +113,7 @@ function set(schemaValue: SchemaValue, data: any, options?: ISchemaSetOptions) {
     case 'date':
     case 'number':
     case 'string': {
+      // return default value if no data given
       if (data === undefined) {
         return isFunction(schemaValue.default) ? schemaValue.default() : schemaValue.default;
       }
@@ -111,7 +122,8 @@ function set(schemaValue: SchemaValue, data: any, options?: ISchemaSetOptions) {
   }
 }
 
-export function setObject(schemaMap: ISchemaMap, target: object, data: object, options?: ISchemaSetOptions) {
+export function setObjectSanitized(schemaMap: ISchemaMap, target: object, data: object,
+                                   options?: ISchemaSanitizeOptions) {
   const dataKeys = Object.keys(data);
 
   const strict = options ? options.strict !== false : true;
@@ -132,7 +144,7 @@ export function setObject(schemaMap: ISchemaMap, target: object, data: object, o
       return;
     }
 
-    target[key] = set(schemaValue, data[key], options);
+    target[key] = sanitize(schemaValue, data[key], options);
   });
 }
 
@@ -140,7 +152,7 @@ export interface ISchemaGetOptions {
   unpopulate?: boolean;
 }
 
-function get(schemaValue: SchemaValue, value, options?: ISchemaGetOptions) {
+export function get(schemaValue: SchemaValue, value, options?: ISchemaGetOptions) {
   if (!value) {
     return undefined;
   }

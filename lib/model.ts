@@ -1,10 +1,12 @@
 import { cloneDeep, forEach } from 'lodash';
 
-import { getObject, ISchemaGetOptions, ISchemaSetOptions, SchemaMap, SchemaValue, setObject } from './schema';
+import { getObject, ISchemaGetOptions, ISchemaSanitizeOptions, sanitize,
+         SchemaMap, SchemaValue, setObjectSanitized } from './schema';
 
 interface IModel {
   constructor: typeof Model;
-  _setted: {[k: string]: object};
+  _sanitized: {[k: string]: object};
+  setKey(key: string, value: any, options?: ISchemaSanitizeOptions);
 }
 
 interface IModelRoot {
@@ -24,46 +26,51 @@ export abstract class Model<T> {
       constructor._schema = cloneDeep(constructor._schema);
       constructor._schema[key] = schema;
 
-      // add setter for nested models
-      switch (schema.type) {
-        case 'model': {
-          Object.defineProperty(target, key, {
-            // tslint:disable-next-line:object-literal-shorthand
-            set: function(value) {
-              if (value === undefined) {
-                delete this._setted[key];
-              } else if (value instanceof schema.model) {
-                this._setted[key] = value;
-              } else {
-                this._setted[key] = new schema.model(value);
-              }
-            },
-            // tslint:disable-next-line:object-literal-shorthand
-            get: function() {
-              return this._setted[key];
-            },
-            enumerable: true,
-          });
-        }
-      }
+      // add setter for sanitizing value
+      Object.defineProperty(target, key, {
+        // tslint:disable-next-line:object-literal-shorthand
+        set: function(value) {
+          const instance = this as IModel;
+          instance.setKey(key, value);
+        },
+        // tslint:disable-next-line:object-literal-shorthand
+        get: function() {
+          return this._sanitized[key];
+        },
+        enumerable: true,
+      });
     };
   }
 
   // TODO: make this work
   // @enumerable(false)
-  protected _setted = {};
+  protected _sanitized = {};
 
   constructor(data?: Partial<T>) {
     // TODO: remove (see @enumerable decorator)
-    Object.defineProperty(this, '_setted', {writable: true, enumerable: false});
+    Object.defineProperty(this, '_sanitized', {writable: true, enumerable: false});
     if (data) {
       this.set(data);
     }
   }
 
-  public set(data: Partial<T>, options?: ISchemaSetOptions) {
+  public set(data: Partial<T>, options?: ISchemaSanitizeOptions) {
+    forEach(data, (v, k) => this.setKey(k, v, options));
+  }
+
+  public setKey(key: string, value: any, options?: ISchemaSanitizeOptions) {
     const constructor = this.constructor as typeof Model;
-    setObject(constructor._schema, this, data, options);
+    const schemaValue = constructor._schema[key];
+
+    if (!schemaValue) {
+      throw new Error(`key ${key} not found in schema`);
+    }
+
+    if (value === undefined) {
+      delete this._sanitized[key];
+    } else {
+      this._sanitized[key] = sanitize(schemaValue, value, options);
+    }
   }
 
   public toObject(options?: ISchemaGetOptions): T {

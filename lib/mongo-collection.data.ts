@@ -28,6 +28,6 @@ class PeopleMongoCollection extends MongoCollection<IPerson, PersonModel> {
   }
 
   public fromDb(doc: object) {
-    return rename(doc, PeopleMongoCollection.fromDbMap);
+    return rename(doc, PeopleMongoCollection.fromDbMap) as IPerson;
   }
 }
