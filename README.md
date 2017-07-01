@@ -1,4 +1,6 @@
 # octonom
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/paperhive/octonom.svg)](https://greenkeeper.io/)
 [![Build Status](https://travis-ci.org/paperhive/octonom.svg?branch=master)](https://travis-ci.org/paperhive/octonom)
 [![codecov](https://codecov.io/gh/paperhive/octonom/branch/master/graph/badge.svg)](https://codecov.io/gh/paperhive/octonom)
 
