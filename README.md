@@ -1,4 +1,6 @@
 # octonom
+[![Build Status](https://travis-ci.org/paperhive/octonom.svg?branch=master)](https://travis-ci.org/paperhive/octonom)
+[![codecov](https://codecov.io/gh/paperhive/octonom/branch/master/graph/badge.svg)](https://codecov.io/gh/paperhive/octonom)
 
 Octonom brings you TypeScript-based models and collections for any database with actual separation of concerns:
 
