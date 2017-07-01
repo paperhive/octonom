@@ -4,5 +4,7 @@ node_js:
 script:
   # lint
   - npm run lint
-  # run tests with coverage report+check
+  # run tests with coverage report
   - npm run test-cover
+  # submit coverage report
+  - npm run test-cover-submit
