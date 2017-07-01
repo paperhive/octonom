@@ -10,15 +10,11 @@ class DiscussionMongoCollection extends MongoCollection<IDiscussion, DiscussionM
   protected static fromDbMap = invertMap(DiscussionMongoCollection.toDbMap);
 
   public toDb(person: IDiscussion) {
-    const doc = cloneDeep(person) as object;
-    rename(doc, DiscussionMongoCollection.toDbMap);
-    return doc;
+    return rename(person, DiscussionMongoCollection.toDbMap);
   }
 
   public fromDb(doc: object) {
-    const person = cloneDeep(doc);
-    rename(doc, DiscussionMongoCollection.fromDbMap);
-    return person as IDiscussion;
+    return rename(doc, DiscussionMongoCollection.fromDbMap) as IDiscussion;
   }
 }
 
@@ -28,14 +24,10 @@ class PeopleMongoCollection extends MongoCollection<IPerson, PersonModel> {
   protected static fromDbMap = invertMap(PeopleMongoCollection.toDbMap);
 
   public toDb(person: IPerson) {
-    const doc = cloneDeep(person) as object;
-    rename(doc, PeopleMongoCollection.toDbMap);
-    return doc;
+    return rename(person, PeopleMongoCollection.toDbMap);
   }
 
   public fromDb(doc: object) {
-    const person = cloneDeep(doc);
-    rename(doc, PeopleMongoCollection.fromDbMap);
-    return person as IPerson;
+    return rename(doc, PeopleMongoCollection.fromDbMap);
   }
 }
