@@ -1,9 +1,14 @@
 language: node_js
 node_js:
   - node
+sudo: required
+services:
+  - docker
 script:
   # lint
   - npm run lint
+  # start docker environment for tests
+  - docker-compose up -d
   # run tests with coverage report
   - npm run test-cover
   # submit coverage report
