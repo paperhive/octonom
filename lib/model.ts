@@ -1,7 +1,6 @@
 import { cloneDeep, forEach } from 'lodash';
 
 import { getObject, ISchemaGetOptions, ISchemaSetOptions, SchemaMap, SchemaValue, setObject } from './schema';
-import { enumerable } from './utils';
 
 interface IModel {
   constructor: typeof Model;
