@@ -148,24 +148,24 @@ export function setObjectSanitized(schemaMap: ISchemaMap, target: object, data: 
   });
 }
 
-export interface ISchemaGetOptions {
+export interface ISchemaToObjectOptions {
   unpopulate?: boolean;
 }
 
-export function get(schemaValue: SchemaValue, value, options?: ISchemaGetOptions) {
+export function toObjectValue(schemaValue: SchemaValue, value, options?: ISchemaToObjectOptions) {
   if (!value) {
     return undefined;
   }
 
   switch (schemaValue.type) {
     case 'array':
-      return value.map(v => get(schemaValue.definition, v, options));
+      return value.map(v => toObjectValue(schemaValue.definition, v, options));
 
     case 'model':
-      return getObject(schemaValue.model._schema, value, options);
+      return toObject(schemaValue.model._schema, value, options);
 
     case 'object':
-      return getObject(schemaValue.definition, value, options);
+      return toObject(schemaValue.definition, value, options);
 
     // case 'reference':
     //   return
@@ -175,11 +175,11 @@ export function get(schemaValue: SchemaValue, value, options?: ISchemaGetOptions
   }
 }
 
-export function getObject(schemaMap: SchemaMap, source: object, options?: ISchemaGetOptions) {
+export function toObject(schemaMap: SchemaMap, source: object, options?: ISchemaToObjectOptions) {
   const result = {};
   forEach(schemaMap, (schemaValue, key) => {
     if (source[key]) {
-      const value = get(schemaValue, source[key], options);
+      const value = toObjectValue(schemaValue, source[key], options);
       if (value !== undefined) {
         result[key] = value;
       }

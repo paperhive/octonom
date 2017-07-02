@@ -1,7 +1,7 @@
 import { cloneDeep, forEach } from 'lodash';
 
-import { getObject, ISchemaGetOptions, ISchemaSanitizeOptions, sanitize,
-         SchemaMap, SchemaValue, setObjectSanitized } from './schema';
+import { ISchemaSanitizeOptions, ISchemaToObjectOptions, sanitize,
+         SchemaMap, SchemaValue, setObjectSanitized, toObject } from './schema';
 
 interface IModel {
   constructor: typeof Model;
@@ -73,9 +73,9 @@ export abstract class Model<T> {
     }
   }
 
-  public toObject(options?: ISchemaGetOptions): T {
+  public toObject(options?: ISchemaToObjectOptions): T {
     const constructor = this.constructor as typeof Model;
-    return getObject(constructor._schema, this, options) as T;
+    return toObject(constructor._schema, this, options) as T;
   }
 
   public toJSON() {
