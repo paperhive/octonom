@@ -1,5 +1,5 @@
 import { Model } from './model';
-import { sanitize, SchemaValue } from './schema';
+import { sanitize, SchemaMap, SchemaValue, setObjectSanitized } from './schema';
 
 describe('schema', () => {
   describe('sanitize()', () => {
@@ -188,6 +188,7 @@ describe('schema', () => {
 
       it('should return a string', () => {
         expect(sanitize(schemaString, 'foo')).to.equal('foo');
+        expect(sanitize(schemaString, '')).to.equal('');
       });
 
       it('should return undefined if data is undefined', () => {
@@ -198,6 +199,33 @@ describe('schema', () => {
         expect(sanitize({type: 'string', default: 'foo'}, undefined)).to.equal('foo');
         expect(sanitize({type: 'string', default: () => 'foo'}, undefined)).to.equal('foo');
       });
+    });
+  });
+
+  describe('setObjectSanitized()', () => {
+    const map: SchemaMap = {age: {type: 'number'}, name: {type: 'string'}};
+
+    it('should throw if data is not an object', () => {
+      expect(() => setObjectSanitized(map, {}, 42 as any)).to.throw('data is not an object');
+    });
+
+    it('should throw if a key is not present in the schema', () => {
+      const obj = {};
+      expect(() => setObjectSanitized(map, obj, {foo: 42})).to.throw('key foo not found in schema');
+    });
+
+    it('should not modify properties that do not exist in data', () => {
+      const obj = {age: 42};
+      const sanitizedObj = setObjectSanitized(map, obj, {name: 'Yllim'});
+      expect(sanitizedObj).to.eql({age: 42, name: 'Yllim'});
+      expect(sanitizedObj).to.equal(obj);
+    });
+
+    it('should remove properties that do not exist in data in replace mode', () => {
+      const obj = {age: 42};
+      const sanitizedObj = setObjectSanitized(map, obj, {name: 'Yllim'}, {replace: true});
+      expect(sanitizedObj).to.eql({name: 'Yllim'});
+      expect(sanitizedObj).to.equal(obj);
     });
   });
 });
