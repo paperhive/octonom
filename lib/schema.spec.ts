@@ -1,5 +1,5 @@
 import { Model } from './model';
-import { sanitize, SchemaMap, SchemaValue, setObjectSanitized, toObjectValue } from './schema';
+import { sanitize, SchemaMap, SchemaValue, setObjectSanitized, toObject, toObjectValue } from './schema';
 
 describe('schema', () => {
   describe('sanitize()', () => {
@@ -286,6 +286,17 @@ describe('schema', () => {
         expect(toObjectValue({type: 'number'}, 42)).to.equal(42);
         expect(toObjectValue({type: 'string'}, 'foo')).to.equal('foo');
       });
+    });
+  });
+
+  describe('toObject()', () => {
+    const map: SchemaMap = {name: {type: 'string'}};
+    it('should return an object without keys that do not exist in schema', () => {
+      expect(toObject(map, {name: 'Yllim', age: 42})).to.eql({name: 'Yllim'});
+    });
+
+    it('should remove keys with undefined values', () => {
+      expect(toObject(map, {name: undefined, age: 42})).to.eql({});
     });
   });
 });

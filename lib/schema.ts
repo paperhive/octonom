@@ -227,11 +227,9 @@ export function toObjectValue(schemaValue: SchemaValue, value, options?: ISchema
 export function toObject(schemaMap: SchemaMap, source: object, options?: ISchemaToObjectOptions) {
   const result = {};
   forEach(schemaMap, (schemaValue, key) => {
-    if (source[key]) {
-      const value = toObjectValue(schemaValue, source[key], options);
-      if (value !== undefined) {
-        result[key] = value;
-      }
+    const value = toObjectValue(schemaValue, source[key], options);
+    if (value !== undefined) {
+      result[key] = value;
     }
   });
   return result;
