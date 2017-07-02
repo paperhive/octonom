@@ -13,6 +13,22 @@ interface IModelRoot {
   getId(): string;
 }
 
+function defineModelProperty(target, key: string, enumerable: boolean) {
+  Object.defineProperty(target, key, {
+    configurable: true,
+    enumerable,
+    // tslint:disable-next-line:object-literal-shorthand
+    get: function() {
+      return this._sanitized[key];
+    },
+    // tslint:disable-next-line:object-literal-shorthand
+    set: function(value) {
+      const instance = this as IModel;
+      instance.setKey(key, value);
+    },
+  });
+}
+
 export abstract class Model<T> {
   public static _schema: SchemaMap = {};
 
@@ -26,19 +42,8 @@ export abstract class Model<T> {
       constructor._schema = cloneDeep(constructor._schema);
       constructor._schema[key] = schema;
 
-      // add setter for sanitizing value
-      Object.defineProperty(target, key, {
-        // tslint:disable-next-line:object-literal-shorthand
-        set: function(value) {
-          const instance = this as IModel;
-          instance.setKey(key, value);
-        },
-        // tslint:disable-next-line:object-literal-shorthand
-        get: function() {
-          return this._sanitized[key];
-        },
-        enumerable: true,
-      });
+      // define model property
+      defineModelProperty(target, key, false);
     };
   }
 
@@ -71,6 +76,8 @@ export abstract class Model<T> {
     } else {
       this._sanitized[key] = sanitize(schemaValue, value, options);
     }
+
+    defineModelProperty(this, key, value !== undefined);
   }
 
   public toObject(options?: ISchemaToObjectOptions): T {
