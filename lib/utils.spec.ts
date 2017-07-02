@@ -1,4 +1,4 @@
-import { generateId, rename } from './utils';
+import { generateId, invertMap, rename } from './utils';
 
 describe('utils', () => {
   /*
@@ -19,6 +19,13 @@ describe('utils', () => {
       const id1 = generateId();
       expect(id1).to.have.lengthOf(12);
       expect(id1).to.not.equal(generateId());
+    });
+  });
+
+  describe('invertMap()', () => {
+    it('should make values to keys', () => {
+      expect(invertMap({id: '_id', createdAt: '_created_at'}))
+        .to.eql({_id: 'id', _created_at: 'createdAt'});
     });
   });
 
