@@ -1,4 +1,4 @@
-import { difference, forEach, isArray, isBoolean, isFunction, isString } from 'lodash';
+import { difference, forEach, isArray, isBoolean, isDate, isFunction, isString } from 'lodash';
 
 import { Model } from './model';
 
@@ -147,6 +147,9 @@ export function sanitize(schemaValue: SchemaValue, data: any, options?: ISchemaS
       }
       if (schemaValue.type === 'boolean' && !isBoolean(value)) {
         throw new Error('not a boolean');
+      }
+      if (schemaValue.type === 'date' && !isDate(value)) {
+        throw new Error('not a date');
       }
       return value;
     }

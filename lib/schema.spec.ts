@@ -131,7 +131,30 @@ describe('schema', () => {
       it('should return default value if undefined', () => {
         expect(sanitize({type: 'boolean', default: true}, undefined)).to.equal(true);
         expect(sanitize({type: 'boolean', default: () => true}, undefined)).to.equal(true);
-      })
+      });
+    });
+
+    describe('type date', () => {
+      const schemaDate: SchemaValue = {type: 'date'};
+
+      it('should throw if data is not a date', () => {
+        expect(() => sanitize(schemaDate, 42)).to.throw('not a date');
+      });
+
+      it('should return a date', () => {
+        const date = new Date();
+        expect(sanitize(schemaDate, date)).to.equal(date);
+      });
+
+      it('should return undefined if data is undefined', () => {
+        expect(sanitize(schemaDate, undefined)).to.equal(undefined);
+      });
+
+      it('should return default value if undefined', () => {
+        const date = new Date();
+        expect(sanitize({type: 'date', default: date}, undefined)).to.equal(date);
+        expect(sanitize({type: 'date', default: () => date}, undefined)).to.equal(date);
+      });
     });
   });
 });
