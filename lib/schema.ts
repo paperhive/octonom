@@ -102,8 +102,11 @@ export function sanitize(schemaValue: SchemaValue, data: any, options?: ISchemaS
         // already a model
         return data;
       } else {
+        if (data === undefined && !schemaValue.required) {
+          return undefined;
+        }
         // create new instance
-        return new schemaValue.model(data);
+        return new schemaValue.model(data || {});
       }
 
     case 'object':
@@ -111,6 +114,13 @@ export function sanitize(schemaValue: SchemaValue, data: any, options?: ISchemaS
       if (data === undefined) {
         return schemaValue.required ? {} : undefined;
       }
+
+      // data incompatible?
+      if (typeof data !== 'object') {
+        throw new Error('data is not an object');
+      }
+
+      // sanitize object
       return setObjectSanitized(schemaValue.definition, {}, data, options);
 
     // case 'reference':
@@ -145,6 +155,9 @@ export function sanitize(schemaValue: SchemaValue, data: any, options?: ISchemaS
 
 export function setObjectSanitized(schemaMap: ISchemaMap, target: object, data: object,
                                    options?: ISchemaSanitizeOptions) {
+  if (typeof data !== 'object') {
+    throw new Error('data is not an object');
+  }
   const dataKeys = Object.keys(data);
 
   const schemaKeys = Object.keys(schemaMap);

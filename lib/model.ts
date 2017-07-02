@@ -60,6 +60,9 @@ export abstract class Model<T> {
   }
 
   public set(data: Partial<T>, options?: ISchemaSanitizeOptions) {
+    if (typeof data !== 'object') {
+      throw new Error('data is not an object');
+    }
     forEach(data, (v, k) => this.setKey(k, v, options));
   }
 
