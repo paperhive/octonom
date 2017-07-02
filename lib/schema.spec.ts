@@ -50,14 +50,14 @@ describe('schema', () => {
       }
       const schemaModel: SchemaValue = {type: 'model', model: Cat};
 
-      it('should throw if the model data cannot be sanitized', () => {
-        expect(() => sanitize(schemaModel, {age: 42}))
-          .to.throw('key age not found in schema');
-      });
-
       it('should throw if data is not an object', () => {
         expect(() => sanitize(schemaModel, 42))
           .to.throw('data is not an object');
+      });
+
+      it('should throw if the model data cannot be sanitized', () => {
+        expect(() => sanitize(schemaModel, {age: 42}))
+          .to.throw('key age not found in schema');
       });
 
       it('should create a model instance', () => {
@@ -77,6 +77,38 @@ describe('schema', () => {
       it('should return an empty object if data is undefined but a value is required', () => {
         const schema: SchemaValue = {type: 'model', required: true, model: Cat};
         expect(sanitize(schema, undefined)).to.be.an.instanceOf(Cat).and.eql({});
+      });
+    });
+
+    describe('type object', () => {
+      const schemaObject: SchemaValue = {type: 'object', definition: {name: {type: 'string'}}};
+
+      it('should throw if data is not an object', () => {
+        expect(() => sanitize(schemaObject, 42))
+          .to.throw('data is not an object');
+      });
+
+      it('should throw if data contains an invalid key', () => {
+        expect(() => sanitize(schemaObject, {age: 42}))
+          .to.throw('key age not found in schema');
+      });
+
+      it('should throw if data contains an invalid value', () => {
+        expect(() => sanitize(schemaObject, {name: 42}))
+          .to.throw('not a string');
+      });
+
+      it('should create an object with valid data', () => {
+        expect(sanitize(schemaObject, {name: 'Yllim'})).to.eql({name: 'Yllim'});
+      });
+
+      it('should return undefined if data is undefined', () => {
+        expect(sanitize(schemaObject, undefined)).to.equal(undefined);
+      });
+
+      it('should return an empty object if data is undefined but a value is required', () => {
+        const schema: SchemaValue = {type: 'object', required: true, definition: {name: {type: 'string'}}};
+        expect(sanitize(schema, undefined)).to.eql({});
       });
     });
   });

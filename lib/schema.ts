@@ -163,7 +163,7 @@ export function setObjectSanitized(schemaMap: ISchemaMap, target: object, data: 
   const schemaKeys = Object.keys(schemaMap);
   const disallowedKeys = difference(dataKeys, schemaKeys);
   if (disallowedKeys.length > 0) {
-    throw new Error(`The following keys are not allowed: ${disallowedKeys.join(', ')}`);
+    throw new Error(`key ${disallowedKeys[0]} not found in schema`);
   }
 
   forEach(schemaMap, (schemaValue, key) => {
@@ -177,6 +177,8 @@ export function setObjectSanitized(schemaMap: ISchemaMap, target: object, data: 
 
     target[key] = sanitize(schemaValue, data[key], options);
   });
+
+  return target;
 }
 
 export interface ISchemaToObjectOptions {
