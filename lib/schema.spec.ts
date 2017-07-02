@@ -129,8 +129,10 @@ describe('schema', () => {
       });
 
       it('should return default value if undefined', () => {
-        expect(sanitize({type: 'boolean', default: true}, undefined)).to.equal(true);
-        expect(sanitize({type: 'boolean', default: () => true}, undefined)).to.equal(true);
+        expect(sanitize({type: 'boolean', default: true}, undefined, {defaults: true}))
+          .to.equal(true);
+        expect(sanitize({type: 'boolean', default: () => true}, undefined, {defaults: true}))
+          .to.equal(true);
       });
     });
 
@@ -152,8 +154,10 @@ describe('schema', () => {
 
       it('should return default value if undefined', () => {
         const date = new Date();
-        expect(sanitize({type: 'date', default: date}, undefined)).to.equal(date);
-        expect(sanitize({type: 'date', default: () => date}, undefined)).to.equal(date);
+        expect(sanitize({type: 'date', default: date}, undefined, {defaults: true}))
+          .to.equal(date);
+        expect(sanitize({type: 'date', default: () => date}, undefined, {defaults: true}))
+          .to.equal(date);
       });
     });
 
@@ -174,8 +178,10 @@ describe('schema', () => {
       });
 
       it('should return default value if undefined', () => {
-        expect(sanitize({type: 'number', default: 42}, undefined)).to.equal(42);
-        expect(sanitize({type: 'number', default: () => 42}, undefined)).to.equal(42);
+        expect(sanitize({type: 'number', default: 42}, undefined, {defaults: true}))
+          .to.equal(42);
+        expect(sanitize({type: 'number', default: () => 42}, undefined, {defaults: true}))
+          .to.equal(42);
       });
     });
 
@@ -196,8 +202,10 @@ describe('schema', () => {
       });
 
       it('should return default value if undefined', () => {
-        expect(sanitize({type: 'string', default: 'foo'}, undefined)).to.equal('foo');
-        expect(sanitize({type: 'string', default: () => 'foo'}, undefined)).to.equal('foo');
+        expect(sanitize({type: 'string', default: 'foo'}, undefined, {defaults: true}))
+          .to.equal('foo');
+        expect(sanitize({type: 'string', default: () => 'foo'}, undefined, {defaults: true}))
+          .to.equal('foo');
       });
     });
   });

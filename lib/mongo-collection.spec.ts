@@ -1,27 +1,10 @@
 import { Db, MongoClient } from 'mongodb';
 
-import { CollectionModel } from './collection-model';
+import { CatModel, ICat } from './collection-model.data';
 import { MongoCollection } from './mongo-collection';
 import { generateId } from './utils';
 
 describe('MongoCollection', () => {
-  interface ICat {
-    _id: string;
-    name: string;
-  }
-
-  class CatModel extends CollectionModel<ICat> {
-    @CollectionModel.PropertySchema({type: 'string', default: generateId})
-    public _id: string;
-
-    @CollectionModel.PropertySchema({type: 'string'})
-    public name: string;
-
-    public getId() {
-      return this._id;
-    }
-  }
-
   class CatCollection extends MongoCollection<ICat, CatModel> {}
   const catObj = {_id: '42', name: 'Yllim'};
 

@@ -7,6 +7,10 @@ import { CollectionModel } from './collection-model';
 export class MongoCollection<T extends object, TModel extends CollectionModel<T>> extends Collection<T, TModel> {
   protected collection: DbCollection;
 
+  constructor(protected name: string, model: new (data: any) => TModel) {
+    super(model);
+  }
+
   public async insertMany(models: TModel[], options?: CollectionInsertManyOptions) {
     const docs = models.map(model => this.toDb(model.toObject({unpopulate: true})));
     await this.collection.insertMany(docs, options);

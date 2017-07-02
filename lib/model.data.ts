@@ -12,6 +12,7 @@ export class PersonAccountModel extends Model<IPersonAccount> {
 }
 
 export interface IPerson {
+  id: string;
   name: string;
   account?: IPersonAccount;
 }
@@ -32,6 +33,7 @@ export class PersonModel extends CollectionModel<IPerson> {
 }
 
 export interface IDiscussion {
+  id: string;
   author: string | IPerson;
   title: string;
 }

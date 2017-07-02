@@ -76,11 +76,15 @@ interface ISchemaMap {
 export type SchemaMap = ISchemaMap;
 
 export interface ISchemaSanitizeOptions {
+  /** Set undefined values to defaults (if configured). Defaults to false. */
+  defaults?: boolean;
   /** Unset all properties that are not provided in the data. Defaults to false. */
   replace?: boolean;
 }
 
-export function sanitize(schemaValue: SchemaValue, data: any, options?: ISchemaSanitizeOptions) {
+export function sanitize(schemaValue: SchemaValue, data: any, _options?: ISchemaSanitizeOptions) {
+  const options = _options || {};
+
   switch (schemaValue.type) {
     case 'array': {
       // return empty array if no data given but a value is required
@@ -133,13 +137,13 @@ export function sanitize(schemaValue: SchemaValue, data: any, options?: ISchemaS
       let value = data;
 
       // get default value if no data given
-      if (value === undefined) {
+      if (options.defaults && value === undefined) {
         value = isFunction(schemaValue.default) ? schemaValue.default() : schemaValue.default;
+      }
 
-        // return undefined if value is still undefined
-        if (value === undefined) {
-          return undefined;
-        }
+      // return undefined if value is still undefined
+      if (value === undefined) {
+        return undefined;
       }
 
       if (schemaValue.type === 'boolean' && !isBoolean(value)) {
@@ -164,12 +168,12 @@ export function sanitize(schemaValue: SchemaValue, data: any, options?: ISchemaS
 }
 
 export function setObjectSanitized(schemaMap: ISchemaMap, target: object, data: object,
-                                   options?: ISchemaSanitizeOptions) {
+                                   options: ISchemaSanitizeOptions = {}) {
   if (typeof data !== 'object') {
     throw new Error('data is not an object');
   }
-  const dataKeys = Object.keys(data);
 
+  const dataKeys = Object.keys(data);
   const schemaKeys = Object.keys(schemaMap);
   const disallowedKeys = difference(dataKeys, schemaKeys);
   if (disallowedKeys.length > 0) {
@@ -177,7 +181,7 @@ export function setObjectSanitized(schemaMap: ISchemaMap, target: object, data: 
   }
 
   forEach(schemaMap, (schemaValue, key) => {
-    if (options && options.replace) {
+    if (options.replace) {
       delete target[key];
     }
 

@@ -1,4 +1,4 @@
-import { cloneDeep, forEach } from 'lodash';
+import { cloneDeep, defaults, difference, forEach } from 'lodash';
 
 import { ISchemaSanitizeOptions, ISchemaToObjectOptions, sanitize,
          SchemaMap, SchemaValue, setObjectSanitized, toObject } from './schema';
@@ -55,18 +55,34 @@ export abstract class Model<T> {
     // TODO: remove (see @enumerable decorator)
     Object.defineProperty(this, '_sanitized', {writable: true, enumerable: false});
     if (data) {
-      this.set(data);
+      this.set(data, {defaults: true, replace: true});
     }
   }
 
-  public set(data: Partial<T>, options?: ISchemaSanitizeOptions) {
+  // TODO: find a way to merge this with setObjectSanitized, code is pretty redundant
+  public set(data: object, options: ISchemaSanitizeOptions = {}) {
+    const constructor = this.constructor as typeof Model;
+
     if (typeof data !== 'object') {
       throw new Error('data is not an object');
     }
-    forEach(data, (v, k) => this.setKey(k, v, options));
+
+    const dataKeys = Object.keys(data);
+    const schemaKeys = Object.keys(constructor._schema);
+    const disallowedKeys = difference(dataKeys, schemaKeys);
+    if (disallowedKeys.length > 0) {
+      throw new Error(`key ${disallowedKeys[0]} not found in schema`);
+    }
+
+    forEach(constructor._schema, (_, key) => {
+      if (data[key] === undefined && !options.replace) {
+        return;
+      }
+      this.setKey(key, data[key], options);
+    });
   }
 
-  public setKey(key: string, value: any, options?: ISchemaSanitizeOptions) {
+  public setKey(key: string, value: any, options: ISchemaSanitizeOptions = {}) {
     const constructor = this.constructor as typeof Model;
     const schemaValue = constructor._schema[key];
 
@@ -74,13 +90,10 @@ export abstract class Model<T> {
       throw new Error(`key ${key} not found in schema`);
     }
 
-    if (value === undefined) {
-      delete this._sanitized[key];
-    } else {
-      this._sanitized[key] = sanitize(schemaValue, value, options);
-    }
+    const sanitizedValue = sanitize(schemaValue, value, options);
+    this._sanitized[key] = sanitizedValue;
 
-    defineModelProperty(this, key, value !== undefined);
+    defineModelProperty(this, key, sanitizedValue !== undefined);
   }
 
   public toObject(options?: ISchemaToObjectOptions): T {
