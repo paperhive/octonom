@@ -1,4 +1,4 @@
-import { difference, forEach, isFunction } from 'lodash';
+import { difference, forEach, isArray, isBoolean, isDate, isFunction, isNumber, isString } from 'lodash';
 
 import { Model } from './model';
 
@@ -76,7 +76,7 @@ interface ISchemaMap {
 export type SchemaMap = ISchemaMap;
 
 export interface ISchemaSanitizeOptions {
-  strict?: boolean;
+  /** Unset all properties that are not provided in the data. Defaults to false. */
   replace?: boolean;
 }
 
@@ -87,6 +87,13 @@ export function sanitize(schemaValue: SchemaValue, data: any, options?: ISchemaS
       if (data === undefined) {
         return schemaValue.required ? [] : undefined;
       }
+
+      // data incompatible?
+      if (!isArray(data)) {
+        throw new Error('data is not an array');
+      }
+
+      // return sanitized elements
       return data.map(v => sanitize(schemaValue.definition, v, options));
     }
 
@@ -95,8 +102,11 @@ export function sanitize(schemaValue: SchemaValue, data: any, options?: ISchemaS
         // already a model
         return data;
       } else {
+        if (data === undefined && !schemaValue.required) {
+          return undefined;
+        }
         // create new instance
-        return new schemaValue.model(data);
+        return new schemaValue.model(data || {});
       }
 
     case 'object':
@@ -104,6 +114,13 @@ export function sanitize(schemaValue: SchemaValue, data: any, options?: ISchemaS
       if (data === undefined) {
         return schemaValue.required ? {} : undefined;
       }
+
+      // data incompatible?
+      if (typeof data !== 'object') {
+        throw new Error('data is not an object');
+      }
+
+      // sanitize object
       return setObjectSanitized(schemaValue.definition, {}, data, options);
 
     // case 'reference':
@@ -113,26 +130,50 @@ export function sanitize(schemaValue: SchemaValue, data: any, options?: ISchemaS
     case 'date':
     case 'number':
     case 'string': {
-      // return default value if no data given
-      if (data === undefined) {
-        return isFunction(schemaValue.default) ? schemaValue.default() : schemaValue.default;
+      let value = data;
+
+      // get default value if no data given
+      if (value === undefined) {
+        value = isFunction(schemaValue.default) ? schemaValue.default() : schemaValue.default;
+
+        // return undefined if value is still undefined
+        if (value === undefined) {
+          return undefined;
+        }
       }
-      return data;
+
+      if (schemaValue.type === 'boolean' && !isBoolean(value)) {
+        throw new Error('not a boolean');
+      }
+      if (schemaValue.type === 'date' && !isDate(value)) {
+        throw new Error('not a date');
+      }
+      if (schemaValue.type === 'number' && !isNumber(value)) {
+        throw new Error('not a number');
+      }
+      if (schemaValue.type === 'string' && !isString(value)) {
+        throw new Error('not a string');
+      }
+
+      return value;
     }
+
+    default:
+      throw new Error(`type ${schemaValue.type} is unknown`);
   }
 }
 
 export function setObjectSanitized(schemaMap: ISchemaMap, target: object, data: object,
                                    options?: ISchemaSanitizeOptions) {
+  if (typeof data !== 'object') {
+    throw new Error('data is not an object');
+  }
   const dataKeys = Object.keys(data);
 
-  const strict = options ? options.strict !== false : true;
-  if (strict) {
-    const schemaKeys = Object.keys(schemaMap);
-    const disallowedKeys = difference(dataKeys, schemaKeys);
-    if (disallowedKeys.length > 0) {
-      throw new Error(`The following keys are not allowed: ${disallowedKeys.join(', ')}`);
-    }
+  const schemaKeys = Object.keys(schemaMap);
+  const disallowedKeys = difference(dataKeys, schemaKeys);
+  if (disallowedKeys.length > 0) {
+    throw new Error(`key ${disallowedKeys[0]} not found in schema`);
   }
 
   forEach(schemaMap, (schemaValue, key) => {
@@ -146,6 +187,8 @@ export function setObjectSanitized(schemaMap: ISchemaMap, target: object, data: 
 
     target[key] = sanitize(schemaValue, data[key], options);
   });
+
+  return target;
 }
 
 export interface ISchemaToObjectOptions {
@@ -153,7 +196,7 @@ export interface ISchemaToObjectOptions {
 }
 
 export function toObjectValue(schemaValue: SchemaValue, value, options?: ISchemaToObjectOptions) {
-  if (!value) {
+  if (value === undefined) {
     return undefined;
   }
 
@@ -170,19 +213,23 @@ export function toObjectValue(schemaValue: SchemaValue, value, options?: ISchema
     // case 'reference':
     //   return
 
-    default:
+    case 'boolean':
+    case 'date':
+    case 'number':
+    case 'string':
       return value;
+
+    default:
+      throw new Error(`type ${schemaValue.type} is unknown`);
   }
 }
 
 export function toObject(schemaMap: SchemaMap, source: object, options?: ISchemaToObjectOptions) {
   const result = {};
   forEach(schemaMap, (schemaValue, key) => {
-    if (source[key]) {
-      const value = toObjectValue(schemaValue, source[key], options);
-      if (value !== undefined) {
-        result[key] = value;
-      }
+    const value = toObjectValue(schemaValue, source[key], options);
+    if (value !== undefined) {
+      result[key] = value;
     }
   });
   return result;

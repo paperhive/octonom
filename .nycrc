@@ -3,6 +3,7 @@
     "lib/**/*.ts"
   ],
   "exclude": [
+    "**/*.data.ts",
     "**/*.spec.ts"
   ],
   "extension": [
