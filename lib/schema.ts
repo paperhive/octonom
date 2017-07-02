@@ -196,7 +196,7 @@ export interface ISchemaToObjectOptions {
 }
 
 export function toObjectValue(schemaValue: SchemaValue, value, options?: ISchemaToObjectOptions) {
-  if (!value) {
+  if (value === undefined) {
     return undefined;
   }
 
@@ -213,8 +213,14 @@ export function toObjectValue(schemaValue: SchemaValue, value, options?: ISchema
     // case 'reference':
     //   return
 
-    default:
+    case 'boolean':
+    case 'date':
+    case 'number':
+    case 'string':
       return value;
+
+    default:
+      throw new Error(`type ${schemaValue.type} is unknown`);
   }
 }
 

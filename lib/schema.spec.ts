@@ -1,5 +1,5 @@
 import { Model } from './model';
-import { sanitize, SchemaMap, SchemaValue, setObjectSanitized } from './schema';
+import { sanitize, SchemaMap, SchemaValue, setObjectSanitized, toObjectValue } from './schema';
 
 describe('schema', () => {
   describe('sanitize()', () => {
@@ -226,6 +226,66 @@ describe('schema', () => {
       const sanitizedObj = setObjectSanitized(map, obj, {name: 'Yllim'}, {replace: true});
       expect(sanitizedObj).to.eql({name: 'Yllim'});
       expect(sanitizedObj).to.equal(obj);
+    });
+  });
+
+  describe('toObjectValue()', () => {
+    interface ICat {
+      name: string;
+    }
+
+    class Cat extends Model<ICat> {
+      @Cat.PropertySchema({type: 'string'})
+      public name: string;
+
+      // note: this property is not in the schema and will thus not be exposed with toObject
+      public age = 42;
+    }
+
+    describe('type invalid', () => {
+      it('should throw if the type is invalid', () => {
+        expect(() => toObjectValue({type: 'invalid'} as any, 42)).to.throw('type invalid is unknown');
+      });
+    });
+
+    describe('type array', () => {
+      it('should clone an array', () => {
+        const schema: SchemaValue = {type: 'array', definition: {type: 'string'}};
+        const array = ['foo', 'bar'];
+        const newArray = toObjectValue(schema, array);
+        expect(newArray).to.eql(['foo', 'bar']);
+        expect(newArray).to.not.equal(array);
+      });
+
+      it('should run toObjectValue() recursively on elements', () => {
+        const schema: SchemaValue = {type: 'array', definition: {type: 'model', model: Cat}};
+        const cats = [new Cat({name: 'Yllim'})];
+        expect(toObjectValue(schema, cats)).to.eql([{name: 'Yllim'}]);
+      });
+    });
+
+    describe('type model', () => {
+      it('should turn a model into an object', () => {
+        const schema: SchemaValue = {type: 'model', model: Cat};
+        expect(toObjectValue(schema, new Cat({name: 'Yllim'}))).to.eql({name: 'Yllim'});
+      });
+    });
+
+    describe('type object', () => {
+      it('should turn an object into a new object', () => {
+        const schema: SchemaValue = {type: 'object', definition: {name: {type: 'string'}}};
+        expect(toObjectValue(schema, {name: 'Yllim', age: 42})).to.eql({name: 'Yllim'});
+      });
+    });
+
+    describe('types boolean, date, number, string', () => {
+      it('should just return the primitive', () => {
+        expect(toObjectValue({type: 'boolean'}, false)).to.equal(false);
+        const date = new Date();
+        expect(toObjectValue({type: 'date'}, date)).to.equal(date);
+        expect(toObjectValue({type: 'number'}, 42)).to.equal(42);
+        expect(toObjectValue({type: 'string'}, 'foo')).to.equal('foo');
+      });
     });
   });
 });
