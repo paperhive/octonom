@@ -1,4 +1,4 @@
-import { difference, forEach, isFunction } from 'lodash';
+import { difference, forEach, isArray, isFunction, isString } from 'lodash';
 
 import { Model } from './model';
 
@@ -76,7 +76,7 @@ interface ISchemaMap {
 export type SchemaMap = ISchemaMap;
 
 export interface ISchemaSanitizeOptions {
-  strict?: boolean;
+  /** Unset all properties that are not provided in the data. Defaults to false. */
   replace?: boolean;
 }
 
@@ -87,6 +87,13 @@ export function sanitize(schemaValue: SchemaValue, data: any, options?: ISchemaS
       if (data === undefined) {
         return schemaValue.required ? [] : undefined;
       }
+
+      // data incompatible?
+      if (!isArray(data)) {
+        throw new Error('data is not an array');
+      }
+
+      // return sanitized elements
       return data.map(v => sanitize(schemaValue.definition, v, options));
     }
 
@@ -113,12 +120,26 @@ export function sanitize(schemaValue: SchemaValue, data: any, options?: ISchemaS
     case 'date':
     case 'number':
     case 'string': {
-      // return default value if no data given
-      if (data === undefined) {
-        return isFunction(schemaValue.default) ? schemaValue.default() : schemaValue.default;
+      let value = data;
+
+      // get default value if no data given
+      if (value === undefined) {
+        value = isFunction(schemaValue.default) ? schemaValue.default() : schemaValue.default;
+
+        // return undefined if value is still undefined
+        if (value === undefined) {
+          return undefined;
+        }
+      }
+
+      if (schemaValue.type === 'string' && !isString(value)) {
+        throw new Error('not a string');
       }
       return data;
     }
+
+    default:
+      throw new Error(`type ${schemaValue.type} is unknown`);
   }
 }
 
@@ -126,13 +147,10 @@ export function setObjectSanitized(schemaMap: ISchemaMap, target: object, data: 
                                    options?: ISchemaSanitizeOptions) {
   const dataKeys = Object.keys(data);
 
-  const strict = options ? options.strict !== false : true;
-  if (strict) {
-    const schemaKeys = Object.keys(schemaMap);
-    const disallowedKeys = difference(dataKeys, schemaKeys);
-    if (disallowedKeys.length > 0) {
-      throw new Error(`The following keys are not allowed: ${disallowedKeys.join(', ')}`);
-    }
+  const schemaKeys = Object.keys(schemaMap);
+  const disallowedKeys = difference(dataKeys, schemaKeys);
+  if (disallowedKeys.length > 0) {
+    throw new Error(`The following keys are not allowed: ${disallowedKeys.join(', ')}`);
   }
 
   forEach(schemaMap, (schemaValue, key) => {
