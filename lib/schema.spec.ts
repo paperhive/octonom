@@ -111,5 +111,27 @@ describe('schema', () => {
         expect(sanitize(schema, undefined)).to.eql({});
       });
     });
+
+    describe('type boolean', () => {
+      const schemaBool: SchemaValue = {type: 'boolean'};
+
+      it('should throw if data is not a boolean', () => {
+        expect(() => sanitize(schemaBool, 42)).to.throw('not a boolean');
+      });
+
+      it('should return a boolean', () => {
+        expect(sanitize(schemaBool, true)).to.equal(true);
+        expect(sanitize(schemaBool, false)).to.equal(false);
+      });
+
+      it('should return undefined if data is undefined', () => {
+        expect(sanitize(schemaBool, undefined)).to.equal(undefined);
+      });
+
+      it('should return default value if undefined', () => {
+        expect(sanitize({type: 'boolean', default: true}, undefined)).to.equal(true);
+        expect(sanitize({type: 'boolean', default: () => true}, undefined)).to.equal(true);
+      })
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { difference, forEach, isArray, isFunction, isString } from 'lodash';
+import { difference, forEach, isArray, isBoolean, isFunction, isString } from 'lodash';
 
 import { Model } from './model';
 
@@ -145,7 +145,10 @@ export function sanitize(schemaValue: SchemaValue, data: any, options?: ISchemaS
       if (schemaValue.type === 'string' && !isString(value)) {
         throw new Error('not a string');
       }
-      return data;
+      if (schemaValue.type === 'boolean' && !isBoolean(value)) {
+        throw new Error('not a boolean');
+      }
+      return value;
     }
 
     default:
