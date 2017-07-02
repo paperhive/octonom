@@ -31,14 +31,14 @@ describe('Model', () => {
     });
 
     it('should create a person without account', () => {
-      const person = new PersonModel({name: 'Alice'});
-      expect(person.toJSON()).to.deep.equal({name: 'Alice'});
+      const person = new PersonModel({id: '42', name: 'Alice'});
+      expect(person.toJSON()).to.deep.equal({id: '42', name: 'Alice'});
     });
 
     it('should create a person with account', () => {
-      const person = new PersonModel({name: 'Alice', account: {username: 'alice'}});
+      const person = new PersonModel({id: '42', name: 'Alice', account: {username: 'alice'}});
       expect(person.account).to.be.an.instanceOf(PersonAccountModel);
-      expect(person.toJSON()).to.deep.equal({name: 'Alice', account: {username: 'alice'}});
+      expect(person.toJSON()).to.deep.equal({id: '42', name: 'Alice', account: {username: 'alice'}});
     });
   });
 
