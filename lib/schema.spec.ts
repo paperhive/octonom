@@ -58,7 +58,7 @@ describe('schema', () => {
       it('should throw if data is not an object', () => {
         expect(() => sanitize(schemaModel, 42))
           .to.throw('data is not an object');
-      })
+      });
 
       it('should create a model instance', () => {
         expect(sanitize(schemaModel, {name: 'Yllim'}))
