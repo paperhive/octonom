@@ -51,7 +51,7 @@ describe('Collection (ArrayCollection)', () => {
   });
 
   describe('findById()', () => {
-    it('should return undefined if id is not found', async() => {
+    it('should return undefined if id is not found', async () => {
       const cat = await catCollection.findById('42');
       expect(cat).to.equal(undefined);
     });
@@ -64,6 +64,4 @@ describe('Collection (ArrayCollection)', () => {
       expect(foundCat.toObject()).to.eql(cat.toObject());
     });
   });
-
-
 });
