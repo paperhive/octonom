@@ -156,5 +156,48 @@ describe('schema', () => {
         expect(sanitize({type: 'date', default: () => date}, undefined)).to.equal(date);
       });
     });
+
+    describe('type number', () => {
+      const schemaNumber: SchemaValue = {type: 'number'};
+
+      it('should throw if data is not a number', () => {
+        expect(() => sanitize(schemaNumber, 'foo')).to.throw('not a number');
+      });
+
+      it('should return a number', () => {
+        expect(sanitize(schemaNumber, 0)).to.equal(0);
+        expect(sanitize(schemaNumber, 13.37)).to.equal(13.37);
+      });
+
+      it('should return undefined if data is undefined', () => {
+        expect(sanitize(schemaNumber, undefined)).to.equal(undefined);
+      });
+
+      it('should return default value if undefined', () => {
+        expect(sanitize({type: 'number', default: 42}, undefined)).to.equal(42);
+        expect(sanitize({type: 'number', default: () => 42}, undefined)).to.equal(42);
+      });
+    });
+
+    describe('type string', () => {
+      const schemaString: SchemaValue = {type: 'string'};
+
+      it('should throw if data is not a string', () => {
+        expect(() => sanitize(schemaString, 42)).to.throw('not a string');
+      });
+
+      it('should return a string', () => {
+        expect(sanitize(schemaString, 'foo')).to.equal('foo');
+      });
+
+      it('should return undefined if data is undefined', () => {
+        expect(sanitize(schemaString, undefined)).to.equal(undefined);
+      });
+
+      it('should return default value if undefined', () => {
+        expect(sanitize({type: 'string', default: 'foo'}, undefined)).to.equal('foo');
+        expect(sanitize({type: 'string', default: () => 'foo'}, undefined)).to.equal('foo');
+      });
+    });
   });
 });
