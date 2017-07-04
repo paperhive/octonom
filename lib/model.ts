@@ -104,4 +104,8 @@ export abstract class Model<T> {
   public toJSON() {
     return this.toObject();
   }
+
+  public inspect() {
+    return this.toObject();
+  }
 }

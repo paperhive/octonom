@@ -40,6 +40,13 @@ describe('Model', () => {
       expect(person.account).to.be.an.instanceOf(PersonAccountModel);
       expect(person.toJSON()).to.deep.equal({id: '42', name: 'Alice', account: {username: 'alice'}});
     });
+
+    describe('inspect()', () => {
+      it('should equal toObject() result', () => {
+        const person = new PersonModel({id: '42', name: 'Alice'});
+        expect(person.inspect()).to.eql({id: '42', name: 'Alice'});
+      });
+    });
   });
 
   it.skip('should create a DiscussionModel', () => {

@@ -1,40 +1,44 @@
 import { find } from 'lodash';
 
 import { Collection } from './collection';
-import { CollectionModel } from './collection-model';
-import { CatModel, ICat } from './collection-model.data';
+import { Model } from './model';
+import { CatModel, ICat } from './model.data';
 
 describe('Collection (ArrayCollection)', () => {
   // simple collection with an in-memory array
   // note: we can't test Collection directly since it's abstract
-  class ArrayCollection<T extends object, TModel extends CollectionModel<T>> extends Collection<T, TModel> {
+  class ArrayCollection<T extends object, TModel extends Model<T>> extends Collection<T, TModel> {
     // note: only p
     public array: object[] = [];
 
     public insert(model: TModel) {
-      const doc = find(this.array, {_id: model.getId()});
+      const doc = find(this.array, {[this.modelIdField]: model[this.modelIdField]});
       if (doc) {
         throw new Error('duplicate key error');
       }
-      this.array.push(this.toDb(model.toObject({unpopulate: true})));
+      this.array.push(this.toDb(model));
     }
 
     public async findById(id: string) {
-      const doc = find(this.array, {_id: id});
+      const doc = find(this.array, {[this.modelIdField]: id});
 
       if (!doc) {
         return undefined;
       }
 
-      return new this.model(this.fromDb(doc));
+      return this.fromDb(doc);
     }
   }
 
-  class CatCollection extends ArrayCollection<ICat, CatModel> {}
+  class CatCollection extends ArrayCollection<ICat, CatModel> {
+    constructor() {
+      super(CatModel, {modelIdField: '_id'});
+    }
+  }
 
   let catCollection: CatCollection;
 
-  beforeEach(() => catCollection = new CatCollection(CatModel));
+  beforeEach(() => catCollection = new CatCollection());
 
   describe('insert()', () => {
     it('should insert a cat', () => {
@@ -43,7 +47,7 @@ describe('Collection (ArrayCollection)', () => {
       expect(catCollection.array).to.eql([cat.toObject()]);
     });
 
-    it('should throw on duplicat keys', () => {
+    it('should throw on duplicate keys', () => {
       const cat = new CatModel({name: 'Yllim'});
       catCollection.insert(cat);
       expect(() => catCollection.insert(cat)).to.throw('duplicate');

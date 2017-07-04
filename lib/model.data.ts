@@ -1,6 +1,18 @@
-import { CollectionModel } from './collection-model';
 import { Model } from './model';
 import { generateId } from './utils';
+
+export interface ICat {
+  _id: string;
+  name: string;
+}
+
+export class CatModel extends Model<ICat> {
+  @Model.PropertySchema({type: 'string', default: generateId})
+  public _id: string;
+
+  @Model.PropertySchema({type: 'string'})
+  public name: string;
+}
 
 interface IPersonAccount {
   username: string;
@@ -17,19 +29,15 @@ export interface IPerson {
   account?: IPersonAccount;
 }
 
-export class PersonModel extends CollectionModel<IPerson> {
-  @CollectionModel.PropertySchema({type: 'string', default: generateId})
+export class PersonModel extends Model<IPerson> {
+  @Model.PropertySchema({type: 'string', default: generateId})
   public id: string;
 
-  @CollectionModel.PropertySchema({type: 'string'})
+  @Model.PropertySchema({type: 'string'})
   public name: string;
 
-  @CollectionModel.PropertySchema({type: 'model', model: PersonAccountModel})
+  @Model.PropertySchema({type: 'model', model: PersonAccountModel})
   public account?: PersonAccountModel | IPersonAccount;
-
-  public getId() {
-    return this.id;
-  }
 }
 
 export interface IDiscussion {
@@ -38,8 +46,8 @@ export interface IDiscussion {
   title: string;
 }
 
-export class DiscussionModel extends CollectionModel<IDiscussion> {
-  @CollectionModel.PropertySchema({type: 'string', default: generateId})
+export class DiscussionModel extends Model<IDiscussion> {
+  @Model.PropertySchema({type: 'string', default: generateId})
   public id: string;
 
   @Model.PropertySchema({type: 'reference', collection: undefined}) // TODO
@@ -49,8 +57,4 @@ export class DiscussionModel extends CollectionModel<IDiscussion> {
   public title: string;
 
   // public participants: string[] | PersonModel[];
-
-  public getId() {
-    return this.id;
-  }
 }
