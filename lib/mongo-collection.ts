@@ -1,28 +1,33 @@
 import { Collection as DbCollection, CollectionInsertManyOptions, Cursor,
   Db, FindOneOptions } from 'mongodb';
 
-import { Collection } from './collection';
-import { CollectionModel } from './collection-model';
+import { Collection, ICollectionOptions } from './collection';
+import { Model } from './model';
+import { rename } from './utils';
 
-export class MongoCollection<T extends object, TModel extends CollectionModel<T>> extends Collection<T, TModel> {
+export class MongoCollection<T extends object, TModel extends Model<T>> extends Collection<T, TModel> {
   protected collection: DbCollection;
 
-  constructor(protected name: string, model: new (data: any) => TModel) {
-    super(model);
+  constructor(
+    protected name: string,
+    model: new (data: any) => TModel,
+    options: ICollectionOptions = {},
+  ) {
+    super(model, options);
   }
 
   public async insertMany(models: TModel[], options?: CollectionInsertManyOptions) {
-    const docs = models.map(model => this.toDb(model.toObject({unpopulate: true})));
+    const docs = models.map(model => this.toDb(model));
     await this.collection.insertMany(docs, options);
   }
 
   public async insertOne(model: TModel) {
-    const doc = this.toDb(model.toObject({unpopulate: true}));
+    const doc = this.toDb(model);
     await this.collection.insertOne(doc);
   }
 
   public async delete(model: TModel) {
-    const result = await this.collection.deleteOne({_id: model.getId()});
+    const result = await this.collection.deleteOne({_id: model[this.modelIdField]});
     if (result.deletedCount === 0) {
       throw new Error('document not found in collection');
     }
@@ -30,7 +35,7 @@ export class MongoCollection<T extends object, TModel extends CollectionModel<T>
 
   public find(query: object) {
     return this.collection.find(query)
-      .map(obj => new this.model(this.fromDb(obj))) as Cursor<TModel>;
+      .map(obj => this.fromDb(obj)) as Cursor<TModel>;
   }
 
   public async findById(id: string) {
@@ -42,16 +47,24 @@ export class MongoCollection<T extends object, TModel extends CollectionModel<T>
     if (!doc) {
       return undefined;
     }
-    return new this.model(this.fromDb(doc));
+    return this.fromDb(doc);
   }
 
   public async init(db: Db) {
     this.collection = await db.createCollection(this.name);
   }
 
+  public toDb(model: TModel) {
+    return rename(super.toDb(model), {[this.modelIdField]: '_id'});
+  }
+
+  public fromDb(doc: object) {
+    return super.fromDb(rename(doc, {_id: this.modelIdField}));
+  }
+
   public async update(model: TModel) {
-    const doc = this.toDb(model.toObject({unpopulate: true}));
-    const result = await this.collection.replaceOne({_id: model.getId()}, doc);
+    const doc = this.toDb(model);
+    const result = await this.collection.replaceOne({_id: model[this.modelIdField]}, doc);
     if (result.matchedCount === 0) {
       throw new Error('document not found in collection');
     }

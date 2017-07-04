@@ -1,15 +1,27 @@
-import { CollectionModel } from './collection-model';
+import { Model } from './model';
+import { rename } from './utils';
 
-export abstract class Collection<T extends object, TModel extends CollectionModel<T>> {
-  constructor(protected model: new (data: any) => TModel) {}
+export interface ICollectionOptions {
+  modelIdField?: string;
+}
+
+export abstract class Collection<T extends object, TModel extends Model<T>> {
+  protected modelIdField: string;
+
+  constructor(
+    protected model: new (data: any) => TModel,
+    protected options: ICollectionOptions = {},
+  ) {
+    this.modelIdField = options.modelIdField || 'id';
+  }
 
   public abstract async findById(id: string): Promise<TModel>;
 
-  public toDb(obj: T): object {
-    return obj;
+  public toDb(model: TModel): object {
+    return model.toObject({unpopulate: true});
   }
 
-  public fromDb(doc: any): T {
-    return doc;
+  public fromDb(doc: object): TModel {
+    return new this.model(doc);
   }
 }

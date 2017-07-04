@@ -1,6 +1,6 @@
 import { Db, MongoClient } from 'mongodb';
 
-import { CatModel, ICat } from './collection-model.data';
+import { CatModel, ICat } from './model.data';
 import { MongoCollection } from './mongo-collection';
 import { generateId } from './utils';
 
@@ -13,7 +13,7 @@ describe('MongoCollection', () => {
 
   beforeEach(async () => {
     db = await MongoClient.connect('mongodb://localhost:27017/paperhive-dev');
-    catCollection = new CatCollection('cats', CatModel);
+    catCollection = new CatCollection('cats', CatModel, {modelIdField: '_id'});
     await catCollection.init(db);
   });
 
