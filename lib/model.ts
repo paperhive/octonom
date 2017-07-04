@@ -9,10 +9,6 @@ interface IModel {
   setKey(key: string, value: any, options?: ISchemaSanitizeOptions);
 }
 
-interface IModelRoot {
-  getId(): string;
-}
-
 function defineModelProperty(target, key: string, enumerable: boolean) {
   Object.defineProperty(target, key, {
     configurable: true,

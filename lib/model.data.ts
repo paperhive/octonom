@@ -14,7 +14,7 @@ export class CatModel extends Model<ICat> {
   public name: string;
 }
 
-interface IPersonAccount {
+export interface IPersonAccount {
   username: string;
 }
 
