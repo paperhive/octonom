@@ -5,7 +5,7 @@
   "main": "lib-js/main.js",
   "types": "lib-js/main.d.ts",
   "scripts": {
-    "build": "rm ./lib-js/* && tsc",
+    "build": "rm -rf ./lib-js && tsc",
     "lint": "tslint lib/**/*.ts",
     "prepublish": "npm run build",
     "test": "mocha  --opts ./mocha.opts",
