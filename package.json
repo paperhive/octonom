@@ -1,13 +1,13 @@
 {
   "name": "octonom",
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0-alpha.3",
   "description": "Object Document Mapper for any database",
   "main": "lib-js/main.js",
   "types": "lib-js/main.d.ts",
   "scripts": {
     "build": "rm -rf ./lib-js && tsc",
     "lint": "tslint lib/**/*.ts",
-    "prepublish": "npm run build",
+    "prepare": "npm run build",
     "test": "mocha  --opts ./mocha.opts",
     "test-cover": "nyc npm test",
     "test-cover-submit": "nyc report --reporter=json && codecov -f coverage/*.json"
@@ -24,14 +24,12 @@
   ],
   "author": "André Gaul <andre@paperhive.org>",
   "license": "MIT",
+  "repository": "paperhive/octonom",
+  "bugs": "https://github.com/paperhive/octonom/issues",
   "devDependencies": {
     "@types/chai": "^4.0.1",
     "@types/chai-as-promised": "0.0.31",
-    "@types/lodash": "^4.14.66",
     "@types/mocha": "^2.2.41",
-    "@types/mongodb": "^2.2.6",
-    "@types/node": "^8.0.2",
-    "@types/node-uuid": "0.0.28",
     "chai": "^4.0.2",
     "chai-as-promised": "^7.0.0",
     "codecov": "^2.2.0",
@@ -42,6 +40,10 @@
     "typescript": "^2.3.4"
   },
   "dependencies": {
+    "@types/lodash": "^4.14.66",
+    "@types/mongodb": "^2.2.6",
+    "@types/node": "^8.0.2",
+    "@types/node-uuid": "0.0.28",
     "lodash": "^4.17.4",
     "mongodb": "^2.2.29",
     "node-uuid": "^1.4.8"
