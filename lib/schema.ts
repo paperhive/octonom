@@ -2,42 +2,42 @@ import { difference, forEach, isArray, isBoolean, isDate, isFunction, isNumber, 
 
 import { Model } from './model';
 
-interface ISchemaValueBase {
+export interface ISchemaValueBase {
   type: string;
   required?: boolean;
   dbKey?: string;
 }
 
-interface ISchemaValueArray extends ISchemaValueBase {
+export interface ISchemaValueArray extends ISchemaValueBase {
   type: 'array';
   definition: SchemaValue;
   minLength?: number;
   maxLength?: number;
 }
 
-interface ISchemaValueBoolean extends ISchemaValueBase {
+export interface ISchemaValueBoolean extends ISchemaValueBase {
   type: 'boolean';
   default?: boolean | (() => boolean);
 }
 
-interface ISchemaValueDate extends ISchemaValueBase {
+export interface ISchemaValueDate extends ISchemaValueBase {
   type: 'date';
   default?: Date | (() => Date);
   min?: Date;
   max?: Date;
 }
 
-interface IModelConstructor {
+export interface IModelConstructor {
   _schema: ISchemaMap;
   new (data: any): any; // TODO
 }
 
-interface ISchemaValueModel extends ISchemaValueBase {
+export interface ISchemaValueModel extends ISchemaValueBase {
   type: 'model';
   model: IModelConstructor;
 }
 
-interface ISchemaValueNumber extends ISchemaValueBase {
+export interface ISchemaValueNumber extends ISchemaValueBase {
   type: 'number';
   default?: number | (() => number);
   min?: number;
@@ -45,17 +45,17 @@ interface ISchemaValueNumber extends ISchemaValueBase {
   integer?: boolean;
 }
 
-interface ISchemaValueObject extends ISchemaValueBase {
+export interface ISchemaValueObject extends ISchemaValueBase {
   type: 'object';
   definition: ISchemaMap;
 }
 
-interface ISchemaValueReference extends ISchemaValueBase {
+export interface ISchemaValueReference extends ISchemaValueBase {
   type: 'reference';
   collection: any; // TODO
 }
 
-interface ISchemaValueString extends ISchemaValueBase {
+export interface ISchemaValueString extends ISchemaValueBase {
   type: 'string';
   default?: string | (() => string);
   allowEmpty?: boolean;
@@ -69,7 +69,7 @@ export type SchemaValue = ISchemaValueArray | ISchemaValueBoolean | ISchemaValue
   ISchemaValueModel | ISchemaValueNumber | ISchemaValueObject | ISchemaValueReference |
   ISchemaValueString;
 
-interface ISchemaMap {
+export interface ISchemaMap {
   [field: string]: SchemaValue;
 }
 
