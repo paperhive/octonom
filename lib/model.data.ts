@@ -2,13 +2,13 @@ import { Model } from './model';
 import { generateId } from './utils';
 
 export interface ICat {
-  _id: string;
+  id: string;
   name: string;
 }
 
 export class CatModel extends Model<ICat> {
   @Model.PropertySchema({type: 'string', default: generateId})
-  public _id: string;
+  public id: string;
 
   @Model.PropertySchema({type: 'string'})
   public name: string;

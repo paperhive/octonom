@@ -50,9 +50,7 @@ export abstract class Model<T> {
   constructor(data?: Partial<T>) {
     // TODO: remove (see @enumerable decorator)
     Object.defineProperty(this, '_sanitized', {writable: true, enumerable: false});
-    if (data) {
-      this.set(data, {defaults: true, replace: true});
-    }
+    this.set(data || {}, {defaults: true, replace: true});
   }
 
   // TODO: find a way to merge this with setObjectSanitized, code is pretty redundant

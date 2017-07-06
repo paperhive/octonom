@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash';
 import { Db, MongoClient } from 'mongodb';
 
 import { CatModel, ICat } from './model.data';
@@ -6,14 +7,14 @@ import { generateId } from './utils';
 
 describe('MongoCollection', () => {
   class CatCollection extends MongoCollection<ICat, CatModel> {}
-  const catObj = {_id: '42', name: 'Yllim'};
+  const catObj = {id: '42', name: 'Yllim'};
 
   let db: Db;
   let catCollection: CatCollection;
 
   beforeEach(async () => {
     db = await MongoClient.connect('mongodb://localhost:27017/paperhive-dev');
-    catCollection = new CatCollection('cats', CatModel, {modelIdField: '_id'});
+    catCollection = new CatCollection('cats', CatModel, {modelIdField: 'id'});
     await catCollection.init(db);
   });
 
@@ -34,10 +35,10 @@ describe('MongoCollection', () => {
 
   describe('insertMany()', () => {
     it('should insert cats', async () => {
-      const cats = [new CatModel(catObj), new CatModel({_id: '23', name: 'Kilf'})];
+      const cats = [new CatModel(catObj), new CatModel({id: '23', name: 'Kilf'})];
       await catCollection.insertMany(cats);
       const docs = await db.collection('cats').find({}).toArray();
-      expect(docs).to.deep.include(catObj);
+      expect(docs).to.deep.include({_id: '42', name: 'Yllim'});
       expect(docs).to.deep.include({_id: '23', name: 'Kilf'});
     });
 
@@ -53,11 +54,11 @@ describe('MongoCollection', () => {
       const cat = new CatModel(catObj);
       await catCollection.insertOne(cat);
       const doc = await db.collection('cats').findOne({_id: '42'});
-      expect(doc).to.eql(catObj);
+      expect(doc).to.eql({_id: '42', name: 'Yllim'});
     });
 
     it('should throw if id is duplicate', async () => {
-      db.collection('cats').insert(catObj);
+      await catCollection.insertOne(new CatModel(catObj));
       await expect(catCollection.insertOne(new CatModel(catObj)))
         .to.be.rejectedWith('duplicate key');
     });
@@ -73,7 +74,7 @@ describe('MongoCollection', () => {
       const cat = new CatModel(catObj);
       await catCollection.insertOne(cat);
       await catCollection.delete(cat);
-      const doc = await db.collection('cats').findOne({_id: '42'});
+      const doc = await db.collection('cats').findOne({id: '42'});
       expect(doc).to.equal(null);
     });
   });
@@ -85,11 +86,11 @@ describe('MongoCollection', () => {
     });
 
     it('should find a cat', async () => {
-      await db.collection('cats').insertMany([catObj, {_id: '23', name: 'Kilf'}]);
-      const cats = await catCollection.find({_id: '23'}).toArray();
+      await db.collection('cats').insertMany([cloneDeep(catObj), {id: '23', name: 'Kilf'}]);
+      const cats = await catCollection.find({id: '23'}).toArray();
       expect(cats).to.be.an('array').and.have.lengthOf(1);
       expect(cats[0]).to.be.instanceOf(CatModel);
-      expect(cats[0].toObject()).to.eql({_id: '23', name: 'Kilf'});
+      expect(cats[0].toObject()).to.eql({id: '23', name: 'Kilf'});
     });
   });
 
@@ -110,7 +111,7 @@ describe('MongoCollection', () => {
 
   describe('findOne()', () => {
     it('should return undefined if no cat was found', async () => {
-      const cat = await catCollection.findOne({_id: 'foo'});
+      const cat = await catCollection.findOne({id: 'foo'});
       expect(cat).to.equal(undefined);
     });
 

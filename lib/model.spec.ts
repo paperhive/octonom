@@ -1,17 +1,19 @@
-import { DiscussionModel, PersonAccountModel, PersonModel } from './model.data' ;
+import { CatModel, DiscussionModel, PersonAccountModel, PersonModel } from './model.data' ;
 
 describe('Model', () => {
-
   describe('PersonModel', () => {
     it('should create an empty person', () => {
       const person = new PersonModel();
-      expect(person.toJSON()).to.deep.equal({});
+      expect(person.toObject()).to.have.property('id');
     });
 
     it('should allow to set a property with set()', () => {
       const person = new PersonModel();
       person.set({name: 'Alice', account: {username: 'alice'}});
-      expect(person.toJSON()).to.deep.equal({name: 'Alice', account: {username: 'alice'}});
+      expect(person.account).to.be.an.instanceOf(PersonAccountModel);
+      const personObj = person.toObject();
+      expect(personObj).to.have.property('id').that.is.a('string');
+      expect(personObj).to.deep.equal({id: personObj.id, name: 'Alice', account: {username: 'alice'}});
     });
 
     it('should allow to set a property directly with proper instances', () => {
@@ -19,7 +21,9 @@ describe('Model', () => {
       person.name = 'Alice';
       person.account = new PersonAccountModel({username: 'alice'});
       expect(person.account).to.be.an.instanceOf(PersonAccountModel);
-      expect(person.toJSON()).to.deep.equal({name: 'Alice', account: {username: 'alice'}});
+      const personObj = person.toObject();
+      expect(personObj).to.have.property('id').that.is.a('string');
+      expect(personObj).to.deep.equal({id: personObj.id, name: 'Alice', account: {username: 'alice'}});
     });
 
     it('should allow to set a property directly with implicit instantiation', () => {
@@ -27,7 +31,9 @@ describe('Model', () => {
       person.name = 'Alice';
       person.account = {username: 'alice'};
       expect(person.account).to.be.an.instanceOf(PersonAccountModel);
-      expect(person.toJSON()).to.deep.equal({name: 'Alice', account: {username: 'alice'}});
+      const personObj = person.toObject();
+      expect(personObj).to.have.property('id').that.is.a('string');
+      expect(personObj).to.deep.equal({id: personObj.id, name: 'Alice', account: {username: 'alice'}});
     });
 
     it('should create a person without account', () => {

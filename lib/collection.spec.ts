@@ -32,7 +32,7 @@ describe('Collection (ArrayCollection)', () => {
 
   class CatCollection extends ArrayCollection<ICat, CatModel> {
     constructor() {
-      super(CatModel, {modelIdField: '_id'});
+      super(CatModel, {modelIdField: 'id'});
     }
   }
 
@@ -63,7 +63,7 @@ describe('Collection (ArrayCollection)', () => {
     it('should find a cat', async () => {
       const cat = new CatModel({name: 'Yllim'});
       catCollection.insert(cat);
-      const foundCat = await catCollection.findById(cat._id);
+      const foundCat = await catCollection.findById(cat.id);
       expect(foundCat).to.be.an.instanceOf(CatModel);
       expect(foundCat.toObject()).to.eql(cat.toObject());
     });
