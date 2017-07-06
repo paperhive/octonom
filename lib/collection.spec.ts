@@ -2,6 +2,7 @@ import { find } from 'lodash';
 
 import { Collection } from './collection';
 import { Model } from './model';
+import { ModelArray } from './model-array';
 import { CatModel, ICat } from './model.data';
 
 describe('Collection (ArrayCollection)', () => {
@@ -27,6 +28,11 @@ describe('Collection (ArrayCollection)', () => {
       }
 
       return this.fromDb(doc);
+    }
+
+    public async findByIds(ids: string[]) {
+      const instances = await Promise.all(ids.map(id => this.findById(id)));
+      return new ModelArray<TModel>(this.model, instances);
     }
   }
 
@@ -66,6 +72,18 @@ describe('Collection (ArrayCollection)', () => {
       const foundCat = await catCollection.findById(cat.id);
       expect(foundCat).to.be.an.instanceOf(CatModel);
       expect(foundCat.toObject()).to.eql(cat.toObject());
+    });
+  });
+
+  describe('findByIds()', () => {
+    it('should return a ModelArray with instances (or undefined)', async () => {
+      catCollection.insert(new CatModel({id: '42', name: 'Yllim'}));
+      catCollection.insert(new CatModel({id: '1337', name: 'Kilf'}));
+      const cats = await catCollection.findByIds(['1337', '23', '42']);
+      expect(cats).to.be.an.instanceOf(ModelArray).and.have.lengthOf(3);
+      expect(cats[0].toObject()).to.eql({id: '1337', name: 'Kilf'});
+      expect(cats[1]).to.equal(undefined);
+      expect(cats[2].toObject()).to.eql({id: '42', name: 'Yllim'});
     });
   });
 });
