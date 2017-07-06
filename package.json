@@ -43,9 +43,9 @@
     "@types/lodash": "^4.14.66",
     "@types/mongodb": "^2.2.6",
     "@types/node": "^8.0.2",
-    "@types/node-uuid": "0.0.28",
+    "@types/uuid": "^3.0.0",
     "lodash": "^4.17.4",
     "mongodb": "^2.2.29",
-    "node-uuid": "^1.4.8"
+    "uuid": "^3.1.0"
   }
 }
