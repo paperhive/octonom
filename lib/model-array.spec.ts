@@ -34,5 +34,11 @@ describe('ModelArray', () => {
       expect(array[0]).to.be.an.instanceOf(CatModel);
       expect(array[0].toObject()).to.eql(catObj);
     });
+
+    it('should push undefined', () => {
+      array.push(undefined);
+      expect(array).to.have.length(1);
+      expect(array[0]).to.equal(undefined);
+    });
   });
 });

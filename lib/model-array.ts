@@ -10,6 +10,11 @@ export class ModelArray<TModel> extends Array<TModel> {
   }
 
   public push(element: TModel | object): number {
+    if (element === undefined) {
+      return super.push(undefined);
+    }
+
+    // do we need to create an instance?
     const instance = element instanceof this.model
       ? element as TModel
       : new this.model(element);
