@@ -1,6 +1,7 @@
 import { cloneDeep } from 'lodash';
 import { Db, MongoClient } from 'mongodb';
 
+import { ModelArray } from './model-array';
 import { CatModel, ICat } from './model.data';
 import { MongoCollection } from './mongo-collection';
 import { generateId } from './utils';
@@ -106,6 +107,20 @@ describe('MongoCollection', () => {
       const foundCat = await catCollection.findById('42');
       expect(foundCat).to.be.instanceOf(CatModel);
       expect(foundCat.toObject()).to.eql(catObj);
+    });
+  });
+
+  describe('findByIds()', () => {
+    it('should return a ModelArray with instances (or undefined)', async () => {
+      catCollection.insertMany([
+        new CatModel({id: '42', name: 'Yllim'}),
+        new CatModel({id: '1337', name: 'Kilf'}),
+      ]);
+      const cats = await catCollection.findByIds(['1337', '23', '42']);
+      expect(cats).to.be.an.instanceOf(ModelArray).and.have.lengthOf(3);
+      expect(cats[0].toObject()).to.eql({id: '1337', name: 'Kilf'});
+      expect(cats[1]).to.equal(undefined);
+      expect(cats[2].toObject()).to.eql({id: '42', name: 'Yllim'});
     });
   });
 

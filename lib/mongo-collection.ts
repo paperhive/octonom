@@ -3,6 +3,7 @@ import { Collection as DbCollection, CollectionInsertManyOptions, Cursor,
 
 import { Collection, ICollectionOptions } from './collection';
 import { Model } from './model';
+import { ModelArray } from './model-array';
 import { rename } from './utils';
 
 export class MongoCollection<T extends object, TModel extends Model<T>> extends Collection<T, TModel> {
@@ -40,6 +41,14 @@ export class MongoCollection<T extends object, TModel extends Model<T>> extends 
 
   public async findById(id: string) {
     return await this.findOne({_id: id});
+  }
+
+  public async findByIds(ids: string[]) {
+    const docs = await this.collection.find({_id: {$in: ids}}).toArray();
+    const idInstanceMap: {[k: string]: TModel} = {};
+    // note: ids that could not be found won't be present in the docs result array
+    docs.forEach(doc => idInstanceMap[doc._id] = this.fromDb(doc));
+    return new ModelArray<TModel>(this.model, ids.map(id => idInstanceMap[id]));
   }
 
   public async findOne(query: object, options?: FindOneOptions) {
