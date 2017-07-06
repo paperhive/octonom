@@ -12,6 +12,8 @@ export class CatModel extends Model<ICat> {
 
   @Model.PropertySchema({type: 'string'})
   public name: string;
+
+  public nonSchemaProperty: string;
 }
 
 export interface IPersonAccount {
