@@ -1,4 +1,4 @@
-import { CatModel, DiscussionModel, PersonAccountModel, PersonModel } from './model.data' ;
+import { CatModel, DiscussionModel, GroupModel, PersonAccountModel, PersonModel } from './model.data' ;
 
 describe('Model', () => {
   describe('simple (CatModel)', () => {
@@ -105,23 +105,21 @@ describe('Model', () => {
     });
   });
 
-  describe('nested array (PersonAccountModel in PersonModel)', () => {
+  describe('nested array (PersonModel in GroupModel)', () => {
     describe('constructor', () => {
-      it('should create a person with a raw array with mixed raw account object and account instance', async () => {
-        // TODO
-      });
+      it('should create a group with a raw array with mixed raw person object and person instance');
 
-      it('should create a person with a model array with an account instance');
+      it('should create a group with a model array with a person instance');
     });
 
     describe('set()', () => {
-      it('should set a raw array with mixed raw account object and account instance');
-      it('should set a model array with an account instance');
+      it('should set a raw array with mixed raw person object and person instance');
+      it('should set a model array with a person instance');
     });
 
     describe('property setter', () => {
-      it('should set a raw array with mixed raw account object and account instance');
-      it('should set a model array with an account instance');
+      it('should set a raw array with mixed raw person object and person instance');
+      it('should set a model array with a person instance');
     });
   });
 

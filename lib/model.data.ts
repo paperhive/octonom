@@ -1,4 +1,5 @@
 import { Model } from './model';
+import { ModelArray } from './model-array';
 import { generateId } from './utils';
 
 export interface ICat {
@@ -40,6 +41,16 @@ export class PersonModel extends Model<IPerson> {
 
   @Model.PropertySchema({type: 'model', model: PersonAccountModel})
   public account?: PersonAccountModel | IPersonAccount;
+}
+
+export interface IGroup {
+  id: string;
+  members: IPerson[];
+}
+
+export class GroupModel extends Model<IGroup> {
+  @Model.PropertySchema({type: 'array', definition: {type: 'model', model: PersonModel}})
+  public members: ModelArray<PersonModel>;
 }
 
 export interface IDiscussion {
