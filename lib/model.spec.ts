@@ -199,6 +199,12 @@ describe('Model', () => {
     describe('populate()', () => {
       it('should populate a person');
     });
+
+    describe('toObject()', () => {
+      it('should return the id of an unpopulated reference');
+      it('should run toObject() recursively on a populated reference with {unpopulate: false}');
+      it('should return the id of a populated reference with {unpopulate: true}');
+    });
   });
 
   describe('reference array (PersonModel in DiscussionModel)', () => {
