@@ -1,5 +1,6 @@
 import { difference, forEach, isArray, isBoolean, isDate, isFunction, isNumber, isString } from 'lodash';
 
+import { Collection } from './collection';
 import { Model } from './model';
 import { ModelArray } from './model-array';
 
@@ -53,7 +54,7 @@ export interface ISchemaValueObject extends ISchemaValueBase {
 
 export interface ISchemaValueReference extends ISchemaValueBase {
   type: 'reference';
-  collection: any; // TODO
+  collection: () => any; // TODO
 }
 
 export interface ISchemaValueString extends ISchemaValueBase {
@@ -87,7 +88,7 @@ export function sanitize(schemaValue: SchemaValue, data: any, _options?: ISchema
   const options = _options || {};
 
   switch (schemaValue.type) {
-    case 'array': {
+    case 'array':
       // return empty array if no data given but a value is required
       if (data === undefined) {
         return schemaValue.required ? [] : undefined;
@@ -114,7 +115,6 @@ export function sanitize(schemaValue: SchemaValue, data: any, _options?: ISchema
         // return sanitized elements
         return data.map(v => sanitize(schemaValue.definition, v, options));
       }
-    }
 
     case 'model':
       if (data instanceof schemaValue.model) {
@@ -142,8 +142,17 @@ export function sanitize(schemaValue: SchemaValue, data: any, _options?: ISchema
       // sanitize object
       return setObjectSanitized(schemaValue.definition, {}, data, options);
 
-    // case 'reference':
-    //   return
+    case 'reference':
+      if (data === undefined) {
+        return undefined;
+      }
+
+      // valid data?
+      if (!(data instanceof schemaValue.collection().model) && !isString(data)) {
+        throw new Error('not an instance or an id');
+      }
+
+      return data;
 
     case 'boolean':
     case 'date':
@@ -178,7 +187,7 @@ export function sanitize(schemaValue: SchemaValue, data: any, _options?: ISchema
     }
 
     default:
-      throw new Error(`type ${schemaValue.type} is unknown`);
+      throw new Error(`type ${(schemaValue as ISchemaValueBase).type} is unknown`);
   }
 }
 
@@ -214,7 +223,7 @@ export interface ISchemaToObjectOptions {
   unpopulate?: boolean;
 }
 
-export function toObjectValue(schemaValue: SchemaValue, value, options?: ISchemaToObjectOptions) {
+export function toObjectValue(schemaValue: SchemaValue, value, options: ISchemaToObjectOptions = {}) {
   if (value === undefined) {
     return undefined;
   }
@@ -229,8 +238,21 @@ export function toObjectValue(schemaValue: SchemaValue, value, options?: ISchema
     case 'object':
       return toObject(schemaValue.definition, value, options);
 
-    // case 'reference':
-    //   return
+    case 'reference':
+      const collection = schemaValue.collection();
+
+      // is value an instance (-> populated)?
+      if (value instanceof collection.model) {
+        // do we only want the id?
+        if (options.unpopulate) {
+          return value[collection.modelIdField];
+        }
+
+        return value.toObject();
+      }
+
+      // value is an id
+      return value;
 
     case 'boolean':
     case 'date':
@@ -239,7 +261,7 @@ export function toObjectValue(schemaValue: SchemaValue, value, options?: ISchema
       return value;
 
     default:
-      throw new Error(`type ${schemaValue.type} is unknown`);
+      throw new Error(`type ${(schemaValue as ISchemaValueBase).type} is unknown`);
   }
 }
 
