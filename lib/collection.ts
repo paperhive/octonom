@@ -7,7 +7,7 @@ export interface ICollectionOptions {
 }
 
 export abstract class Collection<T extends object, TModel extends Model<T>> {
-  protected modelIdField: string;
+  public readonly modelIdField: string;
 
   constructor(
     protected model: new (data: any) => TModel,
