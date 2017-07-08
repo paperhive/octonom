@@ -1,6 +1,7 @@
 import { difference, forEach, isArray, isBoolean, isDate, isFunction, isNumber, isString } from 'lodash';
 
 import { Model } from './model';
+import { ModelArray } from './model-array';
 
 export interface ISchemaValueBase {
   type: string;
@@ -97,8 +98,22 @@ export function sanitize(schemaValue: SchemaValue, data: any, _options?: ISchema
         throw new Error('data is not an array');
       }
 
-      // return sanitized elements
-      return data.map(v => sanitize(schemaValue.definition, v, options));
+      if (schemaValue.definition.type === 'model') {
+        // is the provided data already a ModelArray?
+        if (data instanceof ModelArray) {
+          // does the ModelArray's model match the definition?
+          if (data.model !== schemaValue.definition.model) {
+            throw new Error('ModelArray model mismatch');
+          }
+          return data;
+        }
+
+        // create new ModelArray instance
+        return new ModelArray(schemaValue.definition.model, data);
+      } else {
+        // return sanitized elements
+        return data.map(v => sanitize(schemaValue.definition, v, options));
+      }
     }
 
     case 'model':

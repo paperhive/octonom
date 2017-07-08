@@ -45,12 +45,15 @@ export class PersonModel extends Model<IPerson> {
 
 export interface IGroup {
   id: string;
-  members: IPerson[];
+  members: Array<Partial<IPerson> | PersonModel>;
 }
 
 export class GroupModel extends Model<IGroup> {
+  @Model.PropertySchema({type: 'string', default: generateId})
+  public id: string;
+
   @Model.PropertySchema({type: 'array', definition: {type: 'model', model: PersonModel}})
-  public members: ModelArray<PersonModel>;
+  public members: ModelArray<PersonModel> | Array<Partial<IPerson> | PersonModel>;
 }
 
 export interface IDiscussion {

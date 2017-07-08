@@ -2,7 +2,7 @@ import { ISchemaValueArray } from './schema';
 
 export class ModelArray<TModel> extends Array<TModel> {
   constructor(
-    protected model: new (data: any) => TModel,
+    public readonly model: new (data: any) => TModel,
     data: Array<TModel | object> = [],
   ) {
     super();
