@@ -14,7 +14,7 @@ describe('MongoCollection', () => {
   let catCollection: CatCollection;
 
   beforeEach(async () => {
-    db = await MongoClient.connect('mongodb://localhost:27017/paperhive-dev');
+    db = await MongoClient.connect('mongodb://localhost:27017/octonom');
     catCollection = new CatCollection('cats', CatModel, {modelIdField: 'id'});
     await catCollection.init(db);
   });
