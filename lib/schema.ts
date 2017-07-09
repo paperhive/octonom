@@ -7,7 +7,6 @@ import { ModelArray } from './model-array';
 export interface ISchemaValueBase {
   type: string;
   required?: boolean;
-  dbKey?: string;
 }
 
 export interface ISchemaValueArray extends ISchemaValueBase {
