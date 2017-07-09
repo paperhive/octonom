@@ -1,3 +1,4 @@
+import { ArrayCollection } from './collection.data';
 import { Model } from './model';
 import { ModelArray } from './model-array';
 import { generateId } from './utils';
@@ -43,6 +44,8 @@ export class PersonModel extends Model<IPerson> {
   public account?: PersonAccountModel | IPersonAccount;
 }
 
+export const peopleCollection = new ArrayCollection<IPerson, PersonModel>(PersonModel);
+
 export interface IGroup {
   id: string;
   members: Array<Partial<IPerson> | PersonModel>;
@@ -66,7 +69,7 @@ export class DiscussionModel extends Model<IDiscussion> {
   @Model.PropertySchema({type: 'string', default: generateId})
   public id: string;
 
-  @Model.PropertySchema({type: 'reference', collection: undefined}) // TODO
+  @Model.PropertySchema({type: 'reference', collection: () => peopleCollection})
   public author: string | PersonModel;
 
   @Model.PropertySchema({type: 'string'})

@@ -1,5 +1,6 @@
 import { ModelArray } from './model-array';
-import { CatModel, DiscussionModel, GroupModel, PersonAccountModel, PersonModel } from './model.data' ;
+import { CatModel, DiscussionModel, GroupModel,
+  peopleCollection, PersonAccountModel, PersonModel } from './model.data' ;
 
 describe('Model', () => {
   describe('simple (CatModel)', () => {
@@ -181,29 +182,91 @@ describe('Model', () => {
   });
 
   describe('reference (PersonModel in DiscussionModel', () => {
+    const alice = new PersonModel({id: '42', name: 'Alice'});
+
+    beforeEach(() => {
+      peopleCollection.clear();
+      peopleCollection.insert(alice);
+    });
+
     describe('constructor', () => {
-      it('should create a discussion with a raw person object');
-      it('should create a discussion with a person instance');
+      it('should create a discussion with an id', () => {
+        const discussion = new DiscussionModel({author: '42'});
+        expect(discussion.author).to.equal('42');
+      });
+
+      it('should create a discussion with a person instance', () => {
+        const discussion = new DiscussionModel({author: alice});
+        expect(discussion.author).to.equal(alice);
+      });
     });
 
     describe('set()', () => {
-      it('should set a discussion with a raw person object');
-      it('should set a discussion with a person instance');
+      it('should set a discussion with an id', () => {
+        const discussion = new DiscussionModel();
+        discussion.set({author: '42'});
+        expect(discussion.author).to.equal('42');
+      });
+
+      it('should set a discussion with a person instance', () => {
+        const discussion = new DiscussionModel();
+        discussion.set({author: alice});
+        expect(discussion.author).to.equal(alice);
+      });
     });
 
     describe('property setter', () => {
-      it('should set a discussion with a raw person object');
-      it('should set a discussion with a person instance');
+      it('should set a discussion with an id', () => {
+        const discussion = new DiscussionModel();
+        discussion.author = '42';
+        expect(discussion.author).to.equal('42');
+      });
+
+      it('should set a discussion with a person instance', () => {
+        const discussion = new DiscussionModel();
+        discussion.author = alice;
+        expect(discussion.author).to.equal(alice);
+      });
     });
 
     describe('populate()', () => {
-      it('should populate a person');
+      it('should throw if no path is given or if path is invalid', async () => {
+        const discussion = new DiscussionModel();
+        await expect(discussion.populate()).to.be.rejectedWith('no path given');
+        await expect(discussion.populate([])).to.be.rejectedWith('path is empty');
+        await expect(discussion.populate('non-existent')).to.be.rejectedWith('field non-existent unknown in schema');
+      });
+
+      it('should throw if id does not exist', async () => {
+        const discussion = new DiscussionModel({author: 'non-existent'});
+        await expect(discussion.populate('author')).to.be.rejectedWith('id non-existent not found');
+      });
+
+      it('should populate an id with an instance', async () => {
+        const discussion = new DiscussionModel({author: '42'});
+        await discussion.populate('author');
+        expect(discussion.author).to.be.instanceof(PersonModel);
+        expect((discussion.author as PersonModel).toObject()).to.eql({id: '42', name: 'Alice'});
+      });
+
+      it('should populate multiple fields');
     });
 
     describe('toObject()', () => {
-      it('should return the id of an unpopulated reference');
-      it('should run toObject() recursively on a populated reference with {unpopulate: false}');
-      it('should return the id of a populated reference with {unpopulate: true}');
+      it('should return the id of an unpopulated reference', () => {
+        const discussion = new DiscussionModel({author: '42'});
+        expect(discussion.toObject()).have.property('author', '42');
+      });
+
+      it('should run toObject() recursively on a populated reference with {unpopulate: false}', () => {
+        const discussion = new DiscussionModel({author: alice});
+        expect(discussion.toObject()).have.property('author').that.eql({id: '42', name: 'Alice'});
+      });
+
+      it('should return the id of a populated reference with {unpopulate: true}', () => {
+        const discussion = new DiscussionModel({author: alice});
+        expect(discussion.toObject({unpopulate: true})).have.property('author', '42');
+      });
     });
   });
 
