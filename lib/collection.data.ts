@@ -10,6 +10,10 @@ export class ArrayCollection<T extends object, TModel extends Model<T>> extends 
   // note: only p
   public array: object[] = [];
 
+  public clear() {
+    this.array.splice(0, this.array.length);
+  }
+
   public insert(model: TModel) {
     const doc = find(this.array, {[this.modelIdField]: model[this.modelIdField]});
     if (doc) {
