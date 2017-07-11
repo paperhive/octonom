@@ -1,6 +1,8 @@
+import { Model } from './model';
 import { ModelArray } from './model-array';
-import { CatModel, DiscussionModel, GroupModel,
-  peopleCollection, PersonAccountModel, PersonModel } from './model.data' ;
+import { CatModel, DiscussionModel, IPerson,
+  peopleCollection, PersonAccountModel, PersonModel } from './model.data';
+import { generateId } from './utils';
 
 describe('Model', () => {
   describe('simple (CatModel)', () => {
@@ -107,7 +109,20 @@ describe('Model', () => {
     });
   });
 
-  describe('nested array (ModelArray<PersonModel> in GroupModel)', () => {
+  describe('model array', () => {
+    interface IGroup {
+      id: string;
+      members: Array<Partial<IPerson> | PersonModel>;
+    }
+
+    class GroupModel extends Model<IGroup> {
+      @Model.PropertySchema({type: 'string', default: generateId})
+      public id: string;
+
+      @Model.PropertySchema({type: 'array', definition: {type: 'model', model: PersonModel}})
+      public members: ModelArray<PersonModel> | Array<Partial<IPerson> | PersonModel>;
+    }
+
     describe('constructor', () => {
       it('should create a group with a raw array with mixed raw person object and person instance', () => {
         const person = new PersonModel({name: 'Bob'});
@@ -181,12 +196,14 @@ describe('Model', () => {
     });
   });
 
-  describe('reference (PersonModel in DiscussionModel', () => {
+  describe('reference (author/PersonModel in DiscussionModel', () => {
     const alice = new PersonModel({id: '42', name: 'Alice'});
+    const bob = new PersonModel({id: '23', name: 'Bob'});
 
     beforeEach(() => {
       peopleCollection.clear();
       peopleCollection.insert(alice);
+      peopleCollection.insert(bob);
     });
 
     describe('constructor', () => {
@@ -270,9 +287,24 @@ describe('Model', () => {
     });
   });
 
-  describe('reference array (PersonModel in DiscussionModel)', () => {
+  describe('reference array', () => {
+    interface IGroup {
+      id: string;
+      members: Array<Partial<IPerson> | PersonModel>;
+    }
+
+    class GroupModel extends Model<IGroup> {
+      @Model.PropertySchema({type: 'string', default: generateId})
+      public id: string;
+
+      @Model.PropertySchema({type: 'array', definition: {type: 'reference', collection: () => peopleCollection}})
+      public members: ModelArray<PersonModel> | Array<Partial<IPerson> | PersonModel>;
+    }
+
     describe('constructor', () => {
-      it('should create a discussion with a raw array with mixed raw person object and person instance');
+      it('should create a discussion with a raw array with mixed raw person object and person instance', () => {
+        // TODO
+      });
       it('should create a discussion with a model array with a person instance');
     });
 

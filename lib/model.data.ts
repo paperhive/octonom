@@ -46,19 +46,6 @@ export class PersonModel extends Model<IPerson> {
 
 export const peopleCollection = new ArrayCollection<IPerson, PersonModel>(PersonModel);
 
-export interface IGroup {
-  id: string;
-  members: Array<Partial<IPerson> | PersonModel>;
-}
-
-export class GroupModel extends Model<IGroup> {
-  @Model.PropertySchema({type: 'string', default: generateId})
-  public id: string;
-
-  @Model.PropertySchema({type: 'array', definition: {type: 'model', model: PersonModel}})
-  public members: ModelArray<PersonModel> | Array<Partial<IPerson> | PersonModel>;
-}
-
 export interface IDiscussion {
   id: string;
   author: string | IPerson;
