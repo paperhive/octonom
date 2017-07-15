@@ -48,7 +48,7 @@ export class MongoCollection<T extends object, TModel extends Model<T>> extends 
     const idInstanceMap: {[k: string]: TModel} = {};
     // note: ids that could not be found won't be present in the docs result array
     docs.forEach(doc => idInstanceMap[doc._id] = this.fromDb(doc));
-    return new ModelArray<TModel>(this.model, ids.map(id => idInstanceMap[id]));
+    return new ModelArray<T, TModel>(this.model, ids.map(id => idInstanceMap[id]));
   }
 
   public async findOne(query: object, options?: FindOneOptions) {

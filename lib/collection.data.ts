@@ -34,6 +34,6 @@ export class ArrayCollection<T extends object, TModel extends Model<T>> extends 
 
   public async findByIds(ids: string[]) {
     const instances = await Promise.all(ids.map(id => this.findById(id)));
-    return new ModelArray<TModel>(this.model, instances);
+    return new ModelArray<T, TModel>(this.model, instances);
   }
 }

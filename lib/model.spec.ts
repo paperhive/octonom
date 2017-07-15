@@ -112,7 +112,7 @@ describe('Model', () => {
   describe('model array', () => {
     interface IGroup {
       id: string;
-      members: Array<Partial<IPerson> | PersonModel>;
+      members: ModelArray<IPerson, PersonModel> | Array<Partial<IPerson> | PersonModel>;
     }
 
     class GroupModel extends Model<IGroup> {
@@ -120,7 +120,7 @@ describe('Model', () => {
       public id: string;
 
       @Model.PropertySchema({type: 'array', definition: {type: 'model', model: PersonModel}})
-      public members: ModelArray<PersonModel> | Array<Partial<IPerson> | PersonModel>;
+      public members: ModelArray<IPerson, PersonModel> | Array<Partial<IPerson> | PersonModel>;
     }
 
     describe('constructor', () => {
@@ -298,7 +298,7 @@ describe('Model', () => {
       public id: string;
 
       @Model.PropertySchema({type: 'array', definition: {type: 'reference', collection: () => peopleCollection}})
-      public members: ModelArray<PersonModel> | Array<Partial<IPerson> | PersonModel>;
+      public members: ModelArray<IPerson, PersonModel> | Array<Partial<IPerson> | PersonModel>;
     }
 
     describe('constructor', () => {
