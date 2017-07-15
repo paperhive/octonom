@@ -1,25 +1,35 @@
 import { ISchemaValueArray } from './schema';
 
-export class ModelArray<TModel> extends Array<TModel> {
+export class ModelArray<T, TModel> extends Array<TModel> {
   constructor(
     public readonly model: new (data: any) => TModel,
-    data: Array<TModel | object> = [],
+    data: Array<TModel | T> = [],
   ) {
     super();
     data.forEach(element => this.push(element));
+    return new Proxy(this, {
+      set: (target, key, value, receiver) => {
+        if (typeof key === 'number' || typeof key === 'string' && /^\d$/.test(key)) {
+          target[key] = this.toModel(value);
+        } else {
+          target[key] = value;
+        }
+        return true;
+      },
+    });
   }
 
-  public push(element: TModel | object): number {
+  public toModel(element: TModel | Partial<T>) {
     if (element === undefined) {
-      return super.push(undefined);
+      return undefined;
     }
 
-    // do we need to create an instance?
-    const instance = element instanceof this.model
+    return element instanceof this.model
       ? element as TModel
       : new this.model(element);
-    return super.push(instance);
   }
 
-  // TODO: override setter for index
+  public push(element: TModel | Partial<T>) {
+    return super.push(this.toModel(element));
+  }
 }

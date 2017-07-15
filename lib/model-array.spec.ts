@@ -1,12 +1,12 @@
 import { ModelArray } from './model-array';
-import { CatModel } from './model.data';
+import { CatModel, ICat } from './model.data';
 
 describe('ModelArray', () => {
-  let array: ModelArray<CatModel>;
+  let array: ModelArray<ICat, CatModel>;
   const catObj = {id: '42', name: 'Yllim'};
   const cat = new CatModel(catObj);
 
-  beforeEach(() => array = new ModelArray<CatModel>(CatModel));
+  beforeEach(() => array = new ModelArray<ICat, CatModel>(CatModel));
 
   describe('constructor', () => {
     it('should create an empty array', () => {
@@ -14,10 +14,24 @@ describe('ModelArray', () => {
     });
 
     it('should create an initialized array with raw objects', () => {
-      const initializedArray = new ModelArray<CatModel>(CatModel, [catObj]);
+      const initializedArray = new ModelArray<ICat, CatModel>(CatModel, [catObj]);
       expect(initializedArray).to.have.length(1);
       expect(initializedArray[0]).to.be.an.instanceOf(CatModel);
       expect(initializedArray[0].toObject()).to.eql(catObj);
+    });
+  });
+
+  describe('index setter', () => {
+    it('should set a model instance', () => {
+      array[0] = cat;
+      expect(array).to.have.length(1);
+      expect(array[0]).to.equal(cat);
+    });
+
+    it('should set a model instance', () => {
+      array[0] = catObj as any; // TODO: remove any!
+      expect(array).to.have.length(1);
+      expect(array[0].toObject()).to.eql(catObj);
     });
   });
 
