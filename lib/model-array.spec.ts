@@ -21,6 +21,25 @@ describe('ModelArray', () => {
     });
   });
 
+  describe('fill()', () => {
+    it('should set a model instance', () => {
+      array.length = 3;
+      array.fill(cat, 0, 3);
+      expect(array).to.have.length(3);
+      array.forEach(el => expect(el).to.equal(cat));
+    });
+
+    it('should create an instance if a raw object is provided', () => {
+      array.length = 3;
+      array.fill(catObj, 0, 3);
+      expect(array).to.have.length(3);
+      array.forEach(el => {
+        expect(el).to.be.instanceOf(CatModel);
+        expect(el.toObject()).to.eql(catObj);
+      });
+    });
+  });
+
   describe('index setter', () => {
     it('should set a model instance', () => {
       array[0] = cat;
@@ -28,7 +47,7 @@ describe('ModelArray', () => {
       expect(array[0]).to.equal(cat);
     });
 
-    it('should set a raw object', () => {
+    it('should create an instance if a raw object is provided', () => {
       // note: this creates an instance as expected but we use 'any'
       //       so the typescript compiler doesn't complain
       array[0] = catObj as any;
@@ -56,6 +75,40 @@ describe('ModelArray', () => {
       array.push(undefined);
       expect(array).to.have.length(1);
       expect(array[0]).to.equal(undefined);
+    });
+  });
+
+  describe('splice()', () => {
+    it('should set a model instance', () => {
+      array.length = 3;
+      array.splice(1, 2, cat);
+      expect(array).to.have.length(2);
+      expect(array[1]).to.equal(cat);
+    });
+
+    it('should create an instance if a raw object is provided', () => {
+      array.length = 3;
+      array.splice(1, 2, catObj);
+      expect(array).to.have.length(2);
+      expect(array[1]).to.be.instanceOf(CatModel);
+      expect(array[1].toObject()).to.eql(catObj);
+    });
+  });
+
+  describe('unshift()', () => {
+    it('should set a model instance', () => {
+      array.length = 3;
+      array.unshift(cat);
+      expect(array).to.have.length(4);
+      expect(array[0]).to.equal(cat);
+    });
+
+    it('should create an instance if a raw object is provided', () => {
+      array.length = 3;
+      array.unshift(catObj);
+      expect(array).to.have.length(4);
+      expect(array[0]).to.be.instanceOf(CatModel);
+      expect(array[0].toObject()).to.eql(catObj);
     });
   });
 });
