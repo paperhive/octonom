@@ -28,9 +28,12 @@ describe('ModelArray', () => {
       expect(array[0]).to.equal(cat);
     });
 
-    it('should set a model instance', () => {
-      array[0] = catObj as any; // TODO: remove any!
+    it('should set a raw object', () => {
+      // note: this creates an instance as expected but we use 'any'
+      //       so the typescript compiler doesn't complain
+      array[0] = catObj as any;
       expect(array).to.have.length(1);
+      expect(array[0]).to.be.instanceOf(CatModel);
       expect(array[0].toObject()).to.eql(catObj);
     });
   });
