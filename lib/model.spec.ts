@@ -1,3 +1,5 @@
+import { spy } from 'sinon';
+
 import { Model } from './model';
 import { ModelArray } from './model-array';
 import { CatModel, DiscussionModel, IPerson,
@@ -194,6 +196,16 @@ describe('Model', () => {
         expect(() => group.members = cats).to.throw('ModelArray model mismatch');
       });
     });
+
+    describe('toObject()', () => {
+      it('should run toObject on array elements', async () => {
+        const person = new PersonModel({id: '42', name: 'Bob'});
+        const toObject = spy(person, 'toObject');
+        const group = new GroupModel({id: '1337', members: [person]});
+        expect(group.toObject({unpopulate: true})).to.eql({id: '1337', members: [{id: '42', name: 'Bob'}]});
+        expect(toObject.calledWith({unpopulate: true}));
+      });
+    });
   });
 
   describe('reference (author/PersonModel in DiscussionModel', () => {
@@ -316,6 +328,10 @@ describe('Model', () => {
     describe('property setter', () => {
       it('should set a raw array with mixed raw person object and person instance');
       it('should set a model array with a person instance');
+    });
+
+    describe('toObject()', () => {
+      // TODO
     });
   });
 });
