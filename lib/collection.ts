@@ -10,7 +10,7 @@ export abstract class Collection<T extends object, TModel extends Model<T>> {
   public readonly modelIdField: string;
 
   constructor(
-    protected model: new (data: any) => TModel,
+    public readonly model: new (data: any) => TModel,
     protected options: ICollectionOptions = {},
   ) {
     this.modelIdField = options.modelIdField || 'id';
