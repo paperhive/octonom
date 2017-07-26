@@ -18,7 +18,13 @@ export abstract class Collection<T extends object, TModel extends Model<T>> {
 
   public abstract async findById(id: string): Promise<TModel>;
 
-  public abstract async findByIds(ids: string[]): Promise<ModelArray<T, TModel>>;
+  // trivial implementation, should be implemented efficiently for specific database
+  public async findByIds(ids: string[]): Promise<ModelArray<T, TModel>> {
+    return new ModelArray<T, TModel>(
+      this.model,
+      await Promise.all(ids.map(id => this.findById(id))),
+    );
+  }
 
   public toDb(model: TModel): object {
     return model.toObject({unpopulate: true});
