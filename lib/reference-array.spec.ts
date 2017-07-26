@@ -66,8 +66,19 @@ describe('ReferenceArray', () => {
   });
 
   describe('populate()', () => {
-    it.skip('should populate the array', () => {
-      // TODO
+    it('should populate an existing ids with instances', async () => {
+      array.push(cat);
+      array.push(cat.id);
+      await array.populate();
+      expect(array[0]).to.equal(cat);
+      expect(array[1]).to.be.instanceof(CatModel);
+      expect((array[1] as CatModel).toObject()).to.eql(catObj);
+    });
+
+    it('should populate a non-existing id with undefined', async () => {
+      array.push('non-existing');
+      await array.populate();
+      expect(array[0]).to.equal(undefined);
     });
   });
 
