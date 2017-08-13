@@ -3,7 +3,7 @@ import { Model } from './model';
 
 export class ReferenceArray<T extends object, TModel extends Model<T>> extends Array<TModel | string> {
   constructor(
-    protected collection: Collection<T, TModel>,
+    public readonly collection: Collection<T, TModel>,
     data: Array<TModel | string> = [],
   ) {
     super();

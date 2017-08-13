@@ -4,6 +4,7 @@ import { Model } from './model';
 import { ModelArray } from './model-array';
 import { CatModel, DiscussionModel, IPerson,
   peopleCollection, PersonAccountModel, PersonModel } from './model.data';
+import { ReferenceArray } from './reference-array';
 import { generateId } from './utils';
 
 describe('Model', () => {
@@ -302,7 +303,7 @@ describe('Model', () => {
   describe('reference array', () => {
     interface IGroup {
       id: string;
-      members: Array<Partial<IPerson> | PersonModel>;
+      members: ReferenceArray<IPerson, PersonModel>;
     }
 
     class GroupModel extends Model<IGroup> {
@@ -310,14 +311,25 @@ describe('Model', () => {
       public id: string;
 
       @Model.PropertySchema({type: 'array', definition: {type: 'reference', collection: () => peopleCollection}})
-      public members: ModelArray<IPerson, PersonModel> | Array<Partial<IPerson> | PersonModel>;
+      public members: ReferenceArray<IPerson, PersonModel>;
     }
 
+    const alice = new PersonModel({id: '42', name: 'Alice'});
+    const bob = new PersonModel({id: '23', name: 'Bob'});
+
+    beforeEach(() => {
+      peopleCollection.clear();
+      peopleCollection.insert(alice);
+      peopleCollection.insert(bob);
+    });
+
     describe('constructor', () => {
-      it('should create a discussion with a raw array with mixed raw person object and person instance', () => {
-        // TODO
+      it('should create a group with a ReferenceArray', () => {
+        const members = new ReferenceArray(peopleCollection, [alice, bob.id]);
+        const group = new GroupModel({id: 'groupA', members});
+        expect(group.members).to.equal(members);
       });
-      it('should create a discussion with a model array with a person instance');
+      it('should create a group with a model array with a person instance');
     });
 
     describe('set()', () => {
