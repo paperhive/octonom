@@ -7,7 +7,6 @@ import { ModelArray } from './model-array';
 // simple collection with an in-memory array
 // note: we can't test Collection directly since it's abstract
 export class ArrayCollection<T extends object, TModel extends Model<T>> extends Collection<T, TModel> {
-  // note: only p
   public array: object[] = [];
 
   public clear() {
