@@ -25,9 +25,17 @@ export class ReferenceArray<T extends object, TModel extends Model<T>> extends A
     // fetch models
     const models = await this.collection.findByIds(fetchModels.map(fetchModel => fetchModel.id));
 
+    fetchModels.forEach((fetchModel, index) => {
+      if (!models[index]) {
+        throw new Error(`id ${fetchModel.id} not found`);
+      }
+    });
+
     // sort models into array
     fetchModels.forEach((fetchModel, index) => {
       this[fetchModel.index] = models[index];
     });
   }
 }
+
+export type ReferenceArrayProperty<I extends object, T extends Model<I>> = ReferenceArray<I, T> | Array<string | T>;

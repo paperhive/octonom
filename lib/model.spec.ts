@@ -4,7 +4,7 @@ import { Model } from './model';
 import { ModelArray } from './model-array';
 import { CatModel, DiscussionModel, IPerson,
   peopleCollection, PersonAccountModel, PersonModel } from './model.data';
-import { ReferenceArray } from './reference-array';
+import { ReferenceArray, ReferenceArrayProperty } from './reference-array';
 import { generateId } from './utils';
 
 describe('Model', () => {
@@ -290,7 +290,7 @@ describe('Model', () => {
 
       it('should run toObject() recursively on a populated reference with {unpopulate: false}', () => {
         const discussion = new DiscussionModel({author: alice});
-        expect(discussion.toObject()).have.property('author').that.eql({id: '42', name: 'Alice'});
+        expect(discussion.toObject({unpopulate: false})).have.property('author').that.eql({id: '42', name: 'Alice'});
       });
 
       it('should return the id of a populated reference with {unpopulate: true}', () => {
@@ -303,7 +303,7 @@ describe('Model', () => {
   describe('reference array', () => {
     interface IGroup {
       id: string;
-      members: ReferenceArray<IPerson, PersonModel>;
+      members: ReferenceArrayProperty<IPerson, PersonModel>;
     }
 
     class GroupModel extends Model<IGroup> {
@@ -311,7 +311,7 @@ describe('Model', () => {
       public id: string;
 
       @Model.PropertySchema({type: 'array', definition: {type: 'reference', collection: () => peopleCollection}})
-      public members: ReferenceArray<IPerson, PersonModel>;
+      public members: ReferenceArrayProperty<IPerson, PersonModel>;
     }
 
     const alice = new PersonModel({id: '42', name: 'Alice'});
@@ -326,24 +326,93 @@ describe('Model', () => {
     describe('constructor', () => {
       it('should create a group with a ReferenceArray', () => {
         const members = new ReferenceArray(peopleCollection, [alice, bob.id]);
-        const group = new GroupModel({id: 'groupA', members});
+        const group = new GroupModel({id: '1337', members});
         expect(group.members).to.equal(members);
       });
-      it('should create a group with a model array with a person instance');
+
+      it('should create a group with an array with id and person instance', () => {
+        const members = [alice.id, bob];
+        const group = new GroupModel({id: '1337', members});
+        expect(group.members).to.be.instanceOf(ReferenceArray).and.to.eql(members);
+      });
     });
 
     describe('set()', () => {
-      it('should set a raw array with mixed raw person object and person instance');
-      it('should set a model array with a person instance');
+      it('should set a ReferenceArray', () => {
+        const group = new GroupModel({id: '1337'});
+        const members = new ReferenceArray(peopleCollection, [alice, bob.id]);
+        group.set({members});
+        expect(group.members).to.equal(members);
+      });
+
+      it('should set an array with id and person instance', () => {
+        const group = new GroupModel({id: '1337'});
+        const members = [alice.id, bob];
+        group.set({members});
+        expect(group.members).to.be.instanceOf(ReferenceArray).and.to.eql(members);
+      });
     });
 
     describe('property setter', () => {
-      it('should set a raw array with mixed raw person object and person instance');
-      it('should set a model array with a person instance');
+      it('should set a ReferenceArray', () => {
+        const group = new GroupModel({id: '1337'});
+        const members = new ReferenceArray(peopleCollection, [alice, bob.id]);
+        group.members = members;
+        expect(group.members).to.equal(members);
+      });
+
+      it('should set an array with id and person instance', () => {
+        const group = new GroupModel({id: '1337'});
+        const members = [alice.id, bob];
+        group.members = members;
+        expect(group.members).to.be.instanceOf(ReferenceArray).and.to.eql(members);
+      });
+    });
+
+    describe('populate()', () => {
+      it('should throw if no path is given or if path is invalid', async () => {
+        const discussion = new DiscussionModel();
+        await expect(discussion.populate()).to.be.rejectedWith('no path given');
+        await expect(discussion.populate([])).to.be.rejectedWith('path is empty');
+        await expect(discussion.populate('non-existent')).to.be.rejectedWith('field non-existent unknown in schema');
+      });
+
+      it('should throw if id does not exist', async () => {
+        const discussion = new DiscussionModel({author: 'non-existent'});
+        await expect(discussion.populate('author')).to.be.rejectedWith('id non-existent not found');
+      });
+
+      it('should populate an id with an instance', async () => {
+        const discussion = new DiscussionModel({author: '42'});
+        await discussion.populate('author');
+        expect(discussion.author).to.be.instanceof(PersonModel);
+        expect((discussion.author as PersonModel).toObject()).to.eql({id: '42', name: 'Alice'});
+      });
+
+      it('should populate multiple fields');
     });
 
     describe('toObject()', () => {
-      // TODO
+      it('should return an object for instances and the id for an unpopulated reference', () => {
+        const members = new ReferenceArray(peopleCollection, [alice, bob.id]);
+        const group = new GroupModel({id: '1337', members});
+        const groupObj = group.toObject();
+        expect(groupObj.members).to.eql([alice.toObject(), bob.id]);
+      });
+
+      it('should run toObject() recursively on populated references with {unpopulate: false}', () => {
+        const members = new ReferenceArray(peopleCollection, [alice, bob.id]);
+        const group = new GroupModel({id: '1337', members});
+        const groupObj = group.toObject({unpopulate: false});
+        expect(groupObj.members).to.eql([alice.toObject(), bob.id]);
+      });
+
+      it('should return the id of populated references with {unpopulate: true}', () => {
+        const members = new ReferenceArray(peopleCollection, [alice, bob.id]);
+        const group = new GroupModel({id: '1337', members});
+        const groupObj = group.toObject({unpopulate: true});
+        expect(groupObj.members).to.eql([alice.id, bob.id]);
+      });
     });
   });
 });

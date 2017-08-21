@@ -66,6 +66,11 @@ describe('ReferenceArray', () => {
   });
 
   describe('populate()', () => {
+    it('should throw if an id does not exist', async () => {
+      array.push('non-existing');
+      await expect(array.populate()).to.be.rejectedWith('id non-existing not found');
+    });
+
     it('should populate an existing ids with instances', async () => {
       array.push(cat);
       array.push(cat.id);
@@ -73,12 +78,6 @@ describe('ReferenceArray', () => {
       expect(array[0]).to.equal(cat);
       expect(array[1]).to.be.instanceof(CatModel);
       expect((array[1] as CatModel).toObject()).to.eql(catObj);
-    });
-
-    it('should populate a non-existing id with undefined', async () => {
-      array.push('non-existing');
-      await array.populate();
-      expect(array[0]).to.equal(undefined);
     });
   });
 
