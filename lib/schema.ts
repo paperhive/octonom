@@ -84,9 +84,9 @@ export interface ISchemaSanitizeOptions {
   replace?: boolean;
 }
 
-export type PopulateReference = IPopulationMap | true;
+export type PopulateReference = IPopulateMap | true;
 
-export interface IPopulationMap {
+export interface IPopulateMap {
   [k: string]: PopulateReference;
 }
 
@@ -172,11 +172,11 @@ export async function populateArray(arr: any[], elementSchema: SchemaValue, popu
 }
 
 // populate an object (modifies the object!)
-export async function populateObject(obj: object, schemaMap: SchemaMap, populationMap: IPopulationMap) {
+export async function populateObject(obj: object, schemaMap: SchemaMap, populateMap: IPopulateMap) {
   const populatedResults = {};
 
   // gather results for all keys
-  await Promise.all(Object.keys(populationMap).map(async key => {
+  await Promise.all(Object.keys(populateMap).map(async key => {
     // fail if key is unknown
     if (!schemaMap[key]) {
       throw new Error(`Key ${key} not found in schema`);
@@ -188,7 +188,7 @@ export async function populateObject(obj: object, schemaMap: SchemaMap, populati
     }
 
     // set in temp object
-    populatedResults[key] = await populateValue(obj[key], schemaMap[key], populationMap[key]);
+    populatedResults[key] = await populateValue(obj[key], schemaMap[key], populateMap[key]);
   }));
 
   // set in object

@@ -1,6 +1,6 @@
 import { clone, cloneDeep, defaults, difference, forEach, isArray, isString } from 'lodash';
 
-import { ISchemaSanitizeOptions, ISchemaToObjectOptions, populate, sanitize,
+import { IPopulateMap, ISchemaSanitizeOptions, ISchemaToObjectOptions, populateObject, sanitize,
          SchemaMap, SchemaValue, setObjectSanitized, toObject } from './schema';
 
 interface IModel {
@@ -53,16 +53,9 @@ export abstract class Model<T> {
     this.set(data || {}, {defaults: true, replace: true});
   }
 
-  public async populate(...paths: Array<string | string[]>) {
+  public async populate(populateMap: IPopulateMap) {
     const constructor = this.constructor as typeof Model;
-
-    if (paths.length === 0) {
-      throw new Error('no path given');
-    }
-
-    await Promise.all(paths.map(
-      path => populate(this, constructor._schema, isArray(path) ? path : [path]),
-    ));
+    return populateObject(this, constructor._schema, populateMap);
   }
 
   // TODO: find a way to merge this with setObjectSanitized, code is pretty redundant
