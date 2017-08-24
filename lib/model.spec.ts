@@ -262,19 +262,20 @@ describe('Model', () => {
     describe('populate()', () => {
       it('should throw if no path is given or if path is invalid', async () => {
         const discussion = new DiscussionModel();
-        await expect(discussion.populate()).to.be.rejectedWith('no path given');
-        await expect(discussion.populate([])).to.be.rejectedWith('path is empty');
-        await expect(discussion.populate('non-existent')).to.be.rejectedWith('field non-existent unknown in schema');
+        await expect(discussion.populate(undefined)).to.be.rejectedWith('no path given');
+        await expect(discussion.populate([] as any)).to.be.rejectedWith('path is empty');
+        await expect(discussion.populate({'non-existent': true}))
+          .to.be.rejectedWith('field non-existent unknown in schema');
       });
 
       it('should throw if id does not exist', async () => {
         const discussion = new DiscussionModel({author: 'non-existent'});
-        await expect(discussion.populate('author')).to.be.rejectedWith('id non-existent not found');
+        await expect(discussion.populate({author: true})).to.be.rejectedWith('id non-existent not found');
       });
 
       it('should populate an id with an instance', async () => {
         const discussion = new DiscussionModel({author: '42'});
-        await discussion.populate('author');
+        await discussion.populate({author: true});
         expect(discussion.author).to.be.instanceof(PersonModel);
         expect((discussion.author as PersonModel).toObject()).to.eql({id: '42', name: 'Alice'});
       });
@@ -371,22 +372,19 @@ describe('Model', () => {
 
     describe('populate()', () => {
       it('should throw if no path is given or if path is invalid', async () => {
-        const discussion = new DiscussionModel();
-        await expect(discussion.populate()).to.be.rejectedWith('no path given');
-        await expect(discussion.populate([])).to.be.rejectedWith('path is empty');
-        await expect(discussion.populate('non-existent')).to.be.rejectedWith('field non-existent unknown in schema');
+        // TODO
       });
 
       it('should throw if id does not exist', async () => {
         const discussion = new DiscussionModel({author: 'non-existent'});
-        await expect(discussion.populate('author')).to.be.rejectedWith('id non-existent not found');
+        await expect(discussion.populate({author: true})).to.be.rejectedWith('id non-existent not found');
       });
 
-      it('should populate an id with an instance', async () => {
-        const discussion = new DiscussionModel({author: '42'});
-        await discussion.populate('author');
-        expect(discussion.author).to.be.instanceof(PersonModel);
-        expect((discussion.author as PersonModel).toObject()).to.eql({id: '42', name: 'Alice'});
+      it('should populate ids with an instance', async () => {
+        const group = new GroupModel({id: '1337', members: [alice, bob.id]});
+        await group.populate({members: true});
+        expect(group.members).to.be.instanceOf(ReferenceArray).and.be.of.length(2);
+        expect(group.members[0]).to.equal(alice);
       });
 
       it('should populate multiple fields');

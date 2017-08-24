@@ -1,6 +1,7 @@
 import { clone, cloneDeep, defaults, difference, forEach, isArray, isString } from 'lodash';
 
-import { IPopulateMap, ISchemaSanitizeOptions, ISchemaToObjectOptions, populateObject, sanitize,
+import { IPopulateMap, populateObject } from './populate';
+import { ISchemaSanitizeOptions, ISchemaToObjectOptions, sanitize,
          SchemaMap, SchemaValue, setObjectSanitized, toObject } from './schema';
 
 interface IModel {

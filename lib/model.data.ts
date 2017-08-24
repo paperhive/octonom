@@ -64,3 +64,5 @@ export class DiscussionModel extends Model<IDiscussion> {
 
   // public participants: string[] | PersonModel[];
 }
+
+export const discussionCollection = new ArrayCollection<IDiscussion, DiscussionModel>(DiscussionModel);
