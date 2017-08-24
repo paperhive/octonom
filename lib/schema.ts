@@ -84,98 +84,115 @@ export interface ISchemaSanitizeOptions {
   replace?: boolean;
 }
 
-// populate an object
-export async function populate(obj: object, schemaMap: SchemaMap, path: string[]) {
-  if (path.length === 0) {
-    throw new Error('path is empty');
-  }
+export type PopulateReference = IPopulationMap | true;
 
-  const field = path[0];
+export interface IPopulationMap {
+  [k: string]: PopulateReference;
+}
 
-  const schemaValue = schemaMap[field];
-  if (!schemaValue) {
-    throw new Error(`field ${field} unknown in schema`);
-  }
+// return populated value (modifies value if possible)
+async function populateValue(value: any, schema: SchemaValue, populateReference: PopulateReference) {
+  switch (schema.type) {
+    case 'reference': {
+      const collection = schema.collection();
 
-  const value = obj[field];
+      // fetch if value isn't a model instance
+      const instance = value instanceof collection.model
+        ? value
+        : await collection.findById(value);
 
-  // final path element?
-  if (path.length === 1) {
-    // throw if not a reference
-    if (schemaValue.type !== 'reference') {
-      throw new Error(`field ${field} is not of type reference`);
-    }
-
-    const collection = schemaValue.collection();
-
-    // do nothing if value is undefined
-    if (value === undefined) {
-      return;
-    }
-
-    // already populated?
-    if (value instanceof collection.model) {
-      return;
-    }
-
-    // not an id?
-    if (!isString(value)) {
-      throw new Error(`field ${field} is not an instance and not an id`);
-    }
-
-    // find by id
-    const instance = await schemaValue.collection().findById(value);
-
-    // throw if not found
-    // reason: otherwise we'd replace the id with undefined and this may get persisted to the db
-    if (!instance) {
-      throw new Error(`id ${value} not found`);
-    }
-
-    // set instance
-    obj[field] = instance;
-  }
-
-  // path length > 1
-  const newPath = path.slice(1, path.length);
-  switch (schemaValue.type) {
-    case 'array':
-      if (value === undefined) {
-        return;
+      // nested populate?
+      if (populateReference !== true) {
+        await populateObject(instance, collection.model._schema, populateReference);
       }
-      // TODO
-      return;
 
-    case 'model':
-      if (value === undefined) {
-        return;
-      }
-      const instance = value as Model<any>; // TODO: replace any
-      await instance.populate(newPath);
-      return;
+      return instance;
+    }
 
     case 'object':
-      if (value === undefined) {
-        return;
+      if (populateReference === true) {
+        throw new Error(`An object cannot be populated with populateReference = true.`);
       }
-      await populate(value, schemaValue.definition, newPath);
-      return;
+      return populateObject(value, schema.definition, populateReference);
 
-    case 'reference':
-      const collection = schemaValue.collection();
-
-      // populate inside the populated instance
-      if (value instanceof collection.model) {
-        await value.populate(newPath);
-        return;
-      }
-
-      // do nothing if not populated
-      return;
+    case 'array':
+      return populateArray(value, schema.definition, populateReference);
 
     default:
-      throw new Error(`field ${field} of type ${schemaValue.type} cannot be populated`);
+      throw new Error(`Cannot populate type ${schema.type}`);
   }
+}
+
+// populate an array (modifies the array!)
+export async function populateArray(arr: any[], elementSchema: SchemaValue, populateReference: PopulateReference) {
+  // throw if this is not a nested population and this is not a reference
+  if (populateReference === true && elementSchema.type !== 'reference') {
+    throw new Error(`Refererence array expected but got ${elementSchema.type}`);
+  }
+
+  if (elementSchema.type === 'reference') {
+    const collection = elementSchema.collection();
+
+    const fetchModels = [];
+    arr.forEach((element, index) => {
+      // already populated?
+      if (element instanceof collection.model) {
+        return;
+      }
+
+      fetchModels.push({index, id: element});
+    });
+
+    // fetch models
+    const models = await collection.findByIds(fetchModels.map(fetchModel => fetchModel.id));
+
+    // throw if an id wasn't found
+    // reason: otherwise we'd replace the id with undefined and this may get persisted to the db
+    fetchModels.forEach((fetchModel, index) => {
+      if (!models[index]) {
+        throw new Error(`id ${fetchModel.id} not found`);
+      }
+    });
+
+    // sort models into array
+    fetchModels.forEach((fetchModel, index) => {
+      arr[fetchModel.index] = models[index];
+    });
+  }
+
+  // no nested population
+  if (populateReference === true) {
+    return;
+  }
+
+  // nested population: populate elements individually
+  return Promise.all(arr.map(async (value, index) => {
+    arr[index] = await populateValue(value, elementSchema, populateReference);
+  }));
+}
+
+// populate an object (modifies the object!)
+export async function populateObject(obj: object, schemaMap: SchemaMap, populationMap: IPopulationMap) {
+  const populatedResults = {};
+
+  // gather results for all keys
+  await Promise.all(Object.keys(populationMap).map(async key => {
+    // fail if key is unknown
+    if (!schemaMap[key]) {
+      throw new Error(`Key ${key} not found in schema`);
+    }
+
+    // ignore undefined properties
+    if (obj[key] === undefined) {
+      return;
+    }
+
+    // set in temp object
+    populatedResults[key] = await populateValue(obj[key], schemaMap[key], populationMap[key]);
+  }));
+
+  // set in object
+  Object.assign(obj, populatedResults);
 }
 
 export function sanitize(schemaValue: SchemaValue, data: any, _options?: ISchemaSanitizeOptions) {
