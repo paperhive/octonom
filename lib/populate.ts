@@ -10,7 +10,7 @@ export interface IPopulateMap {
 export async function populateArray(arr: any[], elementSchema: SchemaValue, populateReference: PopulateReference) {
   // throw if this is not a nested population and this is not a reference
   if (populateReference === true && elementSchema.type !== 'reference') {
-    throw new Error(`Refererence array expected but got ${elementSchema.type}`);
+    throw new Error(`Reference expected but got ${elementSchema.type}`);
   }
 
   if (elementSchema.type === 'reference') {
@@ -33,7 +33,7 @@ export async function populateArray(arr: any[], elementSchema: SchemaValue, popu
     // reason: otherwise we'd replace the id with undefined and this may get persisted to the db
     fetchModels.forEach((fetchModel, index) => {
       if (!models[index]) {
-        throw new Error(`id ${fetchModel.id} not found`);
+        throw new Error(`Id ${fetchModel.id} not found`);
       }
     });
 
@@ -64,7 +64,7 @@ export async function populateObject(obj: object, schemaMap: SchemaMap, populate
   await Promise.all(Object.keys(populateMap).map(async key => {
     // fail if key is unknown
     if (!schemaMap[key]) {
-      throw new Error(`Key ${key} not found in schema`);
+      throw new Error(`Key ${key} not found in schema.`);
     }
 
     // ignore undefined properties
@@ -92,6 +92,10 @@ export async function populateValue(value: any, schema: SchemaValue, populateRef
       const instance = value instanceof collection.model
         ? value
         : await collection.findById(value);
+
+      if (instance === undefined) {
+        throw new Error(`Id ${value} not found.`);
+      }
 
       // nested populate?
       if (populateReference !== true) {

@@ -25,9 +25,80 @@ describe('populate', () => {
   });
 
   describe('populateArray()', () => {
+    it('should throw if not nested and schema is not a reference', async () => {
+      await expect(populateArray(['42'], {type: 'string'}, true))
+        .to.be.rejectedWith('Reference expected but got string');
+    });
+
+    it('should throw if an id cannot be found', async () => {
+      await expect(populateArray(
+        ['42', 'non-existent'],
+        {type: 'reference', collection: () => peopleCollection},
+        true,
+      )).to.be.rejectedWith('Id non-existent not found');
+    });
+
+    it('should populate references without touching instances', async () => {
+      const result = await populateArray(
+        ['42', bob],
+        {type: 'reference', collection: () => peopleCollection},
+        true,
+      );
+      expect(result).to.be.an('array').and.have.length(2);
+      expect(result[0]).to.be.an.instanceof(PersonModel);
+      expect(result[0].toObject()).to.eql(alice.toObject());
+      expect(result[1]).to.equal(bob);
+    });
+
+    it('should populate nested references', async () => {
+      const result = await populateArray(
+        ['1337', bobDiscussion],
+        {type: 'reference', collection: () => discussionCollection},
+        {author: true},
+      );
+      expect(result).to.be.an('array').and.have.length(2);
+      expect(result[0]).to.be.an.instanceof(DiscussionModel);
+      expect(result[0].author).to.be.an.instanceof(PersonModel);
+      const aliceDiscussionObj = aliceDiscussion.toObject();
+      aliceDiscussionObj.author = alice.toObject();
+      expect(result[0].toObject()).to.eql(aliceDiscussionObj);
+      expect(result[1]).to.equal(bobDiscussion);
+      expect(result[1].author).to.be.an.instanceof(PersonModel);
+      const bobDiscussionObj = bobDiscussion.toObject();
+      bobDiscussionObj.author = bob.toObject();
+      expect(result[1].toObject()).to.eql(bobDiscussionObj);
+    });
   });
 
   describe('populateObject()', () => {
+    const objectSchemaMap: SchemaMap = {
+      foo: {type: 'reference', collection: () => peopleCollection},
+      bar: {type: 'reference', collection: () => peopleCollection},
+    };
+
+    it('should fail if a key is not in the schema', async () => {
+      await expect(populateObject({foo: '42', baz: '23'}, objectSchemaMap, {baz: true}))
+        .to.be.rejectedWith('Key baz not found in schema.');
+    });
+
+    it('should fail if an id cannot not found', async () => {
+      const obj = {foo: '42', bar: 'non-existent'};
+      await expect(populateObject(obj, objectSchemaMap, {foo: true, bar: true}))
+        .to.be.rejectedWith(`Id non-existent not found`);
+      expect(obj).to.eql({foo: '42', bar: 'non-existent'});
+    });
+
+    it('should not touch undefined properties', async () => {
+      const result = await populateObject({foo: '42'}, objectSchemaMap, {bar: true});
+      expect(result).to.eql({foo: '42'});
+    });
+
+    it('should populate an id', async () => {
+      const result = await populateObject({foo: '42', bar: '23'}, objectSchemaMap, {foo: true}) as any;
+      expect(result.foo).to.be.an.instanceof(PersonModel);
+      expect(result.foo.toObject()).to.eql(alice.toObject());
+      expect(result.bar).to.equal('23');
+    });
   });
 
   describe('populateValue()', () => {
@@ -39,6 +110,11 @@ describe('populate', () => {
     describe('type reference', () => {
       const personRefSchema: SchemaValue = {type: 'reference', collection: () => peopleCollection};
       const discussionRefSchema: SchemaValue = {type: 'reference', collection: () => discussionCollection};
+
+      it('should throw if the id cannot be found', async () => {
+        await expect(populateValue('non-existent', personRefSchema, true))
+          .to.be.rejectedWith('Id non-existent not found.');
+      });
 
       it('should return an instance if id is provided', async () => {
         const result = await populateValue('42', personRefSchema, true);
@@ -71,12 +147,12 @@ describe('populate', () => {
     });
 
     describe('type object', () => {
-      const objectSchema: SchemaValue ={
+      const objectSchema: SchemaValue = {
         type: 'object',
         definition: {
           foo: {type: 'reference', collection: () => peopleCollection},
           bar: {type: 'reference', collection: () => peopleCollection},
-        }
+        },
       };
 
       it('should throw if called without a populateMap', async () => {
@@ -85,7 +161,7 @@ describe('populate', () => {
       });
 
       it('should populate an object property', async () => {
-        const result = await populateValue({foo: '42', bar: '23'}, objectSchema, {foo: true})
+        const result = await populateValue({foo: '42', bar: '23'}, objectSchema, {foo: true});
         expect(result.foo).to.be.an.instanceof(PersonModel);
         expect(result.foo.toObject()).to.eql(alice.toObject());
         expect(result.bar).to.equal('23');
@@ -93,7 +169,7 @@ describe('populate', () => {
     });
 
     describe('type array', () => {
-      const arraySchema: SchemaValue ={
+      const arraySchema: SchemaValue = {
         type: 'array',
         definition: {type: 'reference', collection: () => peopleCollection},
       };
