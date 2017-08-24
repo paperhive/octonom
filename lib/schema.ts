@@ -3,7 +3,6 @@ import { difference, forEach, isArray, isBoolean, isDate, isFunction, isNumber, 
 import { Collection } from './collection';
 import { Model } from './model';
 import { ModelArray } from './model-array';
-import { ReferenceArray } from './reference-array';
 
 export interface ISchemaValueBase {
   type: string;
@@ -111,18 +110,6 @@ export function sanitize(schemaValue: SchemaValue, data: any, _options?: ISchema
 
         // create new ModelArray instance
         return new ModelArray(schemaValue.definition.model, data);
-      } else if (schemaValue.definition.type === 'reference') {
-        // is the provided data already a ReferenceArray?
-        if (data instanceof ReferenceArray) {
-          // does the ReferenceArray's collection match the definition?
-          if (data.collection !== schemaValue.definition.collection()) {
-            throw new Error('ReferenceArray collection mismatch');
-          }
-          return data;
-        }
-
-        // create new ModelArray instance
-        return new ReferenceArray(schemaValue.definition.collection(), data);
       } else {
         // return sanitized elements
         return data.map(v => sanitize(schemaValue.definition, v, options));

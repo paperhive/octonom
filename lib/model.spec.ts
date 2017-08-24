@@ -4,7 +4,6 @@ import { Model } from './model';
 import { ModelArray } from './model-array';
 import { CatModel, DiscussionModel, IPerson,
   peopleCollection, PersonAccountModel, PersonModel } from './model.data';
-import { ReferenceArray, ReferenceArrayProperty } from './reference-array';
 import { generateId } from './utils';
 
 describe('Model', () => {
@@ -260,17 +259,16 @@ describe('Model', () => {
     });
 
     describe('populate()', () => {
-      it('should throw if no path is given or if path is invalid', async () => {
+      it('should throw if key does not exist', async () => {
         const discussion = new DiscussionModel();
-        await expect(discussion.populate(undefined)).to.be.rejectedWith('no path given');
-        await expect(discussion.populate([] as any)).to.be.rejectedWith('path is empty');
         await expect(discussion.populate({'non-existent': true}))
-          .to.be.rejectedWith('field non-existent unknown in schema');
+          .to.be.rejectedWith('Key non-existent not found in schema');
       });
 
       it('should throw if id does not exist', async () => {
         const discussion = new DiscussionModel({author: 'non-existent'});
-        await expect(discussion.populate({author: true})).to.be.rejectedWith('id non-existent not found');
+        await expect(discussion.populate({author: true}))
+          .to.be.rejectedWith('Id non-existent not found.');
       });
 
       it('should populate an id with an instance', async () => {
@@ -301,6 +299,7 @@ describe('Model', () => {
     });
   });
 
+  /*
   describe('reference array', () => {
     interface IGroup {
       id: string;
@@ -413,4 +412,5 @@ describe('Model', () => {
       });
     });
   });
+  */
 });
