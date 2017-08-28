@@ -1,10 +1,7 @@
 import { Collection as DbCollection, CollectionInsertManyOptions, Cursor,
   Db, FindOneOptions } from 'mongodb';
 
-import { Collection, ICollectionOptions } from './collection';
-import { Model } from './model';
-import { ModelArray } from './model-array';
-import { rename } from './utils';
+import { Collection, ICollectionOptions, Model, ModelArray, utils } from 'octonom';
 
 export class MongoCollection<T extends object, TModel extends Model<T>> extends Collection<T, TModel> {
   protected collection: DbCollection;
@@ -64,11 +61,11 @@ export class MongoCollection<T extends object, TModel extends Model<T>> extends 
   }
 
   public toDb(model: TModel) {
-    return rename(super.toDb(model), {[this.modelIdField]: '_id'});
+    return utils.rename(super.toDb(model), {[this.modelIdField]: '_id'});
   }
 
   public fromDb(doc: object) {
-    return super.fromDb(rename(doc, {_id: this.modelIdField}));
+    return super.fromDb(utils.rename(doc, {_id: this.modelIdField}));
   }
 
   public async update(model: TModel) {

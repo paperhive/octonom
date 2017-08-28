@@ -1,0 +1,30 @@
+{
+  "name": "octonom-mongodb",
+  "version": "1.0.0-alpha.3",
+  "description": "MongoDB collection for Octonom",
+  "main": "build/lib/main.js",
+  "types": "build/lib/main.d.ts",
+  "scripts": {
+    "build": "rm -rf ./build && tsc -p tsconfig.build.json",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "octonom-plugin",
+    "mongodb",
+    "collection",
+    "ODM",
+    "ORM",
+    "document",
+    "object",
+    "model"
+  ],
+  "author": "André Gaul <andre@paperhive.org>",
+  "license": "MIT",
+  "repository": "paperhive/octonom",
+  "bugs": "https://github.com/paperhive/octonom/issues",
+  "dependencies": {
+    "@types/mongodb": "^2.2.6",
+    "mongodb": "^2.2.29",
+    "octonom": "^1.0.0-alpha.7"
+  }
+}

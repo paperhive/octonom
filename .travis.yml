@@ -5,10 +5,11 @@ sudo: required
 services:
   - docker
 script:
+  - lerna bootstrap
   # lint
   - npm run lint
   # transpile to js
-  - npm run build
+  - lerna run build
   # start docker environment for tests
   - docker-compose up -d
   # run tests with coverage report

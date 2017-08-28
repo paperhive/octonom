@@ -1,8 +1,8 @@
 node_modules
 .*.swp
 npm-debug.log
-coverage/
+coverage
 .DS_Store
 .nyc_output
 package-lock.json
-lib-js
+build

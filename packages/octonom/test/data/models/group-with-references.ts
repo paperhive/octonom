@@ -1,7 +1,7 @@
 import { Model, utils } from '../../../lib/main';
 
 import { collections } from '../collections';
-import { IPerson, PersonModel } from './person';
+import { PersonModel } from './person';
 
 export interface IGroupWithReferences {
   id: string;

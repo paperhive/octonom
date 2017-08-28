@@ -1,8 +1,9 @@
 import { cloneDeep } from 'lodash';
 import { Db, MongoClient } from 'mongodb';
+import { ModelArray } from 'octonom';
 
-import { CatModel, ICat } from '../test/data/models/cat';
-import { ModelArray } from './model-array';
+import { CatModel, ICat } from 'octonom/build/test/data/models/cat';
+
 import { MongoCollection } from './mongo-collection';
 
 describe('MongoCollection', () => {
