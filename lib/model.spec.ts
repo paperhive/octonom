@@ -1,56 +1,370 @@
-import { DiscussionModel, PersonAccountModel, PersonModel } from './model.data' ;
+import { spy } from 'sinon';
+
+import { collections } from '../test/data/collections';
+import { CatModel } from '../test/data/models/cat';
+import { DiscussionModel } from '../test/data/models/discussion';
+import { GroupWithArrayModel } from '../test/data/models/group-with-array';
+import { GroupWithReferencesModel } from '../test/data/models/group-with-references';
+import { PersonModel } from '../test/data/models/person';
+import { PersonAccountModel } from '../test/data/models/person-account';
+
+import { ModelArray } from './model-array';
 
 describe('Model', () => {
+  describe('simple (CatModel)', () => {
+    describe('constructor', () => {
+      it('should create an empty instance with generated id via default function', () => {
+        const cat = new CatModel();
+        expect(cat.id).to.be.a('string').of.length.at.least(1);
+      });
 
-  describe('PersonModel', () => {
-    it('should create an empty person', () => {
-      const person = new PersonModel();
-      expect(person.toJSON()).to.deep.equal({});
+      it('should create a cat with id and name', () => {
+        const cat = new CatModel({id: '42', name: 'Yllim'});
+        expect(cat.id).to.equal('42');
+        expect(cat.name).to.equal('Yllim');
+      });
     });
 
-    it('should allow to set a property with set()', () => {
-      const person = new PersonModel();
-      person.set({name: 'Alice', account: {username: 'alice'}});
-      expect(person.toJSON()).to.deep.equal({name: 'Alice', account: {username: 'alice'}});
+    describe('property setter', () => {
+      it('should set a property', () => {
+        const cat = new CatModel();
+        cat.id = '42';
+        expect(cat.id).to.equal('42');
+        cat.name = 'Yllim';
+        expect(cat.name).to.equal('Yllim');
+      });
     });
 
-    it('should allow to set a property directly with proper instances', () => {
-      const person = new PersonModel();
-      person.name = 'Alice';
-      person.account = new PersonAccountModel({username: 'alice'});
-      expect(person.account).to.be.an.instanceOf(PersonAccountModel);
-      expect(person.toJSON()).to.deep.equal({name: 'Alice', account: {username: 'alice'}});
-    });
+    describe('toObject()', () => {
+      it('should get only schema properties', () => {
+        const cat = new CatModel({id: '42', name: 'Yllim'});
+        expect(cat.toObject()).to.eql({id: '42', name: 'Yllim'});
+      });
 
-    it('should allow to set a property directly with implicit instantiation', () => {
-      const person = new PersonModel();
-      person.name = 'Alice';
-      person.account = {username: 'alice'};
-      expect(person.account).to.be.an.instanceOf(PersonAccountModel);
-      expect(person.toJSON()).to.deep.equal({name: 'Alice', account: {username: 'alice'}});
-    });
-
-    it('should create a person without account', () => {
-      const person = new PersonModel({id: '42', name: 'Alice'});
-      expect(person.toJSON()).to.deep.equal({id: '42', name: 'Alice'});
-    });
-
-    it('should create a person with account', () => {
-      const person = new PersonModel({id: '42', name: 'Alice', account: {username: 'alice'}});
-      expect(person.account).to.be.an.instanceOf(PersonAccountModel);
-      expect(person.toJSON()).to.deep.equal({id: '42', name: 'Alice', account: {username: 'alice'}});
+      it('should not return properties with undefined value', () => {
+        const cat = new CatModel({id: '42'});
+        expect(cat.toObject()).to.eql({id: '42'});
+      });
     });
 
     describe('inspect()', () => {
       it('should equal toObject() result', () => {
-        const person = new PersonModel({id: '42', name: 'Alice'});
-        expect(person.inspect()).to.eql({id: '42', name: 'Alice'});
+        const cat = new CatModel({id: '42', name: 'Yllim'});
+        expect(cat.inspect()).to.eql({id: '42', name: 'Yllim'});
       });
     });
   });
 
-  it.skip('should create a DiscussionModel', () => {
-    const discussion = new DiscussionModel({author: '42', title: 'new discussion'});
-    // console.log(discussion.toJSON());
+  describe('nested model (PersonAccountModel in PersonModel)', () => {
+    describe('constructor', () => {
+      it('should create a person without account', () => {
+        const person = new PersonModel({id: '42', name: 'Alice'});
+        expect(person.toJSON()).to.deep.equal({id: '42', name: 'Alice'});
+      });
+
+      it('should create a person with raw account object', () => {
+        const person = new PersonModel({id: '42', name: 'Alice', account: {username: 'alice'}});
+        expect(person.account).to.be.an.instanceOf(PersonAccountModel);
+        expect(person.toJSON()).to.deep.equal({id: '42', name: 'Alice', account: {username: 'alice'}});
+      });
+
+      it('should create a person with account instance', () => {
+        const account = new PersonAccountModel({username: 'alice'});
+        const person = new PersonModel({id: '42', name: 'Alice', account});
+        expect(person.account).to.be.an.instanceOf(PersonAccountModel).and.equal(account);
+        expect(person.toJSON()).to.deep.equal({id: '42', name: 'Alice', account: {username: 'alice'}});
+      });
+    });
+
+    describe('set()', () => {
+      it('should set a raw account object with set()', () => {
+        const person = new PersonModel({name: 'Alice'});
+        person.set({account: {username: 'alice'}});
+        expect(person.account).to.be.an.instanceOf(PersonAccountModel);
+        const personObj = person.toObject();
+        expect(personObj).to.deep.equal({id: personObj.id, name: 'Alice', account: {username: 'alice'}});
+      });
+
+      it('should set an account instance with set()', () => {
+        const person = new PersonModel({name: 'Alice'});
+        const account = new PersonAccountModel({username: 'alice'});
+        person.set({account});
+        expect(person.account).to.be.an.instanceOf(PersonAccountModel).and.equal(account);
+        const personObj = person.toObject();
+        expect(personObj).to.deep.equal({id: personObj.id, name: 'Alice', account: {username: 'alice'}});
+      });
+    });
+
+    describe('property setter', () => {
+      it('should set a raw account object directly', () => {
+        const person = new PersonModel({name: 'Alice'});
+        person.account = {username: 'alice'};
+        expect(person.account).to.be.an.instanceOf(PersonAccountModel);
+        const personObj = person.toObject();
+        expect(personObj).to.deep.equal({id: personObj.id, name: 'Alice', account: {username: 'alice'}});
+      });
+
+      it('should set an account instance directly', () => {
+        const person = new PersonModel({name: 'Alice'});
+        const account = new PersonAccountModel({username: 'alice'});
+        person.account = account;
+        expect(person.account).to.be.an.instanceOf(PersonAccountModel).and.equal(account);
+        const personObj = person.toObject();
+        expect(personObj).to.deep.equal({id: personObj.id, name: 'Alice', account: {username: 'alice'}});
+      });
+    });
+  });
+
+  describe('model array', () => {
+    describe('constructor', () => {
+      it('should create a group with a raw array with mixed raw person object and person instance', () => {
+        const person = new PersonModel({name: 'Bob'});
+        const group = new GroupWithArrayModel({members: [{name: 'Alice'}, person]});
+        expect(group.members).to.be.an.instanceOf(ModelArray);
+        expect(group.members).to.have.lengthOf(2);
+        expect(group.members[0]).to.be.an.instanceOf(PersonModel).and.have.property('name', 'Alice');
+        expect(group.members[1]).to.equal(person);
+      });
+
+      it('should create a group with a model array with person instances', () => {
+        const members = new ModelArray(PersonModel, [{name: 'Alice'}, {name: 'Bob'}]);
+        const group = new GroupWithArrayModel({members});
+        expect(group.members).to.equal(members);
+      });
+
+      it('should throw if a model array is provided with the wrong model', () => {
+        const cats = new ModelArray(CatModel, [{name: 'Yllim'}]);
+        expect(() => new GroupWithArrayModel({members: cats})).to.throw('ModelArray model mismatch');
+      });
+    });
+
+    describe('set()', () => {
+      it('should set a raw array with mixed raw person object and person instance', () => {
+        const person = new PersonModel({name: 'Bob'});
+        const group = new GroupWithArrayModel();
+        group.set({members: [{name: 'Alice'}, person]});
+        expect(group.members).to.be.an.instanceOf(ModelArray);
+        expect(group.members).to.have.lengthOf(2);
+        expect(group.members[0]).to.be.an.instanceOf(PersonModel).and.have.property('name', 'Alice');
+        expect(group.members[1]).to.equal(person);
+      });
+
+      it('should set a model array with person instances', () => {
+        const members = new ModelArray(PersonModel, [{name: 'Alice'}, {name: 'Bob'}]);
+        const group = new GroupWithArrayModel();
+        group.set({members});
+        expect(group.members).to.equal(members);
+      });
+
+      it('should throw if a model array is provided with the wrong model', () => {
+        const cats = new ModelArray(CatModel, [{name: 'Yllim'}]);
+        const group = new GroupWithArrayModel();
+        expect(() => group.set({members: cats})).to.throw('ModelArray model mismatch');
+      });
+    });
+
+    describe('property setter', () => {
+      it('should set a raw array with mixed raw person object and person instance', () => {
+        const person = new PersonModel({name: 'Bob'});
+        const group = new GroupWithArrayModel();
+        group.members = [{name: 'Alice'}, person];
+        expect(group.members).to.be.an.instanceOf(ModelArray);
+        expect(group.members).to.have.lengthOf(2);
+        expect(group.members[0]).to.be.an.instanceOf(PersonModel).and.have.property('name', 'Alice');
+        expect(group.members[1]).to.equal(person);
+      });
+
+      it('should set a model array with a person instance', () => {
+        const members = new ModelArray(PersonModel, [{name: 'Alice'}, {name: 'Bob'}]);
+        const group = new GroupWithArrayModel();
+        group.members = members;
+        expect(group.members).to.equal(members);
+      });
+
+      it('should throw if a model array is provided with the wrong model', () => {
+        const cats = new ModelArray(CatModel, [{name: 'Yllim'}]);
+        const group = new GroupWithArrayModel();
+        expect(() => group.members = cats).to.throw('ModelArray model mismatch');
+      });
+    });
+
+    describe('toObject()', () => {
+      it('should run toObject on array elements', async () => {
+        const person = new PersonModel({id: '42', name: 'Bob'});
+        const toObject = spy(person, 'toObject');
+        const group = new GroupWithArrayModel({id: '1337', members: [person]});
+        expect(group.toObject({unpopulate: true})).to.eql({id: '1337', members: [{id: '42', name: 'Bob'}]});
+        expect(toObject.calledWith({unpopulate: true}));
+      });
+    });
+  });
+
+  describe('reference (author/PersonModel in DiscussionModel', () => {
+    const alice = new PersonModel({id: '42', name: 'Alice'});
+    const bob = new PersonModel({id: '23', name: 'Bob'});
+
+    beforeEach(() => {
+      collections.people.clear();
+      collections.people.insert(alice);
+      collections.people.insert(bob);
+    });
+
+    describe('constructor', () => {
+      it('should create a discussion with an id', () => {
+        const discussion = new DiscussionModel({author: '42'});
+        expect(discussion.author).to.equal('42');
+      });
+
+      it('should create a discussion with a person instance', () => {
+        const discussion = new DiscussionModel({author: alice});
+        expect(discussion.author).to.equal(alice);
+      });
+    });
+
+    describe('set()', () => {
+      it('should set a discussion with an id', () => {
+        const discussion = new DiscussionModel();
+        discussion.set({author: '42'});
+        expect(discussion.author).to.equal('42');
+      });
+
+      it('should set a discussion with a person instance', () => {
+        const discussion = new DiscussionModel();
+        discussion.set({author: alice});
+        expect(discussion.author).to.equal(alice);
+      });
+    });
+
+    describe('property setter', () => {
+      it('should set a discussion with an id', () => {
+        const discussion = new DiscussionModel();
+        discussion.author = '42';
+        expect(discussion.author).to.equal('42');
+      });
+
+      it('should set a discussion with a person instance', () => {
+        const discussion = new DiscussionModel();
+        discussion.author = alice;
+        expect(discussion.author).to.equal(alice);
+      });
+    });
+
+    describe('populate()', () => {
+      it('should throw if key does not exist', async () => {
+        const discussion = new DiscussionModel();
+        await expect(discussion.populate({'non-existent': true}))
+          .to.be.rejectedWith('Key non-existent not found in schema');
+      });
+
+      it('should throw if id does not exist', async () => {
+        const discussion = new DiscussionModel({author: 'non-existent'});
+        await expect(discussion.populate({author: true}))
+          .to.be.rejectedWith('Id non-existent not found.');
+      });
+
+      it('should populate an id with an instance', async () => {
+        const discussion = new DiscussionModel({author: '42'});
+        await discussion.populate({author: true});
+        expect(discussion.author).to.be.instanceof(PersonModel);
+        expect((discussion.author as PersonModel).toObject()).to.eql({id: '42', name: 'Alice'});
+      });
+    });
+
+    describe('toObject()', () => {
+      it('should return the id of an unpopulated reference', () => {
+        const discussion = new DiscussionModel({author: '42'});
+        expect(discussion.toObject()).have.property('author', '42');
+      });
+
+      it('should run toObject() recursively on a populated reference with {unpopulate: false}', () => {
+        const discussion = new DiscussionModel({author: alice});
+        expect(discussion.toObject({unpopulate: false})).have.property('author').that.eql({id: '42', name: 'Alice'});
+      });
+
+      it('should return the id of a populated reference with {unpopulate: true}', () => {
+        const discussion = new DiscussionModel({author: alice});
+        expect(discussion.toObject({unpopulate: true})).have.property('author', '42');
+      });
+    });
+  });
+
+  describe('reference array', () => {
+    const alice = new PersonModel({id: '42', name: 'Alice'});
+    const bob = new PersonModel({id: '23', name: 'Bob'});
+
+    beforeEach(() => {
+      collections.people.clear();
+      collections.people.insert(alice);
+      collections.people.insert(bob);
+    });
+
+    describe('constructor', () => {
+      it('should create a group with an array with id and person instance', () => {
+        const members = [alice.id, bob];
+        const group = new GroupWithReferencesModel({id: '1337', members});
+        expect(group.members).to.be.an('array').and.to.eql(members);
+      });
+    });
+
+    describe('set()', () => {
+      it('should set an array with id and person instance', () => {
+        const group = new GroupWithReferencesModel({id: '1337'});
+        const members = [alice.id, bob];
+        group.set({members});
+        expect(group.members).to.be.an('array').and.to.eql(members);
+      });
+    });
+
+    describe('property setter', () => {
+      it('should set an array with id and person instance', () => {
+        const group = new GroupWithReferencesModel({id: '1337'});
+        const members = [alice.id, bob];
+        group.members = members;
+        expect(group.members).to.be.an('array').and.to.eql(members);
+      });
+    });
+
+    describe('populate()', () => {
+      it('should throw if path is invalid', async () => {
+        const discussion = new DiscussionModel({author: 'non-existent'});
+        await expect(discussion.populate({foo: true})).to.be.rejectedWith('Key foo not found in schema');
+      });
+
+      it('should throw if id does not exist', async () => {
+        const discussion = new DiscussionModel({author: 'non-existent'});
+        await expect(discussion.populate({author: true})).to.be.rejectedWith('Id non-existent not found');
+      });
+
+      it('should populate ids with an instance', async () => {
+        const group = new GroupWithReferencesModel({id: '1337', members: [alice, bob.id]});
+        await group.populate({members: true});
+        expect(group.members).to.be.an('array').and.be.of.length(2);
+        expect(group.members[0]).to.equal(alice);
+        expect((group.members[1] as PersonModel).toObject()).to.eql(bob.toObject());
+      });
+    });
+
+    describe('toObject()', () => {
+      it('should return an object for instances and the id for an unpopulated reference', () => {
+        const members = [alice, bob.id];
+        const group = new GroupWithReferencesModel({id: '1337', members});
+        const groupObj = group.toObject();
+        expect(groupObj.members).to.eql([alice.toObject(), bob.id]);
+      });
+
+      it('should run toObject() recursively on populated references with {unpopulate: false}', () => {
+        const members = [alice, bob.id];
+        const group = new GroupWithReferencesModel({id: '1337', members});
+        const groupObj = group.toObject({unpopulate: false});
+        expect(groupObj.members).to.eql([alice.toObject(), bob.id]);
+      });
+
+      it('should return the id of populated references with {unpopulate: true}', () => {
+        const members = [alice, bob.id];
+        const group = new GroupWithReferencesModel({id: '1337', members});
+        const groupObj = group.toObject({unpopulate: true});
+        expect(groupObj.members).to.eql([alice.id, bob.id]);
+      });
+    });
   });
 });

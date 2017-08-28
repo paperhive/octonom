@@ -3,6 +3,7 @@
   "rules": {
     "arrow-parens": [true, "ban-single-arg-parens"],
     "max-classes-per-file": false,
+    "no-unused-variable": true,
     "object-literal-key-quotes": [true, "as-needed"],
     "object-literal-sort-keys": false,
     "quotemark": [true, "single"],

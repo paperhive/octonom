@@ -1,11 +1,10 @@
 import { difference, forEach, isArray, isBoolean, isDate, isFunction, isNumber, isString } from 'lodash';
 
-import { Model } from './model';
+import { ModelArray } from './model-array';
 
 export interface ISchemaValueBase {
   type: string;
   required?: boolean;
-  dbKey?: string;
 }
 
 export interface ISchemaValueArray extends ISchemaValueBase {
@@ -52,7 +51,7 @@ export interface ISchemaValueObject extends ISchemaValueBase {
 
 export interface ISchemaValueReference extends ISchemaValueBase {
   type: 'reference';
-  collection: any; // TODO
+  collection: () => any; // TODO
 }
 
 export interface ISchemaValueString extends ISchemaValueBase {
@@ -86,7 +85,7 @@ export function sanitize(schemaValue: SchemaValue, data: any, _options?: ISchema
   const options = _options || {};
 
   switch (schemaValue.type) {
-    case 'array': {
+    case 'array':
       // return empty array if no data given but a value is required
       if (data === undefined) {
         return schemaValue.required ? [] : undefined;
@@ -97,9 +96,22 @@ export function sanitize(schemaValue: SchemaValue, data: any, _options?: ISchema
         throw new Error('data is not an array');
       }
 
-      // return sanitized elements
-      return data.map(v => sanitize(schemaValue.definition, v, options));
-    }
+      if (schemaValue.definition.type === 'model') {
+        // is the provided data already a ModelArray?
+        if (data instanceof ModelArray) {
+          // does the ModelArray's model match the definition?
+          if (data.model !== schemaValue.definition.model) {
+            throw new Error('ModelArray model mismatch');
+          }
+          return data;
+        }
+
+        // create new ModelArray instance
+        return new ModelArray(schemaValue.definition.model, data);
+      } else {
+        // return sanitized elements
+        return data.map(v => sanitize(schemaValue.definition, v, options));
+      }
 
     case 'model':
       if (data instanceof schemaValue.model) {
@@ -127,8 +139,17 @@ export function sanitize(schemaValue: SchemaValue, data: any, _options?: ISchema
       // sanitize object
       return setObjectSanitized(schemaValue.definition, {}, data, options);
 
-    // case 'reference':
-    //   return
+    case 'reference':
+      if (data === undefined) {
+        return undefined;
+      }
+
+      // valid data?
+      if (!(data instanceof schemaValue.collection().model) && !isString(data)) {
+        throw new Error('not an instance or an id');
+      }
+
+      return data;
 
     case 'boolean':
     case 'date':
@@ -163,7 +184,7 @@ export function sanitize(schemaValue: SchemaValue, data: any, _options?: ISchema
     }
 
     default:
-      throw new Error(`type ${schemaValue.type} is unknown`);
+      throw new Error(`type ${(schemaValue as ISchemaValueBase).type} is unknown`);
   }
 }
 
@@ -199,7 +220,7 @@ export interface ISchemaToObjectOptions {
   unpopulate?: boolean;
 }
 
-export function toObjectValue(schemaValue: SchemaValue, value, options?: ISchemaToObjectOptions) {
+export function toObjectValue(schemaValue: SchemaValue, value, options: ISchemaToObjectOptions = {}) {
   if (value === undefined) {
     return undefined;
   }
@@ -214,8 +235,21 @@ export function toObjectValue(schemaValue: SchemaValue, value, options?: ISchema
     case 'object':
       return toObject(schemaValue.definition, value, options);
 
-    // case 'reference':
-    //   return
+    case 'reference':
+      const collection = schemaValue.collection();
+
+      // is value an instance (-> populated)?
+      if (value instanceof collection.model) {
+        // do we only want the id?
+        if (options.unpopulate) {
+          return value[collection.modelIdField];
+        }
+
+        return value.toObject();
+      }
+
+      // value is an id
+      return value;
 
     case 'boolean':
     case 'date':
@@ -224,7 +258,7 @@ export function toObjectValue(schemaValue: SchemaValue, value, options?: ISchema
       return value;
 
     default:
-      throw new Error(`type ${schemaValue.type} is unknown`);
+      throw new Error(`type ${(schemaValue as ISchemaValueBase).type} is unknown`);
   }
 }
 

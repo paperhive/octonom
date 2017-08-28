@@ -1,3 +1,4 @@
+import { ArrayCollection } from './array-collection';
 import { Model } from './model';
 import { sanitize, SchemaMap, SchemaValue, setObjectSanitized, toObject, toObjectValue } from './schema';
 
@@ -109,6 +110,40 @@ describe('schema', () => {
       it('should return an empty object if data is undefined but a value is required', () => {
         const schema: SchemaValue = {type: 'object', required: true, definition: {name: {type: 'string'}}};
         expect(sanitize(schema, undefined)).to.eql({});
+      });
+    });
+
+    describe('type reference', () => {
+      interface ICat {
+        id: string;
+        name: string;
+      }
+      class Cat extends Model<ICat> {
+        @Cat.PropertySchema({type: 'string'})
+        public id: string;
+
+        @Cat.PropertySchema({type: 'string'})
+        public name: string;
+      }
+      const catsCollection = new ArrayCollection<ICat, Cat>(Cat);
+      const schemaReference: SchemaValue = {type: 'reference', collection: () => catsCollection};
+
+      it('should throw if data is not an instance or an id', () => {
+        expect(() => sanitize(schemaReference, 42))
+          .to.throw('not an instance or an id');
+      });
+
+      it('should return an instance', () => {
+        const cat = new Cat({id: '23', name: 'Kilf'});
+        expect(sanitize(schemaReference, cat)).to.equal(cat);
+      });
+
+      it('should return an id', () => {
+        expect(sanitize(schemaReference, '42')).to.equal('42');
+      });
+
+      it('should return undefined if data is undefined', () => {
+        expect(sanitize(schemaReference, undefined)).to.equal(undefined);
       });
     });
 
@@ -239,16 +274,22 @@ describe('schema', () => {
 
   describe('toObjectValue()', () => {
     interface ICat {
+      id: string;
       name: string;
     }
 
     class Cat extends Model<ICat> {
+      @Cat.PropertySchema({type: 'string'})
+      public id: string;
+
       @Cat.PropertySchema({type: 'string'})
       public name: string;
 
       // note: this property is not in the schema and will thus not be exposed with toObject
       public age = 42;
     }
+
+    const catsCollection = new ArrayCollection<ICat, Cat>(Cat);
 
     describe('type invalid', () => {
       it('should throw if the type is invalid', () => {
@@ -283,6 +324,23 @@ describe('schema', () => {
       it('should turn an object into a new object', () => {
         const schema: SchemaValue = {type: 'object', definition: {name: {type: 'string'}}};
         expect(toObjectValue(schema, {name: 'Yllim', age: 42})).to.eql({name: 'Yllim'});
+      });
+    });
+
+    describe('type reference', () => {
+      const schemaReference: SchemaValue = {type: 'reference', collection: () => catsCollection};
+
+      it('should turn an instance into an object', () => {
+        expect(toObjectValue(schemaReference, new Cat({id: '42', name: 'Yllim'}))).to.eql({id: '42', name: 'Yllim'});
+      });
+
+      it('should turn an instance into an id with {unpopulate: true}', () => {
+        expect(toObjectValue(schemaReference, new Cat({id: '42', name: 'Yllim'}), {unpopulate: true}))
+          .to.eql('42');
+      });
+
+      it('should return an id', () => {
+        expect(toObjectValue(schemaReference, '42')).to.eql('42');
       });
     });
 

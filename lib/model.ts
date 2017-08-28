@@ -1,7 +1,8 @@
-import { cloneDeep, defaults, difference, forEach } from 'lodash';
+import { cloneDeep, difference, forEach } from 'lodash';
 
+import { IPopulateMap, populateObject } from './populate';
 import { ISchemaSanitizeOptions, ISchemaToObjectOptions, sanitize,
-         SchemaMap, SchemaValue, setObjectSanitized, toObject } from './schema';
+         SchemaMap, SchemaValue, toObject } from './schema';
 
 interface IModel {
   constructor: typeof Model;
@@ -50,9 +51,12 @@ export abstract class Model<T> {
   constructor(data?: Partial<T>) {
     // TODO: remove (see @enumerable decorator)
     Object.defineProperty(this, '_sanitized', {writable: true, enumerable: false});
-    if (data) {
-      this.set(data, {defaults: true, replace: true});
-    }
+    this.set(data || {}, {defaults: true, replace: true});
+  }
+
+  public async populate(populateMap: IPopulateMap) {
+    const constructor = this.constructor as typeof Model;
+    return populateObject(this, constructor._schema, populateMap);
   }
 
   // TODO: find a way to merge this with setObjectSanitized, code is pretty redundant

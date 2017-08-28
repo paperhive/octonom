@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 import { forEach } from 'lodash';
-import { v1 as uuidV1 } from 'node-uuid';
+import { v1 as uuidV1 } from 'uuid';
 
 // TODO: fix this decorator
 /*
