@@ -5,7 +5,7 @@
   "author": "André Gaul <andre@paperhive.org>",
   "license": "MIT",
   "scripts": {
-    "lint": "tslint -p tsconfig.json packages/**/*.ts",
+    "lint": "tslint -p tsconfig.json -e '**/node_modules/**/*.ts' -e 'packages/*/build/**/*' packages/**/*.ts",
     "test": "mocha  --opts ./mocha.opts",
     "test-cover": "nyc npm test",
     "test-cover-submit": "nyc report --reporter=json && codecov -f coverage/*.json"

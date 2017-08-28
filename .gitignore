@@ -5,4 +5,4 @@ coverage
 .DS_Store
 .nyc_output
 package-lock.json
-lib-js
+build
