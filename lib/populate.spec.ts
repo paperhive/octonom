@@ -1,4 +1,7 @@
-import { discussionCollection, DiscussionModel, peopleCollection,  PersonModel } from './model.data';
+import { collections } from '../test/data/collections';
+import { DiscussionModel } from '../test/data/models/discussion';
+import { PersonModel } from '../test/data/models/person';
+
 import { IPopulateMap, populateArray, populateObject, populateValue } from './populate';
 import { SchemaMap, SchemaValue } from './schema';
 
@@ -15,13 +18,13 @@ describe('populate', () => {
     aliceDiscussion = new DiscussionModel({id: '1337', author: '42', title: 'hi'});
     bobDiscussion = new DiscussionModel({id: '4711', author: '23', title: 'howdy'});
 
-    peopleCollection.clear();
-    peopleCollection.insert(alice);
-    peopleCollection.insert(bob);
+    collections.people.clear();
+    collections.people.insert(alice);
+    collections.people.insert(bob);
 
-    discussionCollection.clear();
-    discussionCollection.insert(aliceDiscussion);
-    discussionCollection.insert(bobDiscussion);
+    collections.discussions.clear();
+    collections.discussions.insert(aliceDiscussion);
+    collections.discussions.insert(bobDiscussion);
   });
 
   describe('populateArray()', () => {
@@ -33,7 +36,7 @@ describe('populate', () => {
     it('should throw if an id cannot be found', async () => {
       await expect(populateArray(
         ['42', 'non-existent'],
-        {type: 'reference', collection: () => peopleCollection},
+        {type: 'reference', collection: () => collections.people},
         true,
       )).to.be.rejectedWith('Id non-existent not found');
     });
@@ -41,7 +44,7 @@ describe('populate', () => {
     it('should populate references without touching instances', async () => {
       const result = await populateArray(
         ['42', bob],
-        {type: 'reference', collection: () => peopleCollection},
+        {type: 'reference', collection: () => collections.people},
         true,
       );
       expect(result).to.be.an('array').and.have.length(2);
@@ -53,7 +56,7 @@ describe('populate', () => {
     it('should populate nested references', async () => {
       const result = await populateArray(
         ['1337', bobDiscussion],
-        {type: 'reference', collection: () => discussionCollection},
+        {type: 'reference', collection: () => collections.discussions},
         {author: true},
       );
       expect(result).to.be.an('array').and.have.length(2);
@@ -72,8 +75,8 @@ describe('populate', () => {
 
   describe('populateObject()', () => {
     const objectSchemaMap: SchemaMap = {
-      foo: {type: 'reference', collection: () => peopleCollection},
-      bar: {type: 'reference', collection: () => peopleCollection},
+      foo: {type: 'reference', collection: () => collections.people},
+      bar: {type: 'reference', collection: () => collections.people},
     };
 
     it('should fail if a key is not in the schema', async () => {
@@ -108,8 +111,8 @@ describe('populate', () => {
     });
 
     describe('type reference', () => {
-      const personRefSchema: SchemaValue = {type: 'reference', collection: () => peopleCollection};
-      const discussionRefSchema: SchemaValue = {type: 'reference', collection: () => discussionCollection};
+      const personRefSchema: SchemaValue = {type: 'reference', collection: () => collections.people};
+      const discussionRefSchema: SchemaValue = {type: 'reference', collection: () => collections.discussions};
 
       it('should throw if the id cannot be found', async () => {
         await expect(populateValue('non-existent', personRefSchema, true))
@@ -150,8 +153,8 @@ describe('populate', () => {
       const objectSchema: SchemaValue = {
         type: 'object',
         definition: {
-          foo: {type: 'reference', collection: () => peopleCollection},
-          bar: {type: 'reference', collection: () => peopleCollection},
+          foo: {type: 'reference', collection: () => collections.people},
+          bar: {type: 'reference', collection: () => collections.people},
         },
       };
 
@@ -171,7 +174,7 @@ describe('populate', () => {
     describe('type array', () => {
       const arraySchema: SchemaValue = {
         type: 'array',
-        definition: {type: 'reference', collection: () => peopleCollection},
+        definition: {type: 'reference', collection: () => collections.people},
       };
 
       it('should populate an array', async () => {

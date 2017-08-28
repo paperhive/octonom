@@ -1,4 +1,4 @@
-import { ArrayCollection } from './collection.data';
+import { ArrayCollection } from './array-collection';
 import { Model } from './model';
 import { sanitize, SchemaMap, SchemaValue, setObjectSanitized, toObject, toObjectValue } from './schema';
 

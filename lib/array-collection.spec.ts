@@ -1,8 +1,7 @@
-import { Collection } from './collection';
-import { ArrayCollection } from './collection.data';
-import { Model } from './model';
+import { CatModel, ICat } from '../test/data/models/cat';
+
+import { ArrayCollection } from './array-collection';
 import { ModelArray } from './model-array';
-import { CatModel, ICat } from './model.data';
 
 describe('Collection (ArrayCollection)', () => {
   class CatCollection extends ArrayCollection<ICat, CatModel> {

@@ -1,5 +1,6 @@
+import { CatModel, ICat } from '../test/data/models/cat';
+
 import { ModelArray } from './model-array';
-import { CatModel, ICat } from './model.data';
 
 describe('ModelArray', () => {
   let array: ModelArray<ICat, CatModel>;

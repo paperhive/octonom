@@ -1,8 +1,8 @@
 import { cloneDeep } from 'lodash';
 import { Db, MongoClient } from 'mongodb';
 
+import { CatModel, ICat } from '../test/data/models/cat';
 import { ModelArray } from './model-array';
-import { CatModel, ICat } from './model.data';
 import { MongoCollection } from './mongo-collection';
 import { generateId } from './utils';
 

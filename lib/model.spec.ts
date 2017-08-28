@@ -1,10 +1,14 @@
 import { spy } from 'sinon';
 
-import { Model } from './model';
+import { collections } from '../test/data/collections';
+import { CatModel } from '../test/data/models/cat';
+import { DiscussionModel } from '../test/data/models/discussion';
+import { GroupWithArrayModel } from '../test/data/models/group-with-array';
+import { GroupWithReferencesModel } from '../test/data/models/group-with-references';
+import { PersonModel } from '../test/data/models/person';
+import { PersonAccountModel } from '../test/data/models/person-account';
+
 import { ModelArray } from './model-array';
-import { CatModel, DiscussionModel, IPerson,
-  peopleCollection, PersonAccountModel, PersonModel } from './model.data';
-import { generateId } from './utils';
 
 describe('Model', () => {
   describe('simple (CatModel)', () => {
@@ -112,23 +116,10 @@ describe('Model', () => {
   });
 
   describe('model array', () => {
-    interface IGroup {
-      id: string;
-      members: ModelArray<IPerson, PersonModel> | Array<Partial<IPerson> | PersonModel>;
-    }
-
-    class GroupModel extends Model<IGroup> {
-      @Model.PropertySchema({type: 'string', default: generateId})
-      public id: string;
-
-      @Model.PropertySchema({type: 'array', definition: {type: 'model', model: PersonModel}})
-      public members: ModelArray<IPerson, PersonModel> | Array<Partial<IPerson> | PersonModel>;
-    }
-
     describe('constructor', () => {
       it('should create a group with a raw array with mixed raw person object and person instance', () => {
         const person = new PersonModel({name: 'Bob'});
-        const group = new GroupModel({members: [{name: 'Alice'}, person]});
+        const group = new GroupWithArrayModel({members: [{name: 'Alice'}, person]});
         expect(group.members).to.be.an.instanceOf(ModelArray);
         expect(group.members).to.have.lengthOf(2);
         expect(group.members[0]).to.be.an.instanceOf(PersonModel).and.have.property('name', 'Alice');
@@ -137,20 +128,20 @@ describe('Model', () => {
 
       it('should create a group with a model array with person instances', () => {
         const members = new ModelArray(PersonModel, [{name: 'Alice'}, {name: 'Bob'}]);
-        const group = new GroupModel({members});
+        const group = new GroupWithArrayModel({members});
         expect(group.members).to.equal(members);
       });
 
       it('should throw if a model array is provided with the wrong model', () => {
         const cats = new ModelArray(CatModel, [{name: 'Yllim'}]);
-        expect(() => new GroupModel({members: cats})).to.throw('ModelArray model mismatch');
+        expect(() => new GroupWithArrayModel({members: cats})).to.throw('ModelArray model mismatch');
       });
     });
 
     describe('set()', () => {
       it('should set a raw array with mixed raw person object and person instance', () => {
         const person = new PersonModel({name: 'Bob'});
-        const group = new GroupModel();
+        const group = new GroupWithArrayModel();
         group.set({members: [{name: 'Alice'}, person]});
         expect(group.members).to.be.an.instanceOf(ModelArray);
         expect(group.members).to.have.lengthOf(2);
@@ -160,14 +151,14 @@ describe('Model', () => {
 
       it('should set a model array with person instances', () => {
         const members = new ModelArray(PersonModel, [{name: 'Alice'}, {name: 'Bob'}]);
-        const group = new GroupModel();
+        const group = new GroupWithArrayModel();
         group.set({members});
         expect(group.members).to.equal(members);
       });
 
       it('should throw if a model array is provided with the wrong model', () => {
         const cats = new ModelArray(CatModel, [{name: 'Yllim'}]);
-        const group = new GroupModel();
+        const group = new GroupWithArrayModel();
         expect(() => group.set({members: cats})).to.throw('ModelArray model mismatch');
       });
     });
@@ -175,7 +166,7 @@ describe('Model', () => {
     describe('property setter', () => {
       it('should set a raw array with mixed raw person object and person instance', () => {
         const person = new PersonModel({name: 'Bob'});
-        const group = new GroupModel();
+        const group = new GroupWithArrayModel();
         group.members = [{name: 'Alice'}, person];
         expect(group.members).to.be.an.instanceOf(ModelArray);
         expect(group.members).to.have.lengthOf(2);
@@ -185,14 +176,14 @@ describe('Model', () => {
 
       it('should set a model array with a person instance', () => {
         const members = new ModelArray(PersonModel, [{name: 'Alice'}, {name: 'Bob'}]);
-        const group = new GroupModel();
+        const group = new GroupWithArrayModel();
         group.members = members;
         expect(group.members).to.equal(members);
       });
 
       it('should throw if a model array is provided with the wrong model', () => {
         const cats = new ModelArray(CatModel, [{name: 'Yllim'}]);
-        const group = new GroupModel();
+        const group = new GroupWithArrayModel();
         expect(() => group.members = cats).to.throw('ModelArray model mismatch');
       });
     });
@@ -201,7 +192,7 @@ describe('Model', () => {
       it('should run toObject on array elements', async () => {
         const person = new PersonModel({id: '42', name: 'Bob'});
         const toObject = spy(person, 'toObject');
-        const group = new GroupModel({id: '1337', members: [person]});
+        const group = new GroupWithArrayModel({id: '1337', members: [person]});
         expect(group.toObject({unpopulate: true})).to.eql({id: '1337', members: [{id: '42', name: 'Bob'}]});
         expect(toObject.calledWith({unpopulate: true}));
       });
@@ -213,9 +204,9 @@ describe('Model', () => {
     const bob = new PersonModel({id: '23', name: 'Bob'});
 
     beforeEach(() => {
-      peopleCollection.clear();
-      peopleCollection.insert(alice);
-      peopleCollection.insert(bob);
+      collections.people.clear();
+      collections.people.insert(alice);
+      collections.people.insert(bob);
     });
 
     describe('constructor', () => {
@@ -277,8 +268,6 @@ describe('Model', () => {
         expect(discussion.author).to.be.instanceof(PersonModel);
         expect((discussion.author as PersonModel).toObject()).to.eql({id: '42', name: 'Alice'});
       });
-
-      it('should populate multiple fields');
     });
 
     describe('toObject()', () => {
@@ -300,39 +289,26 @@ describe('Model', () => {
   });
 
   describe('reference array', () => {
-    interface IGroup {
-      id: string;
-      members: Array<string | PersonModel>;
-    }
-
-    class GroupModel extends Model<IGroup> {
-      @Model.PropertySchema({type: 'string', default: generateId})
-      public id: string;
-
-      @Model.PropertySchema({type: 'array', definition: {type: 'reference', collection: () => peopleCollection}})
-      public members: Array<string | PersonModel>;
-    }
-
     const alice = new PersonModel({id: '42', name: 'Alice'});
     const bob = new PersonModel({id: '23', name: 'Bob'});
 
     beforeEach(() => {
-      peopleCollection.clear();
-      peopleCollection.insert(alice);
-      peopleCollection.insert(bob);
+      collections.people.clear();
+      collections.people.insert(alice);
+      collections.people.insert(bob);
     });
 
     describe('constructor', () => {
       it('should create a group with an array with id and person instance', () => {
         const members = [alice.id, bob];
-        const group = new GroupModel({id: '1337', members});
+        const group = new GroupWithReferencesModel({id: '1337', members});
         expect(group.members).to.be.an('array').and.to.eql(members);
       });
     });
 
     describe('set()', () => {
       it('should set an array with id and person instance', () => {
-        const group = new GroupModel({id: '1337'});
+        const group = new GroupWithReferencesModel({id: '1337'});
         const members = [alice.id, bob];
         group.set({members});
         expect(group.members).to.be.an('array').and.to.eql(members);
@@ -341,7 +317,7 @@ describe('Model', () => {
 
     describe('property setter', () => {
       it('should set an array with id and person instance', () => {
-        const group = new GroupModel({id: '1337'});
+        const group = new GroupWithReferencesModel({id: '1337'});
         const members = [alice.id, bob];
         group.members = members;
         expect(group.members).to.be.an('array').and.to.eql(members);
@@ -360,7 +336,7 @@ describe('Model', () => {
       });
 
       it('should populate ids with an instance', async () => {
-        const group = new GroupModel({id: '1337', members: [alice, bob.id]});
+        const group = new GroupWithReferencesModel({id: '1337', members: [alice, bob.id]});
         await group.populate({members: true});
         expect(group.members).to.be.an('array').and.be.of.length(2);
         expect(group.members[0]).to.equal(alice);
@@ -371,21 +347,21 @@ describe('Model', () => {
     describe('toObject()', () => {
       it('should return an object for instances and the id for an unpopulated reference', () => {
         const members = [alice, bob.id];
-        const group = new GroupModel({id: '1337', members});
+        const group = new GroupWithReferencesModel({id: '1337', members});
         const groupObj = group.toObject();
         expect(groupObj.members).to.eql([alice.toObject(), bob.id]);
       });
 
       it('should run toObject() recursively on populated references with {unpopulate: false}', () => {
         const members = [alice, bob.id];
-        const group = new GroupModel({id: '1337', members});
+        const group = new GroupWithReferencesModel({id: '1337', members});
         const groupObj = group.toObject({unpopulate: false});
         expect(groupObj.members).to.eql([alice.toObject(), bob.id]);
       });
 
       it('should return the id of populated references with {unpopulate: true}', () => {
         const members = [alice, bob.id];
-        const group = new GroupModel({id: '1337', members});
+        const group = new GroupWithReferencesModel({id: '1337', members});
         const groupObj = group.toObject({unpopulate: true});
         expect(groupObj.members).to.eql([alice.id, bob.id]);
       });
