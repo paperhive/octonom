@@ -1,6 +1,5 @@
 import { Model } from './model';
 import { ModelArray } from './model-array';
-import { rename } from './utils';
 
 export interface ICollectionOptions {
   modelIdField?: string;

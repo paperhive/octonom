@@ -1,8 +1,8 @@
-import { clone, cloneDeep, defaults, difference, forEach, isArray, isString } from 'lodash';
+import { cloneDeep, difference, forEach } from 'lodash';
 
 import { IPopulateMap, populateObject } from './populate';
 import { ISchemaSanitizeOptions, ISchemaToObjectOptions, sanitize,
-         SchemaMap, SchemaValue, setObjectSanitized, toObject } from './schema';
+         SchemaMap, SchemaValue, toObject } from './schema';
 
 interface IModel {
   constructor: typeof Model;

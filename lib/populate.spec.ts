@@ -2,7 +2,7 @@ import { collections } from '../test/data/collections';
 import { DiscussionModel } from '../test/data/models/discussion';
 import { PersonModel } from '../test/data/models/person';
 
-import { IPopulateMap, populateArray, populateObject, populateValue } from './populate';
+import { populateArray, populateObject, populateValue } from './populate';
 import { SchemaMap, SchemaValue } from './schema';
 
 describe('populate', () => {

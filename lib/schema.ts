@@ -1,7 +1,5 @@
 import { difference, forEach, isArray, isBoolean, isDate, isFunction, isNumber, isString } from 'lodash';
 
-import { Collection } from './collection';
-import { Model } from './model';
 import { ModelArray } from './model-array';
 
 export interface ISchemaValueBase {

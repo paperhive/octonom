@@ -6,7 +6,7 @@
   "types": "lib-js/main.d.ts",
   "scripts": {
     "build": "rm -rf ./lib-js && tsc",
-    "lint": "tslint lib/**/*.ts",
+    "lint": "tslint -p tsconfig.json lib/**/*.ts",
     "prepare": "npm run build",
     "test": "mocha  --opts ./mocha.opts",
     "test-cover": "nyc npm test",

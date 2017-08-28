@@ -2,7 +2,6 @@ import { find } from 'lodash';
 
 import { Collection } from './collection';
 import { Model } from './model';
-import { ModelArray } from './model-array';
 
 // simple collection with an in-memory array
 // note: we can't test Collection directly since it's abstract

@@ -4,7 +4,6 @@ import { Db, MongoClient } from 'mongodb';
 import { CatModel, ICat } from '../test/data/models/cat';
 import { ModelArray } from './model-array';
 import { MongoCollection } from './mongo-collection';
-import { generateId } from './utils';
 
 describe('MongoCollection', () => {
   class CatCollection extends MongoCollection<ICat, CatModel> {}
@@ -149,7 +148,7 @@ describe('MongoCollection', () => {
       const cat = new CatModel(catObj);
       await catCollection.insertOne(cat);
       cat.name = 'Kilf';
-      const updatedCat = await catCollection.update(cat);
+      await catCollection.update(cat);
       const doc = await db.collection('cats').findOne({_id: '42'});
       expect(doc).to.eql({_id: '42', name: 'Kilf'});
     });
