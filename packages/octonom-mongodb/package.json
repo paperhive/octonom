@@ -1,7 +1,7 @@
 {
-  "name": "octonom",
-  "version": "1.0.0-alpha.5",
-  "description": "Object Document Mapper for any database",
+  "name": "octonom-mongodb",
+  "version": "1.0.0-alpha.1",
+  "description": "MongoDB collection for Octonom",
   "main": "build/lib/main.js",
   "types": "build/lib/main.d.ts",
   "scripts": {
@@ -9,25 +9,22 @@
     "prepare": "npm run build"
   },
   "keywords": [
-    "octonom",
+    "octonom-plugin",
+    "mongodb",
+    "collection",
     "ODM",
     "ORM",
     "document",
     "object",
-    "model",
-    "collection",
-    "mongodb",
-    "couchdb"
+    "model"
   ],
   "author": "André Gaul <andre@paperhive.org>",
   "license": "MIT",
   "repository": "paperhive/octonom",
   "bugs": "https://github.com/paperhive/octonom/issues",
   "dependencies": {
-    "@types/lodash": "^4.14.66",
-    "@types/node": "^8.0.2",
-    "@types/uuid": "^3.0.0",
-    "lodash": "^4.17.4",
-    "uuid": "^3.1.0"
+    "@types/mongodb": "^2.2.6",
+    "mongodb": "^2.2.29",
+    "octonom": "^1.0.0-alpha.4"
   }
 }

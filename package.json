@@ -1,5 +1,5 @@
 {
-  "name": "octonom",
+  "name": "octonom-lerna",
   "private": true,
   "description": "Object Document Mapper for any database",
   "author": "André Gaul <andre@paperhive.org>",
