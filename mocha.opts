@@ -1,2 +1,2 @@
 --require ./test-init
-lib/**/*.spec.ts
+packages/**/*.spec.ts

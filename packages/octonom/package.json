@@ -2,15 +2,11 @@
   "name": "octonom",
   "version": "1.0.0-alpha.4",
   "description": "Object Document Mapper for any database",
-  "main": "lib-js/main.js",
-  "types": "lib-js/main.d.ts",
+  "main": "build/lib/main.js",
+  "types": "build/lib/main.d.ts",
   "scripts": {
-    "build": "rm -rf ./lib-js && tsc",
-    "lint": "tslint -p tsconfig.json lib/**/*.ts",
-    "prepare": "npm run build",
-    "test": "mocha  --opts ./mocha.opts",
-    "test-cover": "nyc npm test",
-    "test-cover-submit": "nyc report --reporter=json && codecov -f coverage/*.json"
+    "build": "rm -rf ./build && tsc",
+    "prepare": "npm run build"
   },
   "keywords": [
     "ODM",

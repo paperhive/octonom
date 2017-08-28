@@ -4,6 +4,12 @@
   "description": "Object Document Mapper for any database",
   "author": "André Gaul <andre@paperhive.org>",
   "license": "MIT",
+  "scripts": {
+    "lint": "tslint -p tsconfig.json packages/**/*.ts",
+    "test": "mocha  --opts ./mocha.opts",
+    "test-cover": "nyc npm test",
+    "test-cover-submit": "nyc report --reporter=json && codecov -f coverage/*.json"
+  },
   "devDependencies": {
     "@types/chai": "^4.0.1",
     "@types/chai-as-promised": "0.0.31",

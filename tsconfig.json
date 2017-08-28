@@ -3,8 +3,10 @@
     "declaration": true,
     "experimentalDecorators": true,
     "module": "commonjs",
-    "outDir": "lib-js",
     "sourceMap": true,
     "target": "es6"
-  }
+  },
+  "exclude": [
+    "**/*.spec.ts"
+  ]
 }
