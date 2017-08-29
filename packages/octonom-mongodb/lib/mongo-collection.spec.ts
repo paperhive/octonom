@@ -15,7 +15,7 @@ describe('MongoCollection', () => {
 
   beforeEach(async () => {
     db = await MongoClient.connect('mongodb://localhost:27017/octonom');
-    catCollection = new CatCollection('cats', CatModel, {modelIdField: 'id'});
+    catCollection = new CatCollection('cats', CatModel);
     await catCollection.init(db);
   });
 
