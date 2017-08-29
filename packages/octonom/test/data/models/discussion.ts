@@ -1,6 +1,5 @@
 import { Model, utils } from '../../../lib/main';
 
-import { collections } from '../collections';
 import { IPerson, PersonModel } from './person';
 
 export interface IDiscussion {
@@ -9,11 +8,12 @@ export interface IDiscussion {
   title: string;
 }
 
+@Model.Options({primaryIdProperty: 'id'})
 export class DiscussionModel extends Model<IDiscussion> {
   @Model.PropertySchema({type: 'string', default: utils.generateId})
   public id: string;
 
-  @Model.PropertySchema({type: 'reference', collection: () => collections.people})
+  @Model.PropertySchema({type: 'reference', model: PersonModel, collectionName: 'people'})
   public author: string | PersonModel;
 
   @Model.PropertySchema({type: 'string'})

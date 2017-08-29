@@ -252,19 +252,19 @@ describe('Model', () => {
     describe('populate()', () => {
       it('should throw if key does not exist', async () => {
         const discussion = new DiscussionModel();
-        await expect(discussion.populate({'non-existent': true}))
+        await expect(discussion.populate({'non-existent': true}, collections))
           .to.be.rejectedWith('Key non-existent not found in schema');
       });
 
       it('should throw if id does not exist', async () => {
         const discussion = new DiscussionModel({author: 'non-existent'});
-        await expect(discussion.populate({author: true}))
+        await expect(discussion.populate({author: true}, collections))
           .to.be.rejectedWith('Id non-existent not found.');
       });
 
       it('should populate an id with an instance', async () => {
         const discussion = new DiscussionModel({author: '42'});
-        await discussion.populate({author: true});
+        await discussion.populate({author: true}, collections);
         expect(discussion.author).to.be.instanceof(PersonModel);
         expect((discussion.author as PersonModel).toObject()).to.eql({id: '42', name: 'Alice'});
       });
@@ -327,17 +327,17 @@ describe('Model', () => {
     describe('populate()', () => {
       it('should throw if path is invalid', async () => {
         const discussion = new DiscussionModel({author: 'non-existent'});
-        await expect(discussion.populate({foo: true})).to.be.rejectedWith('Key foo not found in schema');
+        await expect(discussion.populate({foo: true}, collections)).to.be.rejectedWith('Key foo not found in schema');
       });
 
       it('should throw if id does not exist', async () => {
         const discussion = new DiscussionModel({author: 'non-existent'});
-        await expect(discussion.populate({author: true})).to.be.rejectedWith('Id non-existent not found');
+        await expect(discussion.populate({author: true}, collections)).to.be.rejectedWith('Id non-existent not found');
       });
 
       it('should populate ids with an instance', async () => {
         const group = new GroupWithReferencesModel({id: '1337', members: [alice, bob.id]});
-        await group.populate({members: true});
+        await group.populate({members: true}, collections);
         expect(group.members).to.be.an('array').and.be.of.length(2);
         expect(group.members[0]).to.equal(alice);
         expect((group.members[1] as PersonModel).toObject()).to.eql(bob.toObject());

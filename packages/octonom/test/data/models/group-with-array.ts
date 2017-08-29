@@ -7,6 +7,7 @@ export interface IGroupWithArray {
   members: ModelArray<IPerson, PersonModel> | Array<Partial<IPerson> | PersonModel>;
 }
 
+@Model.Options({primaryIdProperty: 'id'})
 export class GroupWithArrayModel extends Model<IGroupWithArray> {
   @Model.PropertySchema({type: 'string', default: utils.generateId})
   public id: string;

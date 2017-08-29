@@ -1,19 +1,8 @@
-import { Model } from './model';
+import { IModelConstructor, Model } from './model';
 import { ModelArray } from './model-array';
 
-export interface ICollectionOptions {
-  modelIdField?: string;
-}
-
 export abstract class Collection<T extends object, TModel extends Model<T>> {
-  public readonly modelIdField: string;
-
-  constructor(
-    public readonly model: new (data: any) => TModel,
-    protected options: ICollectionOptions = {},
-  ) {
-    this.modelIdField = options.modelIdField || 'id';
-  }
+  constructor(public readonly model: IModelConstructor<TModel>) {}
 
   public abstract async findById(id: string): Promise<TModel>;
 
@@ -32,4 +21,8 @@ export abstract class Collection<T extends object, TModel extends Model<T>> {
   public fromDb(doc: object): TModel {
     return new this.model(doc);
   }
+}
+
+export interface ICollectionMap {
+  [k: string]: Collection<object, Model<object>>;
 }

@@ -1,3 +1,4 @@
+import { ICollectionMap } from './collection';
 import { SchemaMap, SchemaValue} from './schema';
 
 export type PopulateReference = IPopulateMap | true;
@@ -7,14 +8,19 @@ export interface IPopulateMap {
 }
 
 // populate an array (modifies the array!)
-export async function populateArray(arr: any[], elementSchema: SchemaValue, populateReference: PopulateReference) {
+export async function populateArray(
+    arr: any[],
+    elementSchema: SchemaValue,
+    populateReference: PopulateReference,
+    collectionMap: ICollectionMap,
+  ) {
   // throw if this is not a nested population and this is not a reference
   if (populateReference === true && elementSchema.type !== 'reference') {
     throw new Error(`Reference expected but got ${elementSchema.type}`);
   }
 
   if (elementSchema.type === 'reference') {
-    const collection = elementSchema.collection();
+    const collection = collectionMap[elementSchema.collectionName];
 
     const fetchModels = [];
     arr.forEach((element, index) => {
@@ -50,14 +56,19 @@ export async function populateArray(arr: any[], elementSchema: SchemaValue, popu
 
   // nested population: populate elements individually
   await Promise.all(arr.map(async (value, index) => {
-    arr[index] = await populateValue(value, elementSchema, populateReference);
+    arr[index] = await populateValue(value, elementSchema, populateReference, collectionMap);
   }));
 
   return arr;
 }
 
 // populate an object (modifies the object!)
-export async function populateObject(obj: object, schemaMap: SchemaMap, populateMap: IPopulateMap) {
+export async function populateObject(
+    obj: object,
+    schemaMap: SchemaMap,
+    populateMap: IPopulateMap,
+    collectionMap: ICollectionMap,
+  ) {
   const populatedResults = {};
 
   // gather results for all keys
@@ -73,7 +84,7 @@ export async function populateObject(obj: object, schemaMap: SchemaMap, populate
     }
 
     // set in temp object
-    populatedResults[key] = await populateValue(obj[key], schemaMap[key], populateMap[key]);
+    populatedResults[key] = await populateValue(obj[key], schemaMap[key], populateMap[key], collectionMap);
   }));
 
   // set in object
@@ -83,10 +94,15 @@ export async function populateObject(obj: object, schemaMap: SchemaMap, populate
 }
 
 // return populated value (modifies value if possible)
-export async function populateValue(value: any, schema: SchemaValue, populateReference: PopulateReference) {
+export async function populateValue(
+    value: any,
+    schema: SchemaValue,
+    populateReference: PopulateReference,
+    collectionMap: ICollectionMap,
+  ) {
   switch (schema.type) {
     case 'reference': {
-      const collection = schema.collection();
+      const collection = collectionMap[schema.collectionName];
 
       // fetch if value isn't a model instance
       const instance = value instanceof collection.model
@@ -99,7 +115,7 @@ export async function populateValue(value: any, schema: SchemaValue, populateRef
 
       // nested populate?
       if (populateReference !== true) {
-        await populateObject(instance, collection.model._schema, populateReference);
+        await populateObject(instance, collection.model._schema, populateReference, collectionMap);
       }
 
       return instance;
@@ -109,10 +125,10 @@ export async function populateValue(value: any, schema: SchemaValue, populateRef
       if (populateReference === true) {
         throw new Error(`An object cannot be populated with populateReference = true.`);
       }
-      return populateObject(value, schema.definition, populateReference);
+      return populateObject(value, schema.definition, populateReference, collectionMap);
 
     case 'array':
-      return populateArray(value, schema.definition, populateReference);
+      return populateArray(value, schema.definition, populateReference, collectionMap);
 
     default:
       throw new Error(`Cannot populate type ${schema.type}`);

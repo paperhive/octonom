@@ -1,6 +1,8 @@
+import { IModelConstructor } from './model';
+
 export class ModelArray<T, TModel> extends Array<TModel> {
   constructor(
-    public readonly model: new (data: any) => TModel,
+    public readonly model: IModelConstructor<TModel>,
     data: Array<TModel | Partial<T>> = [],
   ) {
     super();
@@ -39,7 +41,7 @@ export class ModelArray<T, TModel> extends Array<TModel> {
 
     return value instanceof this.model
       ? value as TModel
-      : new this.model(value);
+      : new this.model(value as Partial<T>);
   }
 
   public unshift(...values: Array<TModel | Partial<T>>) {

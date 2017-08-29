@@ -6,7 +6,7 @@ import { ModelArray } from './model-array';
 describe('Collection (ArrayCollection)', () => {
   class CatCollection extends ArrayCollection<ICat, CatModel> {
     constructor() {
-      super(CatModel, {modelIdField: 'id'});
+      super(CatModel);
     }
   }
 

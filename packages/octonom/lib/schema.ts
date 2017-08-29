@@ -1,5 +1,6 @@
 import { difference, forEach, isArray, isBoolean, isDate, isFunction, isNumber, isString } from 'lodash';
 
+import { IModelConstructor, Model } from './model';
 import { ModelArray } from './model-array';
 
 export interface ISchemaValueBase {
@@ -26,14 +27,9 @@ export interface ISchemaValueDate extends ISchemaValueBase {
   max?: Date;
 }
 
-export interface IModelConstructor {
-  _schema: ISchemaMap;
-  new (data: any): any; // TODO
-}
-
 export interface ISchemaValueModel extends ISchemaValueBase {
   type: 'model';
-  model: IModelConstructor;
+  model: IModelConstructor<Model<object>>;
 }
 
 export interface ISchemaValueNumber extends ISchemaValueBase {
@@ -51,7 +47,8 @@ export interface ISchemaValueObject extends ISchemaValueBase {
 
 export interface ISchemaValueReference extends ISchemaValueBase {
   type: 'reference';
-  collection: () => any; // TODO
+  model: IModelConstructor<Model<object>>;
+  collectionName: string;
 }
 
 export interface ISchemaValueString extends ISchemaValueBase {
@@ -145,7 +142,7 @@ export function sanitize(schemaValue: SchemaValue, data: any, _options?: ISchema
       }
 
       // valid data?
-      if (!(data instanceof schemaValue.collection().model) && !isString(data)) {
+      if (!(data instanceof schemaValue.model) && !isString(data)) {
         throw new Error('not an instance or an id');
       }
 
@@ -236,13 +233,12 @@ export function toObjectValue(schemaValue: SchemaValue, value, options: ISchemaT
       return toObject(schemaValue.definition, value, options);
 
     case 'reference':
-      const collection = schemaValue.collection();
-
       // is value an instance (-> populated)?
-      if (value instanceof collection.model) {
+      if (value instanceof schemaValue.model) {
         // do we only want the id?
         if (options.unpopulate) {
-          return value[collection.modelIdField];
+          const idProperty = schemaValue.model._options.primaryIdProperty;
+          return value[idProperty];
         }
 
         return value.toObject();

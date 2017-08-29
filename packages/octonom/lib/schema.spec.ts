@@ -1,4 +1,3 @@
-import { ArrayCollection } from './array-collection';
 import { Model } from './model';
 import { sanitize, SchemaMap, SchemaValue, setObjectSanitized, toObject, toObjectValue } from './schema';
 
@@ -125,8 +124,7 @@ describe('schema', () => {
         @Cat.PropertySchema({type: 'string'})
         public name: string;
       }
-      const catsCollection = new ArrayCollection<ICat, Cat>(Cat);
-      const schemaReference: SchemaValue = {type: 'reference', collection: () => catsCollection};
+      const schemaReference: SchemaValue = {type: 'reference', model: Cat, collectionName: 'cats'};
 
       it('should throw if data is not an instance or an id', () => {
         expect(() => sanitize(schemaReference, 42))
@@ -289,8 +287,6 @@ describe('schema', () => {
       public age = 42;
     }
 
-    const catsCollection = new ArrayCollection<ICat, Cat>(Cat);
-
     describe('type invalid', () => {
       it('should throw if the type is invalid', () => {
         expect(() => toObjectValue({type: 'invalid'} as any, 42)).to.throw('type invalid is unknown');
@@ -328,7 +324,7 @@ describe('schema', () => {
     });
 
     describe('type reference', () => {
-      const schemaReference: SchemaValue = {type: 'reference', collection: () => catsCollection};
+      const schemaReference: SchemaValue = {type: 'reference', model: Cat, collectionName: 'cats'};
 
       it('should turn an instance into an object', () => {
         expect(toObjectValue(schemaReference, new Cat({id: '42', name: 'Yllim'}))).to.eql({id: '42', name: 'Yllim'});

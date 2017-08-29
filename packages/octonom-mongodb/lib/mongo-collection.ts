@@ -1,17 +1,16 @@
 import { Collection as DbCollection, CollectionInsertManyOptions, Cursor,
   Db, FindOneOptions } from 'mongodb';
 
-import { Collection, ICollectionOptions, Model, ModelArray, utils } from 'octonom';
+import { Collection, IModelConstructor, Model, ModelArray, utils } from 'octonom';
 
 export class MongoCollection<T extends object, TModel extends Model<T>> extends Collection<T, TModel> {
   protected collection: DbCollection;
 
   constructor(
     protected name: string,
-    model: new (data: any) => TModel,
-    options: ICollectionOptions = {},
+    model: IModelConstructor<TModel>,
   ) {
-    super(model, options);
+    super(model);
   }
 
   public async insertMany(models: TModel[], options?: CollectionInsertManyOptions) {
@@ -25,7 +24,8 @@ export class MongoCollection<T extends object, TModel extends Model<T>> extends 
   }
 
   public async delete(model: TModel) {
-    const result = await this.collection.deleteOne({_id: model[this.modelIdField]});
+    const idProperty = this.model._options.primaryIdProperty;
+    const result = await this.collection.deleteOne({_id: model[idProperty]});
     if (result.deletedCount === 0) {
       throw new Error('document not found in collection');
     }
@@ -61,16 +61,19 @@ export class MongoCollection<T extends object, TModel extends Model<T>> extends 
   }
 
   public toDb(model: TModel) {
-    return utils.rename(super.toDb(model), {[this.modelIdField]: '_id'});
+    const idProperty = this.model._options.primaryIdProperty;
+    return utils.rename(super.toDb(model), {[idProperty]: '_id'});
   }
 
   public fromDb(doc: object) {
-    return super.fromDb(utils.rename(doc, {_id: this.modelIdField}));
+    const idProperty = this.model._options.primaryIdProperty;
+    return super.fromDb(utils.rename(doc, {_id: idProperty}));
   }
 
   public async update(model: TModel) {
     const doc = this.toDb(model);
-    const result = await this.collection.replaceOne({_id: model[this.modelIdField]}, doc);
+    const idProperty = this.model._options.primaryIdProperty;
+    const result = await this.collection.replaceOne({_id: model[idProperty]}, doc);
     if (result.matchedCount === 0) {
       throw new Error('document not found in collection');
     }
