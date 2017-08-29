@@ -77,15 +77,6 @@ export abstract class Model<T> {
     this.set(data || {}, {defaults: true, replace: true});
   }
 
-  public getPrimaryId(): string {
-    const constructor = this.constructor as typeof Model;
-    const primaryIdProperty = constructor._options.primaryIdProperty;
-    if (!primaryIdProperty) {
-      throw new Error('primaryIdProperty is not set in model options');
-    }
-    return this[primaryIdProperty];
-  }
-
   public async populate(populateMap: IPopulateMap, collectionMap: ICollectionMap) {
     const constructor = this.constructor as typeof Model;
     return populateObject(this, constructor._schema, populateMap, collectionMap);

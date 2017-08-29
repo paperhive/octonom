@@ -237,7 +237,8 @@ export function toObjectValue(schemaValue: SchemaValue, value, options: ISchemaT
       if (value instanceof schemaValue.model) {
         // do we only want the id?
         if (options.unpopulate) {
-          return value.getPrimaryId();
+          const idProperty = schemaValue.model._options.primaryIdProperty;
+          return value[idProperty];
         }
 
         return value.toObject();
