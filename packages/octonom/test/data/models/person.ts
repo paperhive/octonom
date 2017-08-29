@@ -8,6 +8,7 @@ export interface IPerson {
   account?: IPersonAccount;
 }
 
+@Model.Options({primaryIdProperty: 'id'})
 export class PersonModel extends Model<IPerson> {
   @Model.PropertySchema({type: 'string', default: utils.generateId})
   public id: string;

@@ -13,7 +13,8 @@ export class ArrayCollection<T extends object, TModel extends Model<T>> extends 
   }
 
   public insert(model: TModel) {
-    const doc = find(this.array, {[this.modelIdField]: model[this.modelIdField]});
+    const idProperty = this.model._options.primaryIdProperty;
+    const doc = find(this.array, {[idProperty]: model[idProperty]});
     if (doc) {
       throw new Error('duplicate key error');
     }
@@ -21,7 +22,8 @@ export class ArrayCollection<T extends object, TModel extends Model<T>> extends 
   }
 
   public async findById(id: string) {
-    const doc = find(this.array, {[this.modelIdField]: id});
+    const idProperty = this.model._options.primaryIdProperty;
+    const doc = find(this.array, {[idProperty]: id});
 
     if (!doc) {
       return undefined;

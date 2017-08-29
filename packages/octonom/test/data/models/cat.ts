@@ -5,6 +5,7 @@ export interface ICat {
   name: string;
 }
 
+@Model.Options({primaryIdProperty: 'id'})
 export class CatModel extends Model<ICat> {
   @Model.PropertySchema({type: 'string', default: utils.generateId})
   public id: string;

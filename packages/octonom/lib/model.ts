@@ -1,10 +1,17 @@
 import { cloneDeep, difference, forEach } from 'lodash';
 
+import { ICollectionMap } from './collection';
 import { IPopulateMap, populateObject } from './populate';
-import { ISchemaSanitizeOptions, ISchemaToObjectOptions, sanitize,
+import { ISchemaMap, ISchemaSanitizeOptions, ISchemaToObjectOptions, sanitize,
          SchemaMap, SchemaValue, toObject } from './schema';
 
-interface IModel {
+export interface IModelConstructor<TModel> {
+  _options: IModelOptions;
+  _schema: ISchemaMap;
+  new (data: object): TModel;
+}
+
+export interface IModel {
   constructor: typeof Model;
   _sanitized: {[k: string]: object};
   setKey(key: string, value: any, options?: ISchemaSanitizeOptions);
@@ -26,11 +33,27 @@ function defineModelProperty(target, key: string, enumerable: boolean) {
   });
 }
 
+export interface IModelOptions {
+  primaryIdProperty?: string;
+  collectionMap?: ICollectionMap;
+}
+
 export abstract class Model<T> {
+  public static _options: IModelOptions = {};
   public static _schema: SchemaMap = {};
 
   /**
-   * Attach schema information to the property
+   * Set options for the model
+   */
+  public static Options(options: IModelOptions) {
+    return constructor => {
+      Object.assign(constructor._options, options);
+      return constructor;
+    };
+  }
+
+  /**
+   * Set schema information for a property
    * @param schema Schema definition
    */
   public static PropertySchema(schema: SchemaValue): PropertyDecorator {
@@ -54,9 +77,18 @@ export abstract class Model<T> {
     this.set(data || {}, {defaults: true, replace: true});
   }
 
-  public async populate(populateMap: IPopulateMap) {
+  public getPrimaryId(): string {
     const constructor = this.constructor as typeof Model;
-    return populateObject(this, constructor._schema, populateMap);
+    const primaryIdProperty = constructor._options.primaryIdProperty;
+    if (!primaryIdProperty) {
+      throw new Error('primaryIdProperty is not set in model options');
+    }
+    return this[primaryIdProperty];
+  }
+
+  public async populate(populateMap: IPopulateMap, collectionMap: ICollectionMap) {
+    const constructor = this.constructor as typeof Model;
+    return populateObject(this, constructor._schema, populateMap, collectionMap);
   }
 
   // TODO: find a way to merge this with setObjectSanitized, code is pretty redundant
