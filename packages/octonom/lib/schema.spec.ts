@@ -11,6 +11,19 @@ describe('schema', () => {
       });
     });
 
+    describe('type any', () => {
+      const schemaAny: SchemaValue = {type: 'any', default: () => ({foo: 42})};
+
+      it('should return the input', () => {
+        const value = {foo: 'bar'};
+        expect(sanitize(schemaAny, value)).to.equal(value);
+      });
+
+      it('should return default value if undefined', () => {
+        expect(sanitize(schemaAny, undefined, {defaults: true})).to.eql({foo: 42});
+      });
+    });
+
     describe('type array', () => {
       const schemaStringArray: SchemaValue = {type: 'array', definition: {type: 'string'}};
 
@@ -297,6 +310,14 @@ describe('schema', () => {
       });
     });
 
+    describe('type any', () => {
+      it('should return the value', () => {
+        const schema: SchemaValue = {type: 'any'};
+        const value = {foo: 'bar'};
+        expect(toObjectValue(schema, value)).to.eql(value);
+      });
+    });
+
     describe('type array', () => {
       it('should clone an array', () => {
         const schema: SchemaValue = {type: 'array', definition: {type: 'string'}};
@@ -344,8 +365,9 @@ describe('schema', () => {
       });
     });
 
-    describe('types boolean, date, number, string', () => {
+    describe('types any, boolean, date, number, string', () => {
       it('should just return the primitive', () => {
+        expect(toObjectValue({type: 'any'}, {foo: 'bar'})).to.eql({foo: 'bar'});
         expect(toObjectValue({type: 'boolean'}, false)).to.equal(false);
         const date = new Date();
         expect(toObjectValue({type: 'date'}, date)).to.equal(date);

@@ -7,6 +7,11 @@ export interface ISchemaValueBase {
   required?: boolean;
 }
 
+export interface ISchemaValueAny extends ISchemaValueBase {
+  type: 'any';
+  default?: () => any;
+}
+
 export interface ISchemaValueArray extends ISchemaValueBase {
   type: 'array';
   definition: SchemaValue;
@@ -64,9 +69,9 @@ export interface ISchemaValueString extends ISchemaValueBase {
   regex?: RegExp;
 }
 
-export type SchemaValue = ISchemaValueArray | ISchemaValueBoolean | ISchemaValueDate |
-  ISchemaValueModel | ISchemaValueNumber | ISchemaValueObject | ISchemaValueReference |
-  ISchemaValueString;
+export type SchemaValue = ISchemaValueAny | ISchemaValueArray | ISchemaValueBoolean |
+  ISchemaValueDate | ISchemaValueModel | ISchemaValueNumber | ISchemaValueObject |
+  ISchemaValueReference | ISchemaValueString;
 
 export interface ISchemaMap {
   [field: string]: SchemaValue;
@@ -151,6 +156,7 @@ export function sanitize(schemaValue: SchemaValue, data: any, _options?: ISchema
 
       return data;
 
+    case 'any':
     case 'boolean':
     case 'date':
     case 'number':
@@ -251,6 +257,7 @@ export function toObjectValue(schemaValue: SchemaValue, value, options: ISchemaT
       // value is an id
       return value;
 
+    case 'any':
     case 'boolean':
     case 'date':
     case 'number':
