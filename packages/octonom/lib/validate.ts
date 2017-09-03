@@ -62,5 +62,16 @@ export async function validate(
       }
 
       break;
+
+    case 'boolean':
+      if (value !== true && value !== false) {
+        throw new ValidationError('Value is not a boolean.', 'no-boolean', value, path, instance);
+      }
+
+      if (schema.validate) {
+        await schema.validate(value, path, instance);
+      }
+
+      break;
   }
 }

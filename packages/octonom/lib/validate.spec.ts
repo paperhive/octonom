@@ -110,4 +110,35 @@ describe('validate()', () => {
       await validate(schema, value, ['key'], instance);
     });
   });
+
+  describe('type boolean', () => {
+    const schema: SchemaValue = {
+      type: 'boolean',
+      validate: async (value: boolean, path: Array<string | number>, instance: Model<any>) => {
+        if (value === false) {
+          throw new ValidationError('False not allowed.', 'custom', value, path, instance);
+        }
+      },
+    };
+
+    it('should throw a ValidationError if value not a boolean', async () => {
+      const value = 'foo';
+      const instance = getInstance(schema, {key: true}); // pretend it's a boolean
+      await expect(validate(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'Value is not a boolean.');
+    });
+
+    it('should throw a ValidationError if custom validator throws', async () => {
+      const value = false;
+      const instance = getInstance(schema, {key: value});
+      await expect(validate(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'False not allowed.');
+    });
+
+    it('should pass if validator passes', async () => {
+      const value = true;
+      const instance = getInstance(schema, {key: value});
+      await validate(schema, value, ['key'], instance);
+    });
+  });
 });
