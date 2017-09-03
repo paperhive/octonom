@@ -1,5 +1,3 @@
-import { spy } from 'sinon';
-
 import { collections } from '../test/data/collections';
 import { CatModel } from '../test/data/models/cat';
 import { DiscussionModel } from '../test/data/models/discussion';
@@ -191,7 +189,6 @@ describe('Model', () => {
     describe('toObject()', () => {
       it('should run toObject on array elements', async () => {
         const person = new PersonModel({id: '42', name: 'Bob'});
-        const toObject = spy(person, 'toObject');
         const group = new GroupWithArrayModel({id: '1337', members: [person]});
         expect(group.toObject({unpopulate: true})).to.eql({id: '1337', members: [{id: '42', name: 'Bob'}]});
       });

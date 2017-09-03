@@ -1,5 +1,3 @@
-import { stub } from 'sinon';
-
 import { ValidationError } from './errors';
 import { Model } from './model';
 import { SchemaValue } from './schema';
