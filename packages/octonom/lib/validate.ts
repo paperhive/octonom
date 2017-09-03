@@ -73,5 +73,24 @@ export async function validate(
       }
 
       break;
+
+    case 'date':
+      if (!(value instanceof Date)) {
+        throw new ValidationError('Value is not a date.', 'no-date', value, path, instance);
+      }
+
+      if (schema.min && value < schema.min) {
+        throw new ValidationError(`Date must not be before ${schema.min}.`, 'date-min', value, path, instance);
+      }
+
+      if (schema.max && value > schema.max) {
+        throw new ValidationError(`Date must not be after ${schema.max}.`, 'date-max', value, path, instance);
+      }
+
+      if (schema.validate) {
+        await schema.validate(value, path, instance);
+      }
+
+      break;
   }
 }

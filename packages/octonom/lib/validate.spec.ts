@@ -141,4 +141,51 @@ describe('validate()', () => {
       await validate(schema, value, ['key'], instance);
     });
   });
+
+  describe('type date', () => {
+    const schema: SchemaValue = {
+      type: 'date',
+      min: new Date('2000-01-01'),
+      max: new Date('2018-01-01'),
+      validate: async (value: Date, path: Array<string | number>, instance: Model<any>) => {
+        if (value.getTime() === new Date('2017-09-03').getTime()) {
+          throw new ValidationError('2017-09-03 is not allowed.', 'custom', value, path, instance);
+        }
+      },
+    };
+
+    it('should throw a ValidationError if not a date', async () => {
+      const value = 'foo';
+      const instance = getInstance(schema, {key: new Date()}); // pretend it's a date
+      await expect(validate(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'Value is not a date.');
+    });
+
+    it('should throw a ValidationError if before min date', async () => {
+      const value = new Date('1999-12-31');
+      const instance = getInstance(schema, {key: value});
+      await expect(validate(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, `Date must not be before ${schema.min}`);
+    });
+
+    it('should throw a ValidationError if after max date', async () => {
+      const value = new Date('2019-12-31');
+      const instance = getInstance(schema, {key: value});
+      await expect(validate(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, `Date must not be after ${schema.max}`);
+    });
+
+    it('should throw a ValidationError if custom validator throws', async () => {
+      const value = new Date('2017-09-03');
+      const instance = getInstance(schema, {key: value});
+      await expect(validate(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, '2017-09-03 is not allowed.');
+    });
+
+    it('should pass if validator passes', async () => {
+      const value = new Date('2016-06-06');
+      const instance = getInstance(schema, {key: value});
+      await validate(schema, value, ['key'], instance);
+    });
+  });
 });
