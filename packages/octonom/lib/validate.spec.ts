@@ -60,9 +60,11 @@ describe('validate()', () => {
           }
         },
       },
+      minLength: 1,
+      maxLength: 2,
       validate: async (value: any[], path: Array<string | number>, instance: Model<any>) => {
-        if (value.length > 2) {
-          throw new ValidationError('Array is too long.', 'custom', value, path, instance);
+        if (value.indexOf('baz') !== -1) {
+          throw new ValidationError('Array must not contain baz.', 'custom', value, path, instance);
         }
       },
     };
@@ -74,11 +76,25 @@ describe('validate()', () => {
         .to.be.rejectedWith(ValidationError, 'Value is not an array.');
     });
 
-    it('should throw a ValidationError if custom validator throws', async () => {
+    it('should throw a ValidationError with too few elements', async () => {
+      const value = [];
+      const instance = getInstance(schema, {key: value});
+      await expect(validate(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'Array must have at least 1 elements.');
+    });
+
+    it('should throw a ValidationError with too many', async () => {
       const value = [1, 2, 3];
       const instance = getInstance(schema, {key: value});
       await expect(validate(schema, value, ['key'], instance))
-        .to.be.rejectedWith(ValidationError, 'Array is too long.');
+        .to.be.rejectedWith(ValidationError, 'Array must have at most 2 elements.');
+    });
+
+    it('should throw a ValidationError if custom validator throws', async () => {
+      const value = [1, 'baz'];
+      const instance = getInstance(schema, {key: value});
+      await expect(validate(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'Array must not contain baz.');
     });
 
     it('should throw a ValidationError if nested validator throws', async () => {

@@ -36,6 +36,20 @@ export async function validate(
         throw new ValidationError('Value is not an array.', 'no-array', value, path, instance);
       }
 
+      if (schema.minLength !== undefined && value.length < schema.minLength) {
+        throw new ValidationError(
+          `Array must have at least ${schema.minLength} elements.`,
+          'array-min-length', value, path, instance,
+        );
+      }
+
+      if (schema.maxLength !== undefined && value.length > schema.maxLength) {
+        throw new ValidationError(
+          `Array must have at most ${schema.maxLength} elements.`,
+          'array-max-length', value, path, instance,
+        );
+      }
+
       // validate all elements
       await Promise.all(value.map(async (element, index) => {
         const newPath = path.slice();
