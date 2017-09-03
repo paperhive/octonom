@@ -194,7 +194,6 @@ describe('Model', () => {
         const toObject = spy(person, 'toObject');
         const group = new GroupWithArrayModel({id: '1337', members: [person]});
         expect(group.toObject({unpopulate: true})).to.eql({id: '1337', members: [{id: '42', name: 'Bob'}]});
-        expect(toObject.calledWith({unpopulate: true}));
       });
     });
   });
