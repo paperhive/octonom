@@ -32,7 +32,7 @@ describe('validate()', () => {
       type: 'any',
       validate: async (value: any, path: Array<string | number>, instance: Model<any>) => {
         if (value.foo === 'invalid') {
-          throw new ValidationError('custom error', 'custom', value, path, instance);
+          throw new ValidationError('Custom error.', 'custom', value, path, instance);
         }
       },
     };
@@ -41,11 +41,57 @@ describe('validate()', () => {
       const value = {foo: 'invalid'};
       const instance = getInstance(schema, {key: value});
       await expect(validate(schema, value, ['key'], instance))
-        .to.be.rejectedWith(ValidationError, 'custom error');
+        .to.be.rejectedWith(ValidationError, 'Custom error.');
     });
 
     it('should pass if validator passes', async () => {
       const value = {foo: 'bar'};
+      const instance = getInstance(schema, {key: value});
+      await validate(schema, value, ['key'], instance);
+    });
+  });
+
+  describe('type array', () => {
+    const schema: SchemaValue = {
+      type: 'array',
+      definition: {
+        type: 'any',
+        validate: async (value: any, path: Array<string | number>, instance: Model<any>) => {
+          if (value === 'invalid') {
+            throw new ValidationError('Custom error.', 'custom', value, path, instance);
+          }
+        },
+      },
+      validate: async (value: any[], path: Array<string | number>, instance: Model<any>) => {
+        if (value.length > 2) {
+          throw new ValidationError('Array is too long.', 'custom', value, path, instance);
+        }
+      },
+    };
+
+    it('should throw a ValidationError if not an array', async () => {
+      const value = 'foo';
+      const instance = getInstance(schema, {key: ['foo']}); // pretend it's an array
+      await expect(validate(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'Value is not an array.');
+    });
+
+    it('should throw a ValidationError if custom validator throws', async () => {
+      const value = [1, 2, 3];
+      const instance = getInstance(schema, {key: value});
+      await expect(validate(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'Array is too long.');
+    });
+
+    it('should throw a ValidationError if nested validator throws', async () => {
+      const value = ['foo', 'invalid'];
+      const instance = getInstance(schema, {key: value});
+      await expect(validate(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'Custom error.');
+    });
+
+    it('should pass if validator passes', async () => {
+      const value = ['foo', 'bar'];
       const instance = getInstance(schema, {key: value});
       await validate(schema, value, ['key'], instance);
     });
