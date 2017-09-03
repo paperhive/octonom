@@ -1,8 +1,17 @@
 import { ValidationError } from './errors';
 import { Model } from './model';
-import { SchemaValue } from './schema';
+import { SchemaMap, SchemaValue } from './schema';
 
-export async function validate(
+export async function validateObject(
+  schemaMap: SchemaMap,
+  obj: any,
+  path: Array<string | number>,
+  instance: Model<object>,
+) {
+  // TODO
+}
+
+export async function validateValue(
   schema: SchemaValue,
   value: any,
   path: Array<string | number>,
@@ -54,7 +63,7 @@ export async function validate(
       await Promise.all(value.map(async (element, index) => {
         const newPath = path.slice();
         newPath.push(index);
-        await validate(schema.definition, element, newPath, instance);
+        await validateValue(schema.definition, element, newPath, instance);
       }));
 
       if (schema.validate) {
@@ -92,5 +101,24 @@ export async function validate(
       }
 
       break;
+
+    case 'model':
+      if (!(value instanceof schema.model)) {
+        throw new ValidationError(
+          `Value is not an instance of ${schema.model.name}.`,
+          'no-instance', value, path, instance,
+        );
+      }
+
+      await validateObject(schema.model._schema, value, path, instance);
+
+      if (schema.validate) {
+        await schema.validate(value, path, instance);
+      }
+
+      break;
+
+    default:
+      throw new Error(`type ${schema.type} is unknown.`);
   }
 }
