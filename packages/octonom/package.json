@@ -1,6 +1,6 @@
 {
   "name": "octonom",
-  "version": "1.0.0-alpha.12",
+  "version": "1.0.0-alpha.13",
   "description": "Object Document Mapper for any database",
   "main": "build/lib/main.js",
   "types": "build/lib/main.d.ts",
