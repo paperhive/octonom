@@ -20,12 +20,10 @@ function defineModelProperty(target, key: string, enumerable: boolean) {
   Object.defineProperty(target, key, {
     configurable: true,
     enumerable,
-    // tslint:disable-next-line:object-literal-shorthand
-    get: function() {
+    get() {
       return this._sanitized[key];
     },
-    // tslint:disable-next-line:object-literal-shorthand
-    set: function(value) {
+    set(value) {
       const instance = this as IModel;
       instance.setKey(key, value);
     },
