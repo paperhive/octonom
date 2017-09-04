@@ -218,11 +218,14 @@ export function setObjectSanitized(schemaMap: ISchemaMap, target: object, data: 
       delete target[key];
     }
 
-    if (dataKeys.indexOf(key) === -1) {
+    if (data[key] === undefined && !options.replace) {
       return;
     }
 
-    target[key] = sanitize(schemaValue, data[key], options);
+    const sanitizedValue = sanitize(schemaValue, data[key], options);
+    if (sanitizedValue !== undefined) {
+      target[key] = sanitizedValue;
+    }
   });
 
   return target;

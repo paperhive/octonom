@@ -1,8 +1,8 @@
-import { cloneDeep, difference, forEach } from 'lodash';
+import { cloneDeep } from 'lodash';
 
 import { IPopulateMap, populateObject } from './populate';
 import { ISchemaSanitizeOptions, ISchemaToObjectOptions, sanitize,
-         SchemaMap, SchemaValue, toObject } from './schema';
+         SchemaMap, SchemaValue, setObjectSanitized, toObject } from './schema';
 import { validateObject } from './validate';
 
 export interface IModelConstructor<TModel extends Model<object>> {
@@ -12,28 +12,10 @@ export interface IModelConstructor<TModel extends Model<object>> {
 
 interface IModel {
   constructor: typeof Model;
-  _sanitized: {[k: string]: object};
-  setKey(key: string, value: any, options?: ISchemaSanitizeOptions);
-}
-
-function defineModelProperty(target, key: string, enumerable: boolean) {
-  Object.defineProperty(target, key, {
-    configurable: true,
-    enumerable,
-    // tslint:disable-next-line:object-literal-shorthand
-    get: function() {
-      return this._sanitized[key];
-    },
-    // tslint:disable-next-line:object-literal-shorthand
-    set: function(value) {
-      const instance = this as IModel;
-      instance.setKey(key, value);
-    },
-  });
 }
 
 export abstract class Model<T extends object> {
-  public static _schema: SchemaMap = {};
+  public static _schema: SchemaMap;
 
   /**
    * Attach schema information to the property
@@ -42,22 +24,26 @@ export abstract class Model<T extends object> {
   public static PropertySchema(schema: SchemaValue): PropertyDecorator {
     return (target: IModel, key: string) => {
       const constructor = target.constructor;
-      constructor._schema = cloneDeep(constructor._schema);
+      constructor._schema = cloneDeep(constructor._schema || {});
       constructor._schema[key] = schema;
-
-      // define model property
-      defineModelProperty(target, key, false);
     };
   }
 
-  // TODO: make this work
-  // @enumerable(false)
-  protected _sanitized = {};
-
   constructor(data?: Partial<T>) {
-    // TODO: remove (see @enumerable decorator)
-    Object.defineProperty(this, '_sanitized', {writable: true, enumerable: false});
+    const constructor = this.constructor as typeof Model;
+    const schema = constructor._schema;
+
+    // set initial data
     this.set(data || {}, {defaults: true, replace: true});
+
+    // create proxy that intercepts set operations
+    // for running sanitization if the key is in the schema
+    return new Proxy(this, {
+      set(target, key, value, receiver) {
+        target[key] = schema[key] ? sanitize(schema[key], value) : value;
+        return true;
+      },
+    });
   }
 
   public inspect() {
@@ -69,41 +55,10 @@ export abstract class Model<T extends object> {
     return populateObject(this, constructor._schema, populateMap);
   }
 
-  // TODO: find a way to merge this with setObjectSanitized, code is pretty redundant
+  // TODO: sanitize is called twice when this is called via the proxy
   public set(data: object, options: ISchemaSanitizeOptions = {}) {
     const constructor = this.constructor as typeof Model;
-
-    if (typeof data !== 'object') {
-      throw new Error('data is not an object');
-    }
-
-    const dataKeys = Object.keys(data);
-    const schemaKeys = Object.keys(constructor._schema);
-    const disallowedKeys = difference(dataKeys, schemaKeys);
-    if (disallowedKeys.length > 0) {
-      throw new Error(`key ${disallowedKeys[0]} not found in schema`);
-    }
-
-    forEach(constructor._schema, (_, key) => {
-      if (data[key] === undefined && !options.replace) {
-        return;
-      }
-      this.setKey(key, data[key], options);
-    });
-  }
-
-  public setKey(key: string, value: any, options: ISchemaSanitizeOptions = {}) {
-    const constructor = this.constructor as typeof Model;
-    const schemaValue = constructor._schema[key];
-
-    if (!schemaValue) {
-      throw new Error(`key ${key} not found in schema`);
-    }
-
-    const sanitizedValue = sanitize(schemaValue, value, options);
-    this._sanitized[key] = sanitizedValue;
-
-    defineModelProperty(this, key, sanitizedValue !== undefined);
+    setObjectSanitized(constructor._schema, this, data, options);
   }
 
   public toObject(options?: ISchemaToObjectOptions): Partial<T> {
