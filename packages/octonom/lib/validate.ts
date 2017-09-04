@@ -166,7 +166,7 @@ export async function validateValue(
 
     case 'object':
       if (!(value instanceof Object)) {
-        throw new ValidationError('Value is not an object.', 'no-number', value, path, instance);
+        throw new ValidationError('Value is not an object.', 'no-object', value, path, instance);
       }
 
       await validateObject(schema.definition, value, path, instance);
@@ -195,7 +195,43 @@ export async function validateValue(
 
       break;
 
+    case 'string':
+      if (typeof value !== 'string') {
+        throw new ValidationError('Value is not a string.', 'no-string', value, path, instance);
+      }
+
+      if (schema.enum && schema.enum.indexOf(value) === -1) {
+        throw new ValidationError(
+          `String not in enum: ${schema.enum.join(', ')}.`,
+          'string-enum', value, path, instance,
+        );
+      }
+
+      if (schema.min && value.length < schema.min) {
+        throw new ValidationError(
+          `String must not have less than ${schema.min} characters.`,
+          'string-min', value, path, instance,
+        );
+      }
+
+      if (schema.max && value.length > schema.max) {
+        throw new ValidationError(
+          `String must not have more than ${schema.max} characters.`,
+          'string-max', value, path, instance,
+        );
+      }
+
+      if (schema.regex && !schema.regex.test(value)) {
+        throw new ValidationError(`String does not match regex.`, 'string-regex', value, path, instance);
+      }
+
+      if (schema.validate) {
+        await schema.validate(value, path, instance);
+      }
+
+      break;
+
     default:
-      throw new Error(`type ${schema.type} is unknown.`);
+      throw new Error(`type ${(schema as SchemaValue).type} is unknown.`);
   }
 }

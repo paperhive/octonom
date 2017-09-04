@@ -71,7 +71,6 @@ export interface ISchemaValueReference extends ISchemaValueBase {
 export interface ISchemaValueString extends ISchemaValueBase {
   type: 'string';
   default?: string | (() => string);
-  allowEmpty?: boolean;
   enum?: string[];
   min?: number;
   max?: number;

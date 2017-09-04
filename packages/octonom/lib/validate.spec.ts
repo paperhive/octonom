@@ -282,7 +282,7 @@ describe('validateValue()', () => {
 
     it('should throw a ValidationError if not a number', async () => {
       const value = 'foo';
-      const instance = getInstance(schema, {key: 1}); // pretend it's a date
+      const instance = getInstance(schema, {key: 1}); // pretend it's a number
       await expect(validateValue(schema, value, ['key'], instance))
         .to.be.rejectedWith(ValidationError, 'Value is not a number.');
     });
@@ -394,6 +394,69 @@ describe('validateValue()', () => {
 
     it('should pass with an id', async () => {
       const value = 'id';
+      const instance = getInstance(schema, {key: value});
+      await validateValue(schema, value, ['key'], instance);
+    });
+  });
+
+  describe('type string', () => {
+    const schema: SchemaValue = {
+      type: 'string',
+      enum: ['f', 'foo', 'bar', 'bat', 'foobar'], // disallows baz
+      min: 2, // disallows f
+      max: 5, // disallows foobar
+      regex: /^(f|foo|bar|baz|foobar)$/, // disallows bat
+      validate: async (value: string, path: Array<string | number>, instance: Model<any>) => {
+        if (value === 'bar') {
+          throw new ValidationError('String bar is not allowed.', 'custom', value, path, instance);
+        }
+      },
+    };
+
+    it('should throw a ValidationError if not a string', async () => {
+      const value = 1;
+      const instance = getInstance(schema, {key: 'foo'}); // pretend it's a string
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'Value is not a string.');
+    });
+
+    it('should throw a ValidationError if not in enum', async () => {
+      const value = 'baz';
+      const instance = getInstance(schema, {key: value});
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'String not in enum: f, foo, bar, bat, foobar.');
+    });
+
+    it('should throw a ValidationError if less than min characters', async () => {
+      const value = 'f';
+      const instance = getInstance(schema, {key: value});
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, `String must not have less than ${schema.min} characters.`);
+    });
+
+    it('should throw a ValidationError if more than max characters', async () => {
+      const value = 'foobar';
+      const instance = getInstance(schema, {key: value});
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, `String must not have more than ${schema.max} characters.`);
+    });
+
+    it('should throw a ValidationError if regex does not match', async () => {
+      const value = 'bat';
+      const instance = getInstance(schema, {key: value});
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, `String does not match regex.`);
+    });
+
+    it('should throw a ValidationError if custom validator throws', async () => {
+      const value = 'bar';
+      const instance = getInstance(schema, {key: value});
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'String bar is not allowed.');
+    });
+
+    it('should pass if validator passes', async () => {
+      const value = 'foo';
       const instance = getInstance(schema, {key: value});
       await validateValue(schema, value, ['key'], instance);
     });
