@@ -126,8 +126,17 @@ export async function validateValue(
           'no-instance', value, path, instance,
         );
       }
-      // TODO: use value.validate() so we use the same validation we'd get on the instance
-      await validateObject(schema.model._schema, value, path, instance);
+
+      try {
+        await value.validate();
+      } catch (error) {
+        if (error instanceof ValidationError) {
+          const newPath = path.concat(error.path);
+          throw new ValidationError(error.message, error.reason, error.value, newPath, instance);
+        }
+
+        throw error;
+      }
 
       if (schema.validate) {
         await schema.validate(value, path, instance);
