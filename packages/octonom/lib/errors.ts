@@ -12,10 +12,10 @@ export class ExtendableError extends Error {
 export class ValidationError extends ExtendableError {
   constructor(
     message: string,
-    public readonly reason: string,
-    public readonly value: any,
-    public readonly path: Array<string | number>,
-    public readonly instance: Model<object>,
+    public reason?: string,
+    public value?: any,
+    public path?: Array<string | number>,
+    public instance?: Model<object>,
   ) {
     super(message, ValidationError.prototype);
   }

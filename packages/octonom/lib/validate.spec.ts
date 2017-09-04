@@ -231,6 +231,9 @@ describe('validateValue()', () => {
           if (value === 'baz') {
             throw new ValidationError('Value baz is not allowed.', 'custom', value, path, instance);
           }
+          if (value === 'incomplete') {
+            throw new ValidationError('Incomplete error.');
+          }
           if (value === 'throw') {
             throw new Error('Something went horribly wrong.');
           }
@@ -261,6 +264,19 @@ describe('validateValue()', () => {
       const instance = getInstance(schema, {key: value});
       await expect(validateValue(schema, value, ['key'], instance))
         .to.be.rejectedWith(ValidationError, 'Value baz is not allowed.');
+    });
+
+    it('should throw a ValidationError if nested model\'s validator throws incomplete ValidationError', async () => {
+      const value = new NestedModel({foo: 'incomplete'});
+      const instance = getInstance(schema, {key: value});
+      let error;
+      await validateValue(schema, value, ['key'], instance).catch(e => error = e);
+      expect(error).to.be.an.instanceOf(ValidationError);
+      expect(error.message).to.equal('Incomplete error.');
+      expect(error.reason).to.equal('custom');
+      expect(error.value).to.equal('incomplete');
+      expect(error.path).to.eql(['key', 'foo']);
+      expect(error.instance).to.equal(instance);
     });
 
     it('should throw an Error if nested model\'s validator throws Error', async () => {

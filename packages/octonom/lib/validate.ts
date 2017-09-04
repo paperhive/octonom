@@ -28,6 +28,23 @@ export async function validateObject(
   }));
 }
 
+async function runCustomValidator<T>(schema, value: T, path, instance) {
+  try {
+    if (schema.validate) {
+      await schema.validate(value, path, instance);
+    }
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      error.reason = error.reason || 'custom';
+      error.value = error.value || value;
+      error.path = error.path || path;
+      error.instance = error.instance || instance;
+      throw error;
+    }
+    throw error;
+  }
+}
+
 export async function validateValue(
   schema: SchemaValue,
   value: any,
@@ -51,9 +68,7 @@ export async function validateValue(
 
   switch (schema.type) {
     case 'any':
-      if (schema.validate) {
-        await schema.validate(value, path, instance);
-      }
+      await runCustomValidator(schema, value, path, instance);
 
       break;
 
@@ -83,9 +98,7 @@ export async function validateValue(
         await validateValue(schema.definition, element, newPath, instance);
       }));
 
-      if (schema.validate) {
-        await schema.validate(value, path, instance);
-      }
+      await runCustomValidator(schema, value, path, instance);
 
       break;
 
@@ -94,9 +107,7 @@ export async function validateValue(
         throw new ValidationError('Value is not a boolean.', 'no-boolean', value, path, instance);
       }
 
-      if (schema.validate) {
-        await schema.validate(value, path, instance);
-      }
+      await runCustomValidator(schema, value, path, instance);
 
       break;
 
@@ -113,9 +124,7 @@ export async function validateValue(
         throw new ValidationError(`Date must not be after ${schema.max}.`, 'date-max', value, path, instance);
       }
 
-      if (schema.validate) {
-        await schema.validate(value, path, instance);
-      }
+      await runCustomValidator(schema, value, path, instance);
 
       break;
 
@@ -138,9 +147,7 @@ export async function validateValue(
         throw error;
       }
 
-      if (schema.validate) {
-        await schema.validate(value, path, instance);
-      }
+      await runCustomValidator(schema, value, path, instance);
 
       break;
 
@@ -167,9 +174,7 @@ export async function validateValue(
         );
       }
 
-      if (schema.validate) {
-        await schema.validate(value, path, instance);
-      }
+      await runCustomValidator(schema, value, path, instance);
 
       break;
 
@@ -180,9 +185,7 @@ export async function validateValue(
 
       await validateObject(schema.definition, value, path, instance);
 
-      if (schema.validate) {
-        await schema.validate(value, path, instance);
-      }
+      await runCustomValidator(schema, value, path, instance);
 
       break;
 
@@ -198,9 +201,7 @@ export async function validateValue(
         );
       }
 
-      if (schema.validate) {
-        await schema.validate(value, path, instance);
-      }
+      await runCustomValidator(schema, value, path, instance);
 
       break;
 
@@ -234,9 +235,7 @@ export async function validateValue(
         throw new ValidationError(`String does not match regex.`, 'string-regex', value, path, instance);
       }
 
-      if (schema.validate) {
-        await schema.validate(value, path, instance);
-      }
+      await runCustomValidator(schema, value, path, instance);
 
       break;
 
