@@ -56,7 +56,7 @@ describe('sanitize()', () => {
 
   describe('type model', () => {
     class Cat extends Model<Cat> {
-      @Cat.PropertySchema({type: 'string'})
+      @Cat.Property({type: 'string'})
       public name: string;
     }
     const schemaModel: SchemaValue = {type: 'model', model: Cat};
@@ -125,10 +125,10 @@ describe('sanitize()', () => {
 
   describe('type reference', () => {
     class Cat extends Model<Cat> {
-      @Cat.PropertySchema({type: 'string'})
+      @Cat.Property({type: 'string'})
       public id: string;
 
-      @Cat.PropertySchema({type: 'string'})
+      @Cat.Property({type: 'string'})
       public name: string;
     }
     const catsCollection = new ArrayCollection(Cat);

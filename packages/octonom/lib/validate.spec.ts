@@ -8,7 +8,7 @@ import { validateObject, validateValue } from './validate';
 
 function getInstance(schema: SchemaValue, data: object) {
   class TestModel extends Model<TestModel> {
-    @Model.PropertySchema(schema)
+    @Model.Property(schema)
     public key: any;
   }
   return new TestModel(data);
@@ -225,7 +225,7 @@ describe('validateValue()', () => {
 
   describe('type model', () => {
     class NestedModel extends Model<NestedModel> {
-      @Model.PropertySchema({
+      @Model.Property({
         type: 'any',
         validate: async (value: any, path: Array<string | number>, instance: Model<any>) => {
           if (value === 'baz') {
