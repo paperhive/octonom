@@ -15,6 +15,7 @@
     "@types/chai-as-promised": "0.0.31",
     "@types/mocha": "^2.2.41",
     "@types/sinon": "^2.3.3",
+    "@types/sinon-chai": "^2.7.29",
     "chai": "^4.0.2",
     "chai-as-promised": "^7.0.0",
     "codecov": "^2.2.0",
@@ -22,6 +23,7 @@
     "mocha": "^3.4.2",
     "nyc": "^11.0.2",
     "sinon": "^2.4.0",
+    "sinon-chai": "^2.13.0",
     "ts-node": "^3.1.0",
     "tslint": "^5.4.3",
     "typescript": "^2.3.4"

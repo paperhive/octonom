@@ -3,6 +3,7 @@ import { cloneDeep, difference, forEach } from 'lodash';
 import { IPopulateMap, populateObject } from './populate';
 import { ISchemaSanitizeOptions, ISchemaToObjectOptions, sanitize,
          SchemaMap, SchemaValue, toObject } from './schema';
+import { validateObject } from './validate';
 
 interface IModel {
   constructor: typeof Model;
@@ -26,7 +27,7 @@ function defineModelProperty(target, key: string, enumerable: boolean) {
   });
 }
 
-export abstract class Model<T> {
+export abstract class Model<T extends object> {
   public static _schema: SchemaMap = {};
 
   /**
@@ -52,6 +53,10 @@ export abstract class Model<T> {
     // TODO: remove (see @enumerable decorator)
     Object.defineProperty(this, '_sanitized', {writable: true, enumerable: false});
     this.set(data || {}, {defaults: true, replace: true});
+  }
+
+  public inspect() {
+    return this.toObject();
   }
 
   public async populate(populateMap: IPopulateMap) {
@@ -105,7 +110,8 @@ export abstract class Model<T> {
     return this.toObject();
   }
 
-  public inspect() {
-    return this.toObject();
+  public async validate() {
+    const constructor = this.constructor as typeof Model;
+    await validateObject(constructor._schema, this, [], this);
   }
 }

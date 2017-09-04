@@ -1,5 +1,3 @@
-import { spy } from 'sinon';
-
 import { collections } from '../test/data/collections';
 import { CatModel } from '../test/data/models/cat';
 import { DiscussionModel } from '../test/data/models/discussion';
@@ -8,6 +6,8 @@ import { GroupWithReferencesModel } from '../test/data/models/group-with-referen
 import { PersonModel } from '../test/data/models/person';
 import { PersonAccountModel } from '../test/data/models/person-account';
 
+import { ValidationError } from './errors';
+import { Model } from './model';
 import { ModelArray } from './model-array';
 
 describe('Model', () => {
@@ -191,10 +191,8 @@ describe('Model', () => {
     describe('toObject()', () => {
       it('should run toObject on array elements', async () => {
         const person = new PersonModel({id: '42', name: 'Bob'});
-        const toObject = spy(person, 'toObject');
         const group = new GroupWithArrayModel({id: '1337', members: [person]});
         expect(group.toObject({unpopulate: true})).to.eql({id: '1337', members: [{id: '42', name: 'Bob'}]});
-        expect(toObject.calledWith({unpopulate: true}));
       });
     });
   });
@@ -365,6 +363,74 @@ describe('Model', () => {
         const groupObj = group.toObject({unpopulate: true});
         expect(groupObj.members).to.eql([alice.id, bob.id]);
       });
+    });
+  });
+
+  describe('validate()', () => {
+    class TestModel extends Model<TestModel> {
+      @Model.PropertySchema({type: 'string', required: true})
+      public required: string;
+
+      @Model.PropertySchema({type: 'array', definition: {type: 'string', enum: ['foo', 'bar']}})
+      public array: string[];
+
+      @Model.PropertySchema({type: 'model', model: TestModel})
+      public model: TestModel;
+
+      @Model.PropertySchema({type: 'object', definition: {foo: {type: 'string', enum: ['bar']}}})
+      public object: {foo: string};
+    }
+
+    it('should throw if a key is required', async () => {
+      const instance = new TestModel();
+      await expect(instance.validate())
+        .to.be.rejectedWith(ValidationError, 'Required value is undefined.');
+    });
+
+    it('should throw if nested array validation throws', async () => {
+      const instance = new TestModel({required: 'foo', array: ['foo', 'baz']});
+      let error;
+      await instance.validate().catch(e => error = e);
+      expect(error).to.be.instanceOf(ValidationError);
+      expect(error.message).to.equal('String not in enum: foo, bar.');
+      expect(error.value).to.equal('baz');
+      expect(error.path).to.eql(['array', 1]);
+      expect(error.instance).to.equal(instance);
+    });
+
+    it('should throw if nested model validation throws', async () => {
+      const instance = new TestModel({
+        required: 'foo',
+        model: new TestModel({}),
+      });
+      let error;
+      await instance.validate().catch(e => error = e);
+      expect(error).to.be.instanceOf(ValidationError);
+      expect(error.message).to.equal('Required value is undefined.');
+      expect(error.value).to.equal(undefined);
+      expect(error.path).to.eql(['model', 'required']);
+      expect(error.instance).to.equal(instance);
+    });
+
+    it('should throw if nested object validation throws', async () => {
+      const instance = new TestModel({required: 'foo', object: {foo: 'baz'}});
+      let error;
+      await instance.validate().catch(e => error = e);
+      expect(error).to.be.instanceOf(ValidationError);
+      expect(error.message).to.equal('String not in enum: bar.');
+      expect(error.value).to.equal('baz');
+      expect(error.path).to.eql(['object', 'foo']);
+      expect(error.instance).to.equal(instance);
+    });
+
+    it('should pass with a valid instance', async () => {
+      const instance = new TestModel({
+        required: 'foo',
+        array: ['foo', 'bar'],
+        model: new TestModel({required: 'bar'}),
+        object: {foo: 'bar'},
+      });
+      await instance.validate();
     });
   });
 });

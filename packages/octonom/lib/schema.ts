@@ -1,5 +1,6 @@
 import { difference, forEach, isArray, isBoolean, isDate, isFunction, isNumber, isString } from 'lodash';
 
+import { Model } from './model';
 import { ModelArray } from './model-array';
 
 export interface ISchemaValueBase {
@@ -10,6 +11,7 @@ export interface ISchemaValueBase {
 export interface ISchemaValueAny extends ISchemaValueBase {
   type: 'any';
   default?: () => any;
+  validate?(value: any, path: Array<string | number>, instance: Model<any>): Promise<void>;
 }
 
 export interface ISchemaValueArray extends ISchemaValueBase {
@@ -17,11 +19,13 @@ export interface ISchemaValueArray extends ISchemaValueBase {
   definition: SchemaValue;
   minLength?: number;
   maxLength?: number;
+  validate?(value: any[], path: Array<string | number>, instance: Model<any>): Promise<void>;
 }
 
 export interface ISchemaValueBoolean extends ISchemaValueBase {
   type: 'boolean';
   default?: boolean | (() => boolean);
+  validate?(value: boolean, path: Array<string | number>, instance: Model<any>): Promise<void>;
 }
 
 export interface ISchemaValueDate extends ISchemaValueBase {
@@ -29,6 +33,7 @@ export interface ISchemaValueDate extends ISchemaValueBase {
   default?: Date | (() => Date);
   min?: Date;
   max?: Date;
+  validate?(value: Date, path: Array<string | number>, instance: Model<any>): Promise<void>;
 }
 
 export interface IModelConstructor {
@@ -39,6 +44,7 @@ export interface IModelConstructor {
 export interface ISchemaValueModel extends ISchemaValueBase {
   type: 'model';
   model: IModelConstructor;
+  validate?(value: Model<object>, path: Array<string | number>, instance: Model<any>): Promise<void>;
 }
 
 export interface ISchemaValueNumber extends ISchemaValueBase {
@@ -47,26 +53,29 @@ export interface ISchemaValueNumber extends ISchemaValueBase {
   min?: number;
   max?: number;
   integer?: boolean;
+  validate?(value: number, path: Array<string | number>, instance: Model<any>): Promise<void>;
 }
 
 export interface ISchemaValueObject extends ISchemaValueBase {
   type: 'object';
   definition: ISchemaMap;
+  validate?(value: object, path: Array<string | number>, instance: Model<any>): Promise<void>;
 }
 
 export interface ISchemaValueReference extends ISchemaValueBase {
   type: 'reference';
   collection: () => any; // TODO
+  validate?(value: any, path: Array<string | number>, instance: Model<any>): Promise<void>;
 }
 
 export interface ISchemaValueString extends ISchemaValueBase {
   type: 'string';
   default?: string | (() => string);
-  allowEmpty?: boolean;
   enum?: string[];
   min?: number;
   max?: number;
   regex?: RegExp;
+  validate?(value: string, path: Array<string | number>, instance: Model<any>): Promise<void>;
 }
 
 export type SchemaValue = ISchemaValueAny | ISchemaValueArray | ISchemaValueBoolean |
