@@ -375,16 +375,16 @@ describe('Model', () => {
 
   describe('validate()', () => {
     class TestModel extends Model<TestModel> {
-      @Model.PropertySchema({type: 'string', required: true})
+      @Model.Property({type: 'string', required: true})
       public required: string;
 
-      @Model.PropertySchema({type: 'array', definition: {type: 'string', enum: ['foo', 'bar']}})
+      @Model.Property({type: 'array', definition: {type: 'string', enum: ['foo', 'bar']}})
       public array: string[];
 
-      @Model.PropertySchema({type: 'model', model: TestModel})
+      @Model.Property({type: 'model', model: TestModel})
       public model: TestModel;
 
-      @Model.PropertySchema({type: 'object', definition: {foo: {type: 'string', enum: ['bar']}}})
+      @Model.Property({type: 'object', definition: {foo: {type: 'string', enum: ['bar']}}})
       public object: {foo: string};
     }
 

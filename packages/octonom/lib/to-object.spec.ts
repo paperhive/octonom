@@ -16,10 +16,10 @@ describe('toObject()', () => {
 
 describe('toObjectValue()', () => {
   class Cat extends Model<Cat> {
-    @Cat.PropertySchema({type: 'string'})
+    @Cat.Property({type: 'string'})
     public id: string;
 
-    @Cat.PropertySchema({type: 'string'})
+    @Cat.Property({type: 'string'})
     public name: string;
 
     // note: this property is not in the schema and will thus not be exposed with toObject

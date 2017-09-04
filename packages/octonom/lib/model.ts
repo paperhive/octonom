@@ -22,7 +22,7 @@ export abstract class Model<T extends object> {
    * Attach schema information to the property
    * @param schema Schema definition
    */
-  public static PropertySchema(schema: SchemaValue): PropertyDecorator {
+  public static Property(schema: SchemaValue): PropertyDecorator {
     return (target: IModel, key: string) => {
       const constructor = target.constructor;
       constructor._schema = cloneDeep(constructor._schema || {});
