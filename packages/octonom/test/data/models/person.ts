@@ -1,14 +1,8 @@
 import { Model, utils } from '../../../lib/main';
 
-import { IPersonAccount, PersonAccountModel } from './person-account';
+import { PersonAccountModel } from './person-account';
 
-export interface IPerson {
-  id: string;
-  name: string;
-  account?: IPersonAccount;
-}
-
-export class PersonModel extends Model<IPerson> {
+export class PersonModel extends Model<PersonModel> {
   @Model.PropertySchema({type: 'string', default: utils.generateId})
   public id: string;
 
@@ -16,5 +10,5 @@ export class PersonModel extends Model<IPerson> {
   public name: string;
 
   @Model.PropertySchema({type: 'model', model: PersonAccountModel})
-  public account?: PersonAccountModel | IPersonAccount;
+  public account?: Partial<PersonAccountModel>;
 }

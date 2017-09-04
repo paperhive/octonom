@@ -5,6 +5,11 @@ import { ISchemaSanitizeOptions, ISchemaToObjectOptions, sanitize,
          SchemaMap, SchemaValue, toObject } from './schema';
 import { validateObject } from './validate';
 
+export interface IModelConstructor<TModel extends Model<object>> {
+  _schema: SchemaMap;
+  new (data: Partial<TModel>): TModel;
+}
+
 interface IModel {
   constructor: typeof Model;
   _sanitized: {[k: string]: object};
@@ -101,9 +106,9 @@ export abstract class Model<T extends object> {
     defineModelProperty(this, key, sanitizedValue !== undefined);
   }
 
-  public toObject(options?: ISchemaToObjectOptions): T {
+  public toObject(options?: ISchemaToObjectOptions): Partial<T> {
     const constructor = this.constructor as typeof Model;
-    return toObject(constructor._schema, this, options) as T;
+    return toObject(constructor._schema, this, options) as Partial<T>;
   }
 
   public toJSON() {

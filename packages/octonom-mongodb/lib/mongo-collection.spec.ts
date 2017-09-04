@@ -2,12 +2,12 @@ import { cloneDeep } from 'lodash';
 import { Db, MongoClient } from 'mongodb';
 import { ModelArray } from 'octonom';
 
-import { CatModel, ICat } from 'octonom/build/test/data/models/cat';
+import { CatModel } from 'octonom/build/test/data/models/cat';
 
 import { MongoCollection } from './mongo-collection';
 
 describe('MongoCollection', () => {
-  class CatCollection extends MongoCollection<ICat, CatModel> {}
+  class CatCollection extends MongoCollection<CatModel> {}
   const catObj = {id: '42', name: 'Yllim'};
 
   let db: Db;

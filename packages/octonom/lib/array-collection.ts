@@ -5,7 +5,7 @@ import { Model } from './model';
 
 // simple collection with an in-memory array
 // note: we can't test Collection directly since it's abstract
-export class ArrayCollection<T extends object, TModel extends Model<T>> extends Collection<T, TModel> {
+export class ArrayCollection<TModel extends Model<object>> extends Collection<TModel> {
   public array: object[] = [];
 
   public clear() {

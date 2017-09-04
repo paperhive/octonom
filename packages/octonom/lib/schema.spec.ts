@@ -55,10 +55,7 @@ describe('schema', () => {
     });
 
     describe('type model', () => {
-      interface ICat {
-        name: string;
-      }
-      class Cat extends Model<ICat> {
+      class Cat extends Model<Cat> {
         @Cat.PropertySchema({type: 'string'})
         public name: string;
       }
@@ -127,18 +124,14 @@ describe('schema', () => {
     });
 
     describe('type reference', () => {
-      interface ICat {
-        id: string;
-        name: string;
-      }
-      class Cat extends Model<ICat> {
+      class Cat extends Model<Cat> {
         @Cat.PropertySchema({type: 'string'})
         public id: string;
 
         @Cat.PropertySchema({type: 'string'})
         public name: string;
       }
-      const catsCollection = new ArrayCollection<ICat, Cat>(Cat);
+      const catsCollection = new ArrayCollection(Cat);
       const schemaReference: SchemaValue = {type: 'reference', collection: () => catsCollection};
 
       it('should throw if data is not an instance or an id', () => {
@@ -286,12 +279,7 @@ describe('schema', () => {
   });
 
   describe('toObjectValue()', () => {
-    interface ICat {
-      id: string;
-      name: string;
-    }
-
-    class Cat extends Model<ICat> {
+    class Cat extends Model<Cat> {
       @Cat.PropertySchema({type: 'string'})
       public id: string;
 
@@ -302,7 +290,7 @@ describe('schema', () => {
       public age = 42;
     }
 
-    const catsCollection = new ArrayCollection<ICat, Cat>(Cat);
+    const catsCollection = new ArrayCollection(Cat);
 
     describe('type invalid', () => {
       it('should throw if the type is invalid', () => {

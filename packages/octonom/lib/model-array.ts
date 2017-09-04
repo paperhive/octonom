@@ -1,7 +1,9 @@
-export class ModelArray<T, TModel> extends Array<TModel> {
+import { IModelConstructor, Model } from './model';
+
+export class ModelArray<TModel extends Model<object>> extends Array<TModel> {
   constructor(
-    public readonly model: new (data: any) => TModel,
-    data: Array<TModel | Partial<T>> = [],
+    public readonly model: IModelConstructor<TModel>,
+    data: Array<Partial<TModel>> = [],
   ) {
     super();
     data.forEach(element => this.push(element));
@@ -19,20 +21,20 @@ export class ModelArray<T, TModel> extends Array<TModel> {
     });
   }
 
-  public fill(value: TModel | Partial<T>, start?: number, end?: number) {
+  public fill(value: Partial<TModel>, start?: number, end?: number) {
     return super.fill(this.toModel(value), start, end);
   }
 
-  public push(value: TModel | Partial<T>) {
+  public push(value: Partial<TModel>) {
     return super.push(this.toModel(value));
   }
 
-  public splice(start: number, deleteCount?: number, ...values: Array<TModel | Partial<T>>) {
+  public splice(start: number, deleteCount?: number, ...values: Array<Partial<TModel>>) {
     const models = values ? values.map(value => this.toModel(value)) : [];
     return super.splice(start, deleteCount, ...models);
   }
 
-  public toModel(value: TModel | Partial<T>) {
+  public toModel(value: Partial<TModel>) {
     if (value === undefined) {
       return undefined;
     }
@@ -42,7 +44,7 @@ export class ModelArray<T, TModel> extends Array<TModel> {
       : new this.model(value);
   }
 
-  public unshift(...values: Array<TModel | Partial<T>>) {
+  public unshift(...values: Array<Partial<TModel>>) {
     const models = values ? values.map(value => this.toModel(value)) : [];
     return super.unshift(...models);
   }

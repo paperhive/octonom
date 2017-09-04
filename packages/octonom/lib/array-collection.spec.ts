@@ -1,10 +1,10 @@
-import { CatModel, ICat } from '../test/data/models/cat';
+import { CatModel } from '../test/data/models/cat';
 
 import { ArrayCollection } from './array-collection';
 import { ModelArray } from './model-array';
 
 describe('Collection (ArrayCollection)', () => {
-  class CatCollection extends ArrayCollection<ICat, CatModel> {
+  class CatCollection extends ArrayCollection<CatModel> {
     constructor() {
       super(CatModel, {modelIdField: 'id'});
     }
