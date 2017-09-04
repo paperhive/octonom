@@ -6,6 +6,8 @@ import { GroupWithReferencesModel } from '../test/data/models/group-with-referen
 import { PersonModel } from '../test/data/models/person';
 import { PersonAccountModel } from '../test/data/models/person-account';
 
+import { ValidationError } from './errors';
+import { Model } from './model';
 import { ModelArray } from './model-array';
 
 describe('Model', () => {
@@ -361,6 +363,33 @@ describe('Model', () => {
         const groupObj = group.toObject({unpopulate: true});
         expect(groupObj.members).to.eql([alice.id, bob.id]);
       });
+    });
+  });
+
+  describe('validate()', () => {
+    class TestModel extends Model<TestModel> {
+      @Model.PropertySchema({type: 'string', required: true})
+      public required: string;
+
+      @Model.PropertySchema({type: 'array', definition: {type: 'string', enum: ['foo', 'bar']}})
+      public array: string[];
+    }
+
+    it('should throw if a key is required', async () => {
+      const instance = new TestModel();
+      await expect(instance.validate())
+        .to.be.rejectedWith(ValidationError, 'Required value is undefined.');
+    });
+
+    it('should throw if nested array validation throws', async () => {
+      const instance = new TestModel({required: 'foo', array: ['foo', 'baz']});
+      await expect(instance.validate())
+        .to.be.rejectedWith(ValidationError, 'String not in enum: foo, bar.');
+    });
+
+    it('should pass with a valid instance', async () => {
+      const instance = new TestModel({required: 'foo', array: ['foo', 'bar']});
+      await instance.validate();
     });
   });
 });
