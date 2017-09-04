@@ -46,6 +46,13 @@ describe('validateValue()', () => {
       .to.be.rejectedWith(ValidationError, 'Required value is undefined.');
   });
 
+  it('should throw an Error if type is unknown', async () => {
+    const schema: SchemaValue = {type: 'invalid'} as any;
+    const instance = getInstance({type: 'string'}, {key: 'test'}); // fake for instance
+    await expect(validateValue(schema, 'test', ['key'], instance))
+      .to.be.rejectedWith(Error, 'Type invalid is unknown.');
+  });
+
   it('should pass if value is undefined and not required', async () => {
     const schema: SchemaValue = {type: 'any'};
     const instance = getInstance(schema, {});

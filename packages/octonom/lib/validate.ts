@@ -232,6 +232,6 @@ export async function validateValue(
       break;
 
     default:
-      throw new Error(`type ${(schema as SchemaValue).type} is unknown.`);
+      throw new Error(`Type ${(schema as SchemaValue).type} is unknown.`);
   }
 }
