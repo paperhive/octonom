@@ -38,13 +38,13 @@ Let's define a model:
 import { Model } from 'octonom';
 
 export class PersonModel extends Model<PersonModel> {
-  @Model.PropertySchema({type: 'string', default: () => '42'})
+  @Model.Property({type: 'string', default: () => '42'})
   public id: string;
 
-  @Model.PropertySchema({type: 'string'})
+  @Model.Property({type: 'string'})
   public name: string;
 
-  @Model.PropertySchema({type: 'number', integer: true, min: 0})
+  @Model.Property({type: 'number', integer: true, min: 0})
   public age: number;
 
   public makeOlder() {
