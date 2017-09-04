@@ -1,11 +1,6 @@
 import { Model, utils } from '../../../lib/main';
 
-export interface ICat {
-  id: string;
-  name: string;
-}
-
-export class CatModel extends Model<ICat> {
+export class CatModel extends Model<CatModel> {
   @Model.PropertySchema({type: 'string', default: utils.generateId})
   public id: string;
 

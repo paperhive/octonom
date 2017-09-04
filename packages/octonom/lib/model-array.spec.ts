@@ -1,13 +1,13 @@
-import { CatModel, ICat } from '../test/data/models/cat';
+import { CatModel } from '../test/data/models/cat';
 
 import { ModelArray } from './model-array';
 
 describe('ModelArray', () => {
-  let array: ModelArray<ICat, CatModel>;
+  let array: ModelArray<CatModel>;
   const catObj = {id: '42', name: 'Yllim'};
   const cat = new CatModel(catObj);
 
-  beforeEach(() => array = new ModelArray<ICat, CatModel>(CatModel));
+  beforeEach(() => array = new ModelArray(CatModel));
 
   describe('constructor', () => {
     it('should create an empty array', () => {
@@ -15,7 +15,7 @@ describe('ModelArray', () => {
     });
 
     it('should create an initialized array with raw objects', () => {
-      const initializedArray = new ModelArray<ICat, CatModel>(CatModel, [catObj]);
+      const initializedArray = new ModelArray(CatModel, [catObj]);
       expect(initializedArray).to.have.length(1);
       expect(initializedArray[0]).to.be.an.instanceOf(CatModel);
       expect(initializedArray[0].toObject()).to.eql(catObj);

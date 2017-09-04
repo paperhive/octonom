@@ -32,22 +32,12 @@ Octonom brings you TypeScript-based models and collections for any database with
 
 ### Model
 
-Let's first define an interface for a person. The interface is required for making the constructor aware of which properties your model accepts.
-
-```typescript
-interface IPerson {
-  id: string;
-  name: string;
-  age: number;
-}
-```
-
-Then we can define the actual model:
+Let's define a model:
 
 ```typescript
 import { Model } from 'octonom';
 
-export class PersonModel extends Model<IPerson> {
+export class PersonModel extends Model<PersonModel> {
   @Model.PropertySchema({type: 'string', default: () => '42'})
   public id: string;
 
@@ -85,11 +75,11 @@ Having a local instance of a model is really nice but you probably want to persi
 Let's create a collection for people and connect it with a database:
 
 ```typescript
+import { MongoClient } from 'mongodb';
 import { MongoCollection } from 'octonom';
 
 // create people collection
-const people = new MongoCollection<IPerson, PersonModel>
-  ('people', PersonModel, {modelIdField: 'id'});
+const people = new MongoCollection('people', PersonModel, {modelIdField: 'id'});
 
 // connect with to database
 const db = await MongoClient.connect('mongodb://localhost:27017/mydb');

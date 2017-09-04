@@ -1,4 +1,4 @@
-import { difference, forEach, isArray, isBoolean, isDate, isFunction, isNumber, isString } from 'lodash';
+import { difference, forEach, isArray, isBoolean, isDate, isNumber, isString } from 'lodash';
 
 import { Model } from './model';
 import { ModelArray } from './model-array';
@@ -38,7 +38,7 @@ export interface ISchemaValueDate extends ISchemaValueBase {
 
 export interface IModelConstructor {
   _schema: ISchemaMap;
-  new (data: any): any; // TODO
+  new (data: Partial<Model<object>>): Model<object>; // TODO
 }
 
 export interface ISchemaValueModel extends ISchemaValueBase {
@@ -174,7 +174,9 @@ export function sanitize(schemaValue: SchemaValue, data: any, _options?: ISchema
 
       // get default value if no data given
       if (options.defaults && value === undefined) {
-        value = isFunction(schemaValue.default) ? schemaValue.default() : schemaValue.default;
+        value = (typeof schemaValue.default === 'function')
+          ? schemaValue.default()
+          : schemaValue.default;
       }
 
       // return undefined if value is still undefined

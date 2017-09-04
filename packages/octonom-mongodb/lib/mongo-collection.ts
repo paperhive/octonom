@@ -3,12 +3,12 @@ import { Collection as DbCollection, CollectionInsertManyOptions, Cursor,
 
 import { Collection, ICollectionOptions, Model, ModelArray, utils } from 'octonom';
 
-export class MongoCollection<T extends object, TModel extends Model<T>> extends Collection<T, TModel> {
+export class MongoCollection<TModel extends Model<TModel>> extends Collection<TModel> {
   protected collection: DbCollection;
 
   constructor(
     protected name: string,
-    model: new (data: any) => TModel,
+    model: new (data: Partial<TModel>) => TModel,
     options: ICollectionOptions = {},
   ) {
     super(model, options);
@@ -45,7 +45,7 @@ export class MongoCollection<T extends object, TModel extends Model<T>> extends 
     const idInstanceMap: {[k: string]: TModel} = {};
     // note: ids that could not be found won't be present in the docs result array
     docs.forEach(doc => idInstanceMap[doc._id] = this.fromDb(doc));
-    return new ModelArray<T, TModel>(this.model, ids.map(id => idInstanceMap[id]));
+    return new ModelArray<TModel>(this.model, ids.map(id => idInstanceMap[id]));
   }
 
   public async findOne(query: object, options?: FindOneOptions) {

@@ -5,11 +5,11 @@ export interface ICollectionOptions {
   modelIdField?: string;
 }
 
-export abstract class Collection<T extends object, TModel extends Model<T>> {
+export abstract class Collection<TModel extends Model<object>> {
   public readonly modelIdField: string;
 
   constructor(
-    public readonly model: new (data: any) => TModel,
+    public readonly model: new (data: Partial<TModel>) => TModel,
     protected options: ICollectionOptions = {},
   ) {
     this.modelIdField = options.modelIdField || 'id';
@@ -18,8 +18,8 @@ export abstract class Collection<T extends object, TModel extends Model<T>> {
   public abstract async findById(id: string): Promise<TModel>;
 
   // trivial implementation, should be implemented efficiently for specific database
-  public async findByIds(ids: string[]): Promise<ModelArray<T, TModel>> {
-    return new ModelArray<T, TModel>(
+  public async findByIds(ids: string[]): Promise<ModelArray<TModel>> {
+    return new ModelArray<TModel>(
       this.model,
       await Promise.all(ids.map(id => this.findById(id))),
     );

@@ -3,12 +3,7 @@ import { Model, utils } from '../../../lib/main';
 import { collections } from '../collections';
 import { PersonModel } from './person';
 
-export interface IGroupWithReferences {
-  id: string;
-  members: Array<string | PersonModel>;
-}
-
-export class GroupWithReferencesModel extends Model<IGroupWithReferences> {
+export class GroupWithReferencesModel extends Model<GroupWithReferencesModel> {
   @Model.PropertySchema({type: 'string', default: utils.generateId})
   public id: string;
 

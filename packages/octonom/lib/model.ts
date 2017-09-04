@@ -101,9 +101,9 @@ export abstract class Model<T extends object> {
     defineModelProperty(this, key, sanitizedValue !== undefined);
   }
 
-  public toObject(options?: ISchemaToObjectOptions): T {
+  public toObject(options?: ISchemaToObjectOptions): Partial<T> {
     const constructor = this.constructor as typeof Model;
-    return toObject(constructor._schema, this, options) as T;
+    return toObject(constructor._schema, this, options) as Partial<T>;
   }
 
   public toJSON() {
