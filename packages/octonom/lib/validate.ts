@@ -177,6 +177,24 @@ export async function validateValue(
 
       break;
 
+    case 'reference':
+      // note: we do not run validation on a populated reference since it's not part of
+      //       the model instance
+
+      const collection = schema.collection();
+      if (typeof value !== 'string' && !(value instanceof collection.model)) {
+        throw new ValidationError(
+          `Value is not an id or ${collection.model.name} instance.`,
+          'no-number', value, path, instance,
+        );
+      }
+
+      if (schema.validate) {
+        await schema.validate(value, path, instance);
+      }
+
+      break;
+
     default:
       throw new Error(`type ${schema.type} is unknown.`);
   }

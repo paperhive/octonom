@@ -1,3 +1,6 @@
+import { collections } from '../test/data/collections';
+import { CatModel } from '../test/data/models/cat';
+
 import { ValidationError } from './errors';
 import { Model } from './model';
 import { SchemaMap, SchemaValue } from './schema';
@@ -353,6 +356,44 @@ describe('validateValue()', () => {
 
     it('should pass if validator passes', async () => {
       const value = {foo: 'bar'};
+      const instance = getInstance(schema, {key: value});
+      await validateValue(schema, value, ['key'], instance);
+    });
+  });
+
+  describe('type reference', () => {
+    const schema: SchemaValue = {
+      type: 'reference',
+      collection: () => collections.cats,
+      validate: async (value: any, path: Array<string | number>, instance: Model<any>) => {
+        if (value === 'invalid') {
+          throw new ValidationError('Invalid id.', 'custom', value, path, instance);
+        }
+      },
+    };
+
+    it('should throw a ValidationError if not an id or CatModel instance', async () => {
+      const value = 1;
+      const instance = getInstance(schema, {key: 'fakeId'}); // pretend it's an id
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'Value is not an id or CatModel instance.');
+    });
+
+    it('should throw a ValidationError if custom validator throws', async () => {
+      const value = 'invalid';
+      const instance = getInstance(schema, {key: value});
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'Invalid id.');
+    });
+
+    it('should pass with a CatModel instance', async () => {
+      const value = new CatModel({id: 'catId', name: 'Yllim'});
+      const instance = getInstance(schema, {key: value});
+      await validateValue(schema, value, ['key'], instance);
+    });
+
+    it('should pass with an id', async () => {
+      const value = 'id';
       const instance = getInstance(schema, {key: value});
       await validateValue(schema, value, ['key'], instance);
     });
