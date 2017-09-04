@@ -1,6 +1,6 @@
 import { difference, forEach, isArray, isBoolean, isDate, isNumber, isString } from 'lodash';
 
-import { Model } from './model';
+import { IModelConstructor, Model } from './model';
 import { ModelArray } from './model-array';
 
 export interface ISchemaValueBase {
@@ -36,14 +36,9 @@ export interface ISchemaValueDate extends ISchemaValueBase {
   validate?(value: Date, path: Array<string | number>, instance: Model<any>): Promise<void>;
 }
 
-export interface IModelConstructor {
-  _schema: ISchemaMap;
-  new (data: Partial<Model<object>>): Model<object>; // TODO
-}
-
 export interface ISchemaValueModel extends ISchemaValueBase {
   type: 'model';
-  model: IModelConstructor;
+  model: IModelConstructor<Model<object>>;
   validate?(value: Model<object>, path: Array<string | number>, instance: Model<any>): Promise<void>;
 }
 

@@ -1,8 +1,8 @@
-import { Model } from './model';
+import { IModelConstructor, Model } from './model';
 
 export class ModelArray<TModel extends Model<object>> extends Array<TModel> {
   constructor(
-    public readonly model: new (data: any) => TModel,
+    public readonly model: IModelConstructor<TModel>,
     data: Array<Partial<TModel>> = [],
   ) {
     super();

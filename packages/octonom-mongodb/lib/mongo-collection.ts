@@ -1,14 +1,14 @@
 import { Collection as DbCollection, CollectionInsertManyOptions, Cursor,
   Db, FindOneOptions } from 'mongodb';
 
-import { Collection, ICollectionOptions, Model, ModelArray, utils } from 'octonom';
+import { Collection, ICollectionOptions, IModelConstructor, Model, ModelArray, utils } from 'octonom';
 
 export class MongoCollection<TModel extends Model<TModel>> extends Collection<TModel> {
   protected collection: DbCollection;
 
   constructor(
     protected name: string,
-    model: new (data: Partial<TModel>) => TModel,
+    model: IModelConstructor<TModel>,
     options: ICollectionOptions = {},
   ) {
     super(model, options);

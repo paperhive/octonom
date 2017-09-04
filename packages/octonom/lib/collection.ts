@@ -1,4 +1,4 @@
-import { Model } from './model';
+import { IModelConstructor, Model } from './model';
 import { ModelArray } from './model-array';
 
 export interface ICollectionOptions {
@@ -9,7 +9,7 @@ export abstract class Collection<TModel extends Model<object>> {
   public readonly modelIdField: string;
 
   constructor(
-    public readonly model: new (data: Partial<TModel>) => TModel,
+    public readonly model: IModelConstructor<TModel>,
     protected options: ICollectionOptions = {},
   ) {
     this.modelIdField = options.modelIdField || 'id';
