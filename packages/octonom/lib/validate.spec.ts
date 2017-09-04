@@ -239,4 +239,59 @@ describe('validateValue()', () => {
       await validateValue(schema, value, ['key'], instance);
     });
   });
+
+  describe('type number', () => {
+    const schema: SchemaValue = {
+      type: 'number',
+      min: 1,
+      max: 5,
+      integer: true,
+      validate: async (value: number, path: Array<string | number>, instance: Model<any>) => {
+        if (value === 3) {
+          throw new ValidationError('3 is not allowed.', 'custom', value, path, instance);
+        }
+      },
+    };
+
+    it('should throw a ValidationError if not a number', async () => {
+      const value = 'foo';
+      const instance = getInstance(schema, {key: 1}); // pretend it's a date
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'Value is not a number.');
+    });
+
+    it('should throw a ValidationError if not an integer', async () => {
+      const value = 2.5;
+      const instance = getInstance(schema, {key: value});
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'Number is not an integer.');
+    });
+
+    it('should throw a ValidationError if less than min', async () => {
+      const value = 0;
+      const instance = getInstance(schema, {key: value});
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, `Number must not be less than ${schema.min}`);
+    });
+
+    it('should throw a ValidationError if greater than max', async () => {
+      const value = 6;
+      const instance = getInstance(schema, {key: value});
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, `Number must not be greater than ${schema.max}`);
+    });
+
+    it('should throw a ValidationError if custom validator throws', async () => {
+      const value = 3;
+      const instance = getInstance(schema, {key: value});
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, '3 is not allowed.');
+    });
+
+    it('should pass if validator passes', async () => {
+      const value = 2;
+      const instance = getInstance(schema, {key: value});
+      await validateValue(schema, value, ['key'], instance);
+    });
+  });
 });

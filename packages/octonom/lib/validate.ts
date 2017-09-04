@@ -109,8 +109,37 @@ export async function validateValue(
           'no-instance', value, path, instance,
         );
       }
-
+      // TODO: use value.validate() so we use the same validation we'd get on the instance
       await validateObject(schema.model._schema, value, path, instance);
+
+      if (schema.validate) {
+        await schema.validate(value, path, instance);
+      }
+
+      break;
+
+    case 'number':
+      if (typeof value !== 'number' || !Number.isFinite(value)) {
+        throw new ValidationError('Value is not a number.', 'no-number', value, path, instance);
+      }
+
+      if (schema.integer && !Number.isInteger(value)) {
+        throw new ValidationError('Number is not an integer.', 'no-integer', value, path, instance);
+      }
+
+      if (schema.min !== undefined && value < schema.min) {
+        throw new ValidationError(
+          `Number must not be less than ${schema.min}.`,
+          'number-min', value, path, instance,
+        );
+      }
+
+      if (schema.max !== undefined && value > schema.max) {
+        throw new ValidationError(
+          `Number must not be greater than ${schema.max}.`,
+          'number-max', value, path, instance,
+        );
+      }
 
       if (schema.validate) {
         await schema.validate(value, path, instance);
