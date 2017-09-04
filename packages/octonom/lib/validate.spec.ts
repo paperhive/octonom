@@ -231,6 +231,9 @@ describe('validateValue()', () => {
           if (value === 'baz') {
             throw new ValidationError('Value baz is not allowed.', 'custom', value, path, instance);
           }
+          if (value === 'throw') {
+            throw new Error('Something went horribly wrong.');
+          }
         },
       })
       public foo: any;
@@ -253,11 +256,18 @@ describe('validateValue()', () => {
         .to.be.rejectedWith(ValidationError, 'Value is not an instance of NestedModel.');
     });
 
-    it('should throw a ValidationError if nested model\'s validator throws', async () => {
+    it('should throw a ValidationError if nested model\'s validator throws ValidationError', async () => {
       const value = new NestedModel({foo: 'baz'});
       const instance = getInstance(schema, {key: value});
       await expect(validateValue(schema, value, ['key'], instance))
         .to.be.rejectedWith(ValidationError, 'Value baz is not allowed.');
+    });
+
+    it('should throw an Error if nested model\'s validator throws Error', async () => {
+      const value = new NestedModel({foo: 'throw'});
+      const instance = getInstance(schema, {key: value});
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(Error, 'Something went horribly wrong.');
     });
 
     it('should throw a ValidationError if custom validator throws', async () => {
