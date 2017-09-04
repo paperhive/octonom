@@ -33,6 +33,13 @@ describe('Model', () => {
         cat.name = 'Yllim';
         expect(cat.name).to.equal('Yllim');
       });
+
+      it('should delete a property', () => {
+        const cat = new CatModel();
+        cat.id = '42';
+        delete cat.id;
+        expect(cat.id).to.equal(undefined);
+      });
     });
 
     describe('toObject()', () => {
