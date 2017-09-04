@@ -1,18 +1,42 @@
 import { ValidationError } from './errors';
 import { Model } from './model';
-import { SchemaValue } from './schema';
-import { validateValue } from './validate';
+import { SchemaMap, SchemaValue } from './schema';
+import { validateObject, validateValue } from './validate';
+
+function getInstance(schema: SchemaValue, data: object) {
+  class TestModel extends Model<TestModel> {
+    @Model.PropertySchema(schema)
+    public key: any;
+  }
+  return new TestModel(data);
+}
+
+describe('validateObject()', () => {
+  const schemaMap: SchemaMap = {key: {type: 'any', required: true}};
+
+  it('should throw a ValidationError if key is not in schema', async () => {
+    const obj = {key: 'foo', invalid: true};
+    const instance = getInstance(schemaMap.key, {key: obj.key});
+    await expect(validateObject(schemaMap, obj, [], instance))
+      .to.be.rejectedWith(ValidationError, 'Key invalid not in schema.');
+  });
+
+  it('should throw a ValidationError if nested validation fails', async () => {
+    const obj = {};
+    const instance = getInstance(schemaMap.key, obj);
+    await expect(validateObject(schemaMap, obj, [], instance))
+      .to.be.rejectedWith(ValidationError, 'Required value is undefined.');
+  });
+
+  it('should pass with a valid object', async () => {
+    const obj = {key: 'foo'};
+    const instance = getInstance(schemaMap.key, obj);
+    await validateObject(schemaMap, obj, [], instance);
+  });
+});
 
 describe('validateValue()', () => {
-  function getInstance(schema: SchemaValue, data: object) {
-    class TestModel extends Model<TestModel> {
-      @Model.PropertySchema(schema)
-      public key: any;
-    }
-    return new TestModel(data);
-  }
-
-  it('should throw a validation error if required value is undefined', async () => {
+  it('should throw a ValidationError if required value is undefined', async () => {
     const schema: SchemaValue = {type: 'any', required: true};
     const instance = getInstance(schema, {});
     await expect(validateValue(schema, undefined, ['key'], instance))
@@ -290,6 +314,45 @@ describe('validateValue()', () => {
 
     it('should pass if validator passes', async () => {
       const value = 2;
+      const instance = getInstance(schema, {key: value});
+      await validateValue(schema, value, ['key'], instance);
+    });
+  });
+
+  describe('type object', () => {
+    const schema: SchemaValue = {
+      type: 'object',
+      definition: {foo: {type: 'any', required: true}},
+      validate: async (value: any, path: Array<string | number>, instance: Model<any>) => {
+        if (value && value.foo === 'invalid') {
+          throw new ValidationError('Invalid value for key foo.', 'custom', value, path, instance);
+        }
+      },
+    };
+
+    it('should throw a ValidationError if not an object', async () => {
+      const value = 1;
+      const instance = getInstance(schema, {key: {}});
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'Value is not an object.');
+    });
+
+    it('should throw a ValidationError if nested validator throws', async () => {
+      const value = {};
+      const instance = getInstance(schema, {key: value});
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'Required value is undefined.');
+    });
+
+    it('should throw a ValidationError if custom validator throws', async () => {
+      const value = {foo: 'invalid'};
+      const instance = getInstance(schema, {key: value});
+      await expect(validateValue(schema, value, ['key'], instance))
+        .to.be.rejectedWith(ValidationError, 'Invalid value for key foo.');
+    });
+
+    it('should pass if validator passes', async () => {
+      const value = {foo: 'bar'};
       const instance = getInstance(schema, {key: value});
       await validateValue(schema, value, ['key'], instance);
     });

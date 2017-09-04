@@ -4,11 +4,28 @@ import { SchemaMap, SchemaValue } from './schema';
 
 export async function validateObject(
   schemaMap: SchemaMap,
-  obj: any,
+  obj: object,
   path: Array<string | number>,
   instance: Model<object>,
 ) {
-  // TODO
+  const keys = Object.keys(obj);
+  const schemaKeys = Object.keys(schemaMap);
+
+  const invalidKeys = keys.filter(key => schemaKeys.indexOf(key) === -1);
+  if (invalidKeys.length > 0) {
+    const newPath = path.slice();
+    newPath.push(invalidKeys[0]);
+    throw new ValidationError(
+      `Key ${invalidKeys[0]} not in schema.`,
+      'key-unknown', obj[invalidKeys[0]], newPath, instance,
+    );
+  }
+
+  await Promise.all(schemaKeys.map(async key => {
+    const newPath = path.slice();
+    newPath.push(key);
+    await validateValue(schemaMap[key], obj[key], newPath, instance);
+  }));
 }
 
 export async function validateValue(
@@ -140,6 +157,19 @@ export async function validateValue(
           'number-max', value, path, instance,
         );
       }
+
+      if (schema.validate) {
+        await schema.validate(value, path, instance);
+      }
+
+      break;
+
+    case 'object':
+      if (!(value instanceof Object)) {
+        throw new ValidationError('Value is not an object.', 'no-number', value, path, instance);
+      }
+
+      await validateObject(schema.definition, value, path, instance);
 
       if (schema.validate) {
         await schema.validate(value, path, instance);
