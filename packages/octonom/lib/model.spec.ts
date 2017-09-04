@@ -373,6 +373,12 @@ describe('Model', () => {
 
       @Model.PropertySchema({type: 'array', definition: {type: 'string', enum: ['foo', 'bar']}})
       public array: string[];
+
+      @Model.PropertySchema({type: 'model', model: TestModel})
+      public model: TestModel;
+
+      @Model.PropertySchema({type: 'object', definition: {foo: {type: 'string', enum: ['bar']}}})
+      public object: {foo: string};
     }
 
     it('should throw if a key is required', async () => {
@@ -383,12 +389,47 @@ describe('Model', () => {
 
     it('should throw if nested array validation throws', async () => {
       const instance = new TestModel({required: 'foo', array: ['foo', 'baz']});
-      await expect(instance.validate())
-        .to.be.rejectedWith(ValidationError, 'String not in enum: foo, bar.');
+      let error;
+      await instance.validate().catch(e => error = e);
+      expect(error).to.be.instanceOf(ValidationError);
+      expect(error.message).to.equal('String not in enum: foo, bar.');
+      expect(error.value).to.equal('baz');
+      expect(error.path).to.eql(['array', 1]);
+      expect(error.instance).to.equal(instance);
+    });
+
+    it('should throw if nested model validation throws', async () => {
+      const instance = new TestModel({
+        required: 'foo',
+        model: new TestModel({}),
+      });
+      let error;
+      await instance.validate().catch(e => error = e);
+      expect(error).to.be.instanceOf(ValidationError);
+      expect(error.message).to.equal('Required value is undefined.');
+      expect(error.value).to.equal(undefined);
+      expect(error.path).to.eql(['model', 'required']);
+      expect(error.instance).to.equal(instance);
+    });
+
+    it('should throw if nested object validation throws', async () => {
+      const instance = new TestModel({required: 'foo', object: {foo: 'baz'}});
+      let error;
+      await instance.validate().catch(e => error = e);
+      expect(error).to.be.instanceOf(ValidationError);
+      expect(error.message).to.equal('String not in enum: bar.');
+      expect(error.value).to.equal('baz');
+      expect(error.path).to.eql(['object', 'foo']);
+      expect(error.instance).to.equal(instance);
     });
 
     it('should pass with a valid instance', async () => {
-      const instance = new TestModel({required: 'foo', array: ['foo', 'bar']});
+      const instance = new TestModel({
+        required: 'foo',
+        array: ['foo', 'bar'],
+        model: new TestModel({required: 'bar'}),
+        object: {foo: 'bar'},
+      });
       await instance.validate();
     });
   });
