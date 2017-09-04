@@ -1,8 +1,9 @@
 import { cloneDeep } from 'lodash';
 
 import { IPopulateMap, populateObject } from './populate';
-import { ISchemaSanitizeOptions, ISchemaToObjectOptions, sanitize,
-         SchemaMap, SchemaValue, setObjectSanitized, toObject } from './schema';
+import { ISanitizeOptions, sanitize, setObjectSanitized } from './sanitize';
+import { SchemaMap, SchemaValue } from './schema';
+import { IToObjectOptions, toObject } from './to-object';
 import { validateObject } from './validate';
 
 export interface IModelConstructor<TModel extends Model<object>> {
@@ -56,12 +57,12 @@ export abstract class Model<T extends object> {
   }
 
   // TODO: sanitize is called twice when this is called via the proxy
-  public set(data: object, options: ISchemaSanitizeOptions = {}) {
+  public set(data: object, options: ISanitizeOptions = {}) {
     const constructor = this.constructor as typeof Model;
     setObjectSanitized(constructor._schema, this, data, options);
   }
 
-  public toObject(options?: ISchemaToObjectOptions): Partial<T> {
+  public toObject(options?: IToObjectOptions): Partial<T> {
     const constructor = this.constructor as typeof Model;
     return toObject(constructor._schema, this, options) as Partial<T>;
   }
