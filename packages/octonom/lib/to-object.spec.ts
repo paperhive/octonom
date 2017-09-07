@@ -15,7 +15,7 @@ describe('toObject()', () => {
 });
 
 describe('toObjectValue()', () => {
-  class Cat extends Model<Cat> {
+  class Cat extends Model {
     @Cat.Property({type: 'string'})
     public id: string;
 

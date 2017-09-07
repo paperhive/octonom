@@ -2,7 +2,7 @@ import { Model, ModelArray, utils } from '../../../lib/main';
 
 import { PersonModel } from './person';
 
-export class GroupWithArrayModel extends Model<GroupWithArrayModel> {
+export class GroupWithArrayModel extends Model {
   @Model.Property({type: 'string', default: utils.generateId})
   public id: string;
 

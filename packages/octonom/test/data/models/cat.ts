@@ -1,6 +1,6 @@
 import { Model, utils } from '../../../lib/main';
 
-export class CatModel extends Model<CatModel> {
+export class CatModel extends Model {
   @Model.Property({type: 'string', default: utils.generateId})
   public id: string;
 

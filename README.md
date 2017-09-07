@@ -37,7 +37,7 @@ Let's define a model:
 ```typescript
 import { Model } from 'octonom';
 
-export class PersonModel extends Model<PersonModel> {
+export class Person extends Model {
   @Model.Property({type: 'string', default: () => '42'})
   public id: string;
 
@@ -57,7 +57,7 @@ Let's create an instance:
 
 ```typescript
 // create an instance with initial data
-const person = new PersonModel({name: 'Marx', age: 200});
+const person = new Person({name: 'Marx', age: 200});
 
 // call a model instance method
 person.makeOlder();
@@ -79,7 +79,7 @@ import { MongoClient } from 'mongodb';
 import { MongoCollection } from 'octonom';
 
 // create people collection
-const people = new MongoCollection('people', PersonModel, {modelIdField: 'id'});
+const people = new MongoCollection('people', Person, {modelIdField: 'id'});
 
 // connect with to database
 const db = await MongoClient.connect('mongodb://localhost:27017/mydb');
@@ -92,7 +92,7 @@ Inserting and retrieving models is straight-forward:
 
 ```typescript
 // insert a person
-const karl = new PersonModel({id: 'C4p1T4l', name: 'Marx', age: 200});
+const karl = new Person({id: 'C4p1T4l', name: 'Marx', age: 200});
 await people.insertOne(karl);
 
 // retrieve a person

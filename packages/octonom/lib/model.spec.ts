@@ -374,7 +374,7 @@ describe('Model', () => {
   });
 
   describe('validate()', () => {
-    class TestModel extends Model<TestModel> {
+    class TestModel extends Model {
       @Model.Property({type: 'string', required: true})
       public required: string;
 

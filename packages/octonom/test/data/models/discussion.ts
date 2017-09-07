@@ -3,7 +3,7 @@ import { Model, utils } from '../../../lib/main';
 import { collections } from '../collections';
 import { PersonModel } from './person';
 
-export class DiscussionModel extends Model<DiscussionModel> {
+export class DiscussionModel extends Model {
   @Model.Property({type: 'string', default: utils.generateId})
   public id: string;
 

@@ -3,7 +3,7 @@ import { Model, utils } from '../../../lib/main';
 import { collections } from '../collections';
 import { PersonModel } from './person';
 
-export class GroupWithReferencesModel extends Model<GroupWithReferencesModel> {
+export class GroupWithReferencesModel extends Model {
   @Model.Property({type: 'string', default: utils.generateId})
   public id: string;
 
