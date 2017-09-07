@@ -6,7 +6,7 @@ export async function validateObject(
   schemaMap: SchemaMap,
   obj: object,
   path: Array<string | number>,
-  instance: Model<object>,
+  instance: Model,
 ) {
   const keys = Object.keys(obj);
   const schemaKeys = Object.keys(schemaMap);
@@ -49,7 +49,7 @@ export async function validateValue(
   schema: SchemaValue,
   value: any,
   path: Array<string | number>,
-  instance: Model<object>,
+  instance: Model,
 ) {
   if (schema.required && value === undefined) {
     throw new ValidationError(

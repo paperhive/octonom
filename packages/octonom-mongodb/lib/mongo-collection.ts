@@ -3,28 +3,28 @@ import { Collection as DbCollection, CollectionInsertManyOptions, Cursor,
 
 import { Collection, ICollectionOptions, IModelConstructor, Model, ModelArray, utils } from 'octonom';
 
-export class MongoCollection<TModel extends Model<TModel>> extends Collection<TModel> {
+export class MongoCollection<T extends Model> extends Collection<T> {
   protected collection: DbCollection;
 
   constructor(
     protected name: string,
-    model: IModelConstructor<TModel>,
+    model: IModelConstructor<T>,
     options: ICollectionOptions = {},
   ) {
     super(model, options);
   }
 
-  public async insertMany(models: TModel[], options?: CollectionInsertManyOptions) {
+  public async insertMany(models: T[], options?: CollectionInsertManyOptions) {
     const docs = models.map(model => this.toDb(model));
     await this.collection.insertMany(docs, options);
   }
 
-  public async insertOne(model: TModel) {
+  public async insertOne(model: T) {
     const doc = this.toDb(model);
     await this.collection.insertOne(doc);
   }
 
-  public async delete(model: TModel) {
+  public async delete(model: T) {
     const result = await this.collection.deleteOne({_id: model[this.modelIdField]});
     if (result.deletedCount === 0) {
       throw new Error('document not found in collection');
@@ -33,7 +33,7 @@ export class MongoCollection<TModel extends Model<TModel>> extends Collection<TM
 
   public find(query: object) {
     return this.collection.find(query)
-      .map(obj => this.fromDb(obj)) as Cursor<TModel>;
+      .map(obj => this.fromDb(obj)) as Cursor<T>;
   }
 
   public async findById(id: string) {
@@ -42,10 +42,10 @@ export class MongoCollection<TModel extends Model<TModel>> extends Collection<TM
 
   public async findByIds(ids: string[]) {
     const docs = await this.collection.find({_id: {$in: ids}}).toArray();
-    const idInstanceMap: {[k: string]: TModel} = {};
+    const idInstanceMap: {[k: string]: T} = {};
     // note: ids that could not be found won't be present in the docs result array
     docs.forEach(doc => idInstanceMap[doc._id] = this.fromDb(doc));
-    return new ModelArray<TModel>(this.model, ids.map(id => idInstanceMap[id]));
+    return new ModelArray<T>(this.model, ids.map(id => idInstanceMap[id]));
   }
 
   public async findOne(query: object, options?: FindOneOptions) {
@@ -60,7 +60,7 @@ export class MongoCollection<TModel extends Model<TModel>> extends Collection<TM
     this.collection = await db.createCollection(this.name);
   }
 
-  public toDb(model: TModel) {
+  public toDb(model: T) {
     return utils.rename(super.toDb(model), {[this.modelIdField]: '_id'});
   }
 
@@ -68,7 +68,7 @@ export class MongoCollection<TModel extends Model<TModel>> extends Collection<TM
     return super.fromDb(utils.rename(doc, {_id: this.modelIdField}));
   }
 
-  public async update(model: TModel) {
+  public async update(model: T) {
     const doc = this.toDb(model);
     const result = await this.collection.replaceOne({_id: model[this.modelIdField]}, doc);
     if (result.matchedCount === 0) {
