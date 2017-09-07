@@ -5,14 +5,14 @@ import { Model } from './model';
 
 // simple collection with an in-memory array
 // note: we can't test Collection directly since it's abstract
-export class ArrayCollection<TModel extends Model<object>> extends Collection<TModel> {
+export class ArrayCollection<T extends Model> extends Collection<T> {
   public array: object[] = [];
 
   public clear() {
     this.array.splice(0, this.array.length);
   }
 
-  public insert(model: TModel) {
+  public insert(model: T) {
     const doc = find(this.array, {[this.modelIdField]: model[this.modelIdField]});
     if (doc) {
       throw new Error('duplicate key error');

@@ -55,7 +55,7 @@ describe('sanitize()', () => {
   });
 
   describe('type model', () => {
-    class Cat extends Model<Cat> {
+    class Cat extends Model {
       @Cat.Property({type: 'string'})
       public name: string;
     }
@@ -124,7 +124,7 @@ describe('sanitize()', () => {
   });
 
   describe('type reference', () => {
-    class Cat extends Model<Cat> {
+    class Cat extends Model {
       @Cat.Property({type: 'string'})
       public id: string;
 

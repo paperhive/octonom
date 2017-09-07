@@ -15,7 +15,7 @@ export class ValidationError extends ExtendableError {
     public reason?: string,
     public value?: any,
     public path?: Array<string | number>,
-    public instance?: Model<object>,
+    public instance?: Model,
   ) {
     super(message, ValidationError.prototype);
   }

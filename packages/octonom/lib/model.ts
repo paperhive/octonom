@@ -6,16 +6,16 @@ import { SchemaMap, SchemaValue } from './schema';
 import { IToObjectOptions, toObject } from './to-object';
 import { validateObject } from './validate';
 
-export interface IModelConstructor<TModel extends Model<object>> {
+export interface IModelConstructor<T extends Model> {
   schema: SchemaMap;
-  new (data: Partial<TModel>): TModel;
+  new (data: Partial<T>): T;
 }
 
 interface IModel {
   constructor: typeof Model;
 }
 
-export abstract class Model<T extends object> {
+export abstract class Model {
   public static schema: SchemaMap;
 
   /**
@@ -30,7 +30,8 @@ export abstract class Model<T extends object> {
     };
   }
 
-  constructor(data?: Partial<T>) {
+  // TODO: ideally we'd also use Partial<this> as the type for data
+  constructor(data?) {
     const constructor = this.constructor as typeof Model;
     const schema = constructor.schema;
 
@@ -57,14 +58,14 @@ export abstract class Model<T extends object> {
   }
 
   // TODO: sanitize is called twice when this is called via the proxy
-  public set(data: object, options: ISanitizeOptions = {}) {
+  public set(data: Partial<this>, options: ISanitizeOptions = {}) {
     const constructor = this.constructor as typeof Model;
     setObjectSanitized(constructor.schema, this, data, options);
   }
 
-  public toObject(options?: IToObjectOptions): Partial<T> {
+  public toObject(options?: IToObjectOptions): Partial<this> {
     const constructor = this.constructor as typeof Model;
-    return toObject(constructor.schema, this, options) as Partial<T>;
+    return toObject(constructor.schema, this, options) as Partial<this>;
   }
 
   public toJSON() {

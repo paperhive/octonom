@@ -2,7 +2,7 @@ import { Model, utils } from '../../../lib/main';
 
 import { PersonAccountModel } from './person-account';
 
-export class PersonModel extends Model<PersonModel> {
+export class PersonModel extends Model {
   @Model.Property({type: 'string', default: utils.generateId})
   public id: string;
 

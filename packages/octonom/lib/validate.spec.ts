@@ -7,7 +7,7 @@ import { SchemaMap, SchemaValue } from './schema';
 import { validateObject, validateValue } from './validate';
 
 function getInstance(schema: SchemaValue, data: object) {
-  class TestModel extends Model<TestModel> {
+  class TestModel extends Model {
     @Model.Property(schema)
     public key: any;
   }
@@ -62,7 +62,7 @@ describe('validateValue()', () => {
   describe('type any', () => {
     const schema: SchemaValue = {
       type: 'any',
-      validate: async (value: any, path: Array<string | number>, instance: Model<any>) => {
+      validate: async (value: any, path: Array<string | number>, instance: Model) => {
         if (value.foo === 'invalid') {
           throw new ValidationError('Custom error.', 'custom', value, path, instance);
         }
@@ -88,7 +88,7 @@ describe('validateValue()', () => {
       type: 'array',
       definition: {
         type: 'any',
-        validate: async (value: any, path: Array<string | number>, instance: Model<any>) => {
+        validate: async (value: any, path: Array<string | number>, instance: Model) => {
           if (value === 'invalid') {
             throw new ValidationError('Custom error.', 'custom', value, path, instance);
           }
@@ -96,7 +96,7 @@ describe('validateValue()', () => {
       },
       minLength: 1,
       maxLength: 2,
-      validate: async (value: any[], path: Array<string | number>, instance: Model<any>) => {
+      validate: async (value: any[], path: Array<string | number>, instance: Model) => {
         if (value.indexOf('baz') !== -1) {
           throw new ValidationError('Array must not contain baz.', 'custom', value, path, instance);
         }
@@ -148,7 +148,7 @@ describe('validateValue()', () => {
   describe('type boolean', () => {
     const schema: SchemaValue = {
       type: 'boolean',
-      validate: async (value: boolean, path: Array<string | number>, instance: Model<any>) => {
+      validate: async (value: boolean, path: Array<string | number>, instance: Model) => {
         if (value === false) {
           throw new ValidationError('False not allowed.', 'custom', value, path, instance);
         }
@@ -181,7 +181,7 @@ describe('validateValue()', () => {
       type: 'date',
       min: new Date('2000-01-01'),
       max: new Date('2018-01-01'),
-      validate: async (value: Date, path: Array<string | number>, instance: Model<any>) => {
+      validate: async (value: Date, path: Array<string | number>, instance: Model) => {
         if (value.getTime() === new Date('2017-09-03').getTime()) {
           throw new ValidationError('2017-09-03 is not allowed.', 'custom', value, path, instance);
         }
@@ -224,10 +224,10 @@ describe('validateValue()', () => {
   });
 
   describe('type model', () => {
-    class NestedModel extends Model<NestedModel> {
+    class NestedModel extends Model {
       @Model.Property({
         type: 'any',
-        validate: async (value: any, path: Array<string | number>, instance: Model<any>) => {
+        validate: async (value: any, path: Array<string | number>, instance: Model) => {
           if (value === 'baz') {
             throw new ValidationError('Value baz is not allowed.', 'custom', value, path, instance);
           }
@@ -245,7 +245,7 @@ describe('validateValue()', () => {
     const schema: SchemaValue = {
       type: 'model',
       model: NestedModel,
-      validate: async (value: NestedModel, path: Array<string | number>, instance: Model<any>) => {
+      validate: async (value: NestedModel, path: Array<string | number>, instance: Model) => {
         if (value.foo === 'invalid') {
           throw new ValidationError('Value invalid is not allowed.', 'custom', value, path, instance);
         }
@@ -306,7 +306,7 @@ describe('validateValue()', () => {
       min: 1,
       max: 5,
       integer: true,
-      validate: async (value: number, path: Array<string | number>, instance: Model<any>) => {
+      validate: async (value: number, path: Array<string | number>, instance: Model) => {
         if (value === 3) {
           throw new ValidationError('3 is not allowed.', 'custom', value, path, instance);
         }
@@ -359,7 +359,7 @@ describe('validateValue()', () => {
     const schema: SchemaValue = {
       type: 'object',
       definition: {foo: {type: 'any', required: true}},
-      validate: async (value: any, path: Array<string | number>, instance: Model<any>) => {
+      validate: async (value: any, path: Array<string | number>, instance: Model) => {
         if (value && value.foo === 'invalid') {
           throw new ValidationError('Invalid value for key foo.', 'custom', value, path, instance);
         }
@@ -398,7 +398,7 @@ describe('validateValue()', () => {
     const schema: SchemaValue = {
       type: 'reference',
       collection: () => collections.cats,
-      validate: async (value: any, path: Array<string | number>, instance: Model<any>) => {
+      validate: async (value: any, path: Array<string | number>, instance: Model) => {
         if (value === 'invalid') {
           throw new ValidationError('Invalid id.', 'custom', value, path, instance);
         }
@@ -439,7 +439,7 @@ describe('validateValue()', () => {
       min: 2, // disallows f
       max: 5, // disallows foobar
       regex: /^(f|foo|bar|baz|foobar)$/, // disallows bat
-      validate: async (value: string, path: Array<string | number>, instance: Model<any>) => {
+      validate: async (value: string, path: Array<string | number>, instance: Model) => {
         if (value === 'bar') {
           throw new ValidationError('String bar is not allowed.', 'custom', value, path, instance);
         }
