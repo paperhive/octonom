@@ -99,7 +99,7 @@ export async function populateValue(value: any, schema: SchemaValue, populateRef
 
       // nested populate?
       if (populateReference !== true) {
-        await populateObject(instance, collection.model._schema, populateReference);
+        await populateObject(instance, collection.model.schema, populateReference);
       }
 
       return instance;

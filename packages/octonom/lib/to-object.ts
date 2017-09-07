@@ -16,7 +16,7 @@ export function toObjectValue(schemaValue: SchemaValue, value, options: IToObjec
       return value.map(v => toObjectValue(schemaValue.definition, v, options));
 
     case 'model':
-      return toObject(schemaValue.model._schema, value, options);
+      return toObject(schemaValue.model.schema, value, options);
 
     case 'object':
       return toObject(schemaValue.definition, value, options);
