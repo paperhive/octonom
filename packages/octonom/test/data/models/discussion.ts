@@ -12,4 +12,8 @@ export class DiscussionModel extends Model {
 
   @Model.Property({type: 'string'})
   public title: string;
+
+  constructor(data?: Partial<DiscussionModel>) {
+    super(data);
+  }
 }

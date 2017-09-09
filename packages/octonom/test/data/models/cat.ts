@@ -8,4 +8,8 @@ export class CatModel extends Model {
   public name: string;
 
   public nonSchemaProperty: string;
+
+  constructor(data?: Partial<CatModel>) {
+    super(data);
+  }
 }

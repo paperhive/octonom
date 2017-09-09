@@ -7,7 +7,7 @@ describe('ModelArray', () => {
   const catObj = {id: '42', name: 'Yllim'};
   const cat = new CatModel(catObj);
 
-  beforeEach(() => array = new ModelArray(CatModel));
+  beforeEach(() => array = new ModelArray<CatModel>(CatModel));
 
   describe('constructor', () => {
     it('should create an empty array', () => {
@@ -15,7 +15,7 @@ describe('ModelArray', () => {
     });
 
     it('should create an initialized array with raw objects', () => {
-      const initializedArray = new ModelArray(CatModel, [catObj]);
+      const initializedArray = new ModelArray<CatModel>(CatModel, [catObj]);
       expect(initializedArray).to.have.length(1);
       expect(initializedArray[0]).to.be.an.instanceOf(CatModel);
       expect(initializedArray[0].toObject()).to.eql(catObj);

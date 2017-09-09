@@ -134,13 +134,13 @@ describe('Model', () => {
       });
 
       it('should create a group with a model array with person instances', () => {
-        const members = new ModelArray(PersonModel, [{name: 'Alice'}, {name: 'Bob'}]);
+        const members = new ModelArray<PersonModel>(PersonModel, [{name: 'Alice'}, {name: 'Bob'}]);
         const group = new GroupWithArrayModel({members});
         expect(group.members).to.equal(members);
       });
 
       it('should throw if a model array is provided with the wrong model', () => {
-        const cats = new ModelArray(CatModel, [{name: 'Yllim'}]);
+        const cats = new ModelArray<CatModel>(CatModel, [{name: 'Yllim'}]);
         expect(() => new GroupWithArrayModel({members: cats})).to.throw('ModelArray model mismatch');
       });
     });
@@ -157,14 +157,14 @@ describe('Model', () => {
       });
 
       it('should set a model array with person instances', () => {
-        const members = new ModelArray(PersonModel, [{name: 'Alice'}, {name: 'Bob'}]);
+        const members = new ModelArray<PersonModel>(PersonModel, [{name: 'Alice'}, {name: 'Bob'}]);
         const group = new GroupWithArrayModel();
         group.set({members});
         expect(group.members).to.equal(members);
       });
 
       it('should throw if a model array is provided with the wrong model', () => {
-        const cats = new ModelArray(CatModel, [{name: 'Yllim'}]);
+        const cats = new ModelArray<CatModel>(CatModel, [{name: 'Yllim'}]);
         const group = new GroupWithArrayModel();
         expect(() => group.set({members: cats})).to.throw('ModelArray model mismatch');
       });
@@ -182,14 +182,14 @@ describe('Model', () => {
       });
 
       it('should set a model array with a person instance', () => {
-        const members = new ModelArray(PersonModel, [{name: 'Alice'}, {name: 'Bob'}]);
+        const members = new ModelArray<PersonModel>(PersonModel, [{name: 'Alice'}, {name: 'Bob'}]);
         const group = new GroupWithArrayModel();
         group.members = members;
         expect(group.members).to.equal(members);
       });
 
       it('should throw if a model array is provided with the wrong model', () => {
-        const cats = new ModelArray(CatModel, [{name: 'Yllim'}]);
+        const cats = new ModelArray<CatModel>(CatModel, [{name: 'Yllim'}]);
         const group = new GroupWithArrayModel();
         expect(() => group.members = cats).to.throw('ModelArray model mismatch');
       });
