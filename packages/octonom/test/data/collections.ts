@@ -7,9 +7,9 @@ import { GroupWithReferencesModel } from './models/group-with-references';
 import { PersonModel } from './models/person';
 
 export const collections = {
-  cats: new ArrayCollection(CatModel),
-  discussions: new ArrayCollection(DiscussionModel),
-  groupsWithArray: new ArrayCollection(GroupWithArrayModel),
-  groupsWithReferences: new ArrayCollection(GroupWithReferencesModel),
-  people: new ArrayCollection(PersonModel),
+  cats: new ArrayCollection<CatModel>(CatModel),
+  discussions: new ArrayCollection<DiscussionModel>(DiscussionModel),
+  groupsWithArray: new ArrayCollection<GroupWithArrayModel>(GroupWithArrayModel),
+  groupsWithReferences: new ArrayCollection<GroupWithReferencesModel>(GroupWithReferencesModel),
+  people: new ArrayCollection<PersonModel>(PersonModel),
 };

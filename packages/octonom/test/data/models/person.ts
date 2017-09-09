@@ -11,4 +11,8 @@ export class PersonModel extends Model {
 
   @Model.Property({type: 'model', model: PersonAccountModel})
   public account?: Partial<PersonAccountModel>;
+
+  constructor(data?: Partial<PersonModel>) {
+    super(data);
+  }
 }

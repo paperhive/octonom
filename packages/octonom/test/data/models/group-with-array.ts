@@ -8,4 +8,8 @@ export class GroupWithArrayModel extends Model {
 
   @Model.Property({type: 'array', definition: {type: 'model', model: PersonModel}})
   public members: ModelArray<PersonModel> | Array<Partial<PersonModel>>;
+
+  constructor(data?: Partial<GroupWithArrayModel>) {
+    super(data);
+  }
 }
