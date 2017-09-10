@@ -1,3 +1,5 @@
+import { spy } from 'sinon';
+
 import { collections } from '../test/data/collections';
 import { CatModel } from '../test/data/models/cat';
 import { DiscussionModel } from '../test/data/models/discussion';
@@ -7,8 +9,60 @@ import { PersonModel } from '../test/data/models/person';
 import { PersonAccountModel } from '../test/data/models/person-account';
 
 import { ValidationError } from './errors';
-import { Model } from './model';
+import { Hook, Model, Property } from './model';
 import { ModelArray } from './model-array';
+
+describe('Hook decorator', () => {
+  let beforeObj;
+  let afterObj;
+  const beforeSet = spy(options => beforeObj = options.instance.toObject());
+  const afterSet = spy(options => afterObj = options.instance.toObject());
+
+  function resetSpies() {
+    beforeObj = undefined;
+    afterObj = undefined;
+    beforeSet.reset();
+    afterSet.reset();
+  }
+
+  beforeEach(resetSpies);
+
+  @Hook('beforeSet', beforeSet)
+  @Hook('afterSet', afterSet)
+  class Hooked extends Model {
+    @Property({type: 'string'})
+    public foo: string;
+
+
+  }
+
+  it('should register handlers', () => {
+    expect((Hooked.hooks as any).handlers.beforeSet).to.eql([beforeSet]);
+    expect((Hooked.hooks as any).handlers.afterSet).to.eql([afterSet]);
+  });
+
+  it('should run handlers when constructed', () => {
+    const hooked = new Hooked({foo: 'bar'});
+    expect(beforeSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar'}});
+    expect(beforeObj).to.eql({});
+    expect(afterSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar'}});
+    expect(afterObj).to.eql({foo: 'bar'});
+  });
+
+  it('should run handlers when calling set()', () => {
+    const hooked = new Hooked({});
+    resetSpies();
+    hooked.set({foo: 'bar'});
+    expect(beforeSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar'}});
+    expect(beforeObj).to.eql({});
+    expect(afterSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar'}});
+    expect(afterObj).to.eql({foo: 'bar'});
+  });
+});
+
+describe('Property decorator', () => {
+  it('should register a schema property');
+});
 
 describe('Model', () => {
   describe('simple (CatModel)', () => {
