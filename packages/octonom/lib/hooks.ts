@@ -46,7 +46,6 @@ export class Hooks<TModel extends Model> {
   }
 
   public register<K extends keyof HookHandlersMap<TModel>>(name: K, handler: HookHandlersMap<TModel>[K][0]) {
-    this.handlers[name] = this.handlers[name].slice();
     const handlers = this.handlers[name] as Array<HookHandlersMap<TModel>[K][0]>;
     handlers.push(handler);
   }
