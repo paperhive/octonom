@@ -33,7 +33,8 @@ describe('Hook decorator', () => {
     @Property({type: 'string'})
     public foo: string;
 
-
+    @Property({type: 'string'})
+    public baz: string;
   }
 
   it('should register handlers', () => {
@@ -52,11 +53,11 @@ describe('Hook decorator', () => {
   it('should run handlers when calling set()', () => {
     const hooked = new Hooked({});
     resetSpies();
-    hooked.set({foo: 'bar'});
-    expect(beforeSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar'}});
+    hooked.set({foo: 'bar', baz: 'lol'});
+    expect(beforeSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar', baz: 'lol'}});
     expect(beforeObj).to.eql({});
-    expect(afterSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar'}});
-    expect(afterObj).to.eql({foo: 'bar'});
+    expect(afterSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar', baz: 'lol'}});
+    expect(afterObj).to.eql({foo: 'bar', baz: 'lol'});
   });
 });
 
