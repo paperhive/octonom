@@ -1,5 +1,6 @@
 import { cloneDeep } from 'lodash';
 
+import { HookHandlersMap, Hooks } from './hooks';
 import { IPopulateMap, populateObject } from './populate';
 import { ISanitizeOptions, sanitize, setObjectSanitized } from './sanitize';
 import { SchemaMap, SchemaValue } from './schema';
@@ -10,7 +11,7 @@ export type Constructor<T = {}> = new (...args: any[]) => T;
 
 export interface IModelConstructor<T extends Model> {
   schema: SchemaMap;
-  hooks: ModelHooks<T>;
+  hooks: Hooks<T>;
   new (data: Partial<T>): T;
 }
 
@@ -26,20 +27,12 @@ export function Property(schema: SchemaValue): PropertyDecorator {
   };
 }
 
-export type setHook<T> = (instance?: T, data?: Partial<T>, options?: ISanitizeOptions) => void;
-export interface IModelHookOptions<T> {
-  beforeSet: setHook<T>;
-  afterSet: setHook<T>;
-}
-
-export type ModelHooks<T> = {
-  [k in keyof IModelHookOptions<T>]: Array<IModelHookOptions<T>[k]>;
-};
-
-export function Hooks<T extends Model>(hooks: Partial<IModelHookOptions<T>>) {
-  return (constructor: IModelConstructor<T>) => {
-    constructor.hooks = cloneDeep(constructor.hooks);
-    Object.keys(hooks).forEach(name => constructor.hooks[name].push(hooks[name]));
+export function Hook<TModel extends Model,  K extends keyof HookHandlersMap<TModel>>(
+  name: K, handler: HookHandlersMap<TModel>[K][0],
+) {
+  return (constructor: IModelConstructor<TModel>) => {
+    constructor.hooks = new Hooks<TModel>(constructor.hooks);
+    constructor.hooks.register(name, handler);
   };
 }
 
@@ -48,10 +41,7 @@ export function Hooks<T extends Model>(hooks: Partial<IModelHookOptions<T>>) {
 export class Model {
   public static schema: SchemaMap = {};
 
-  public static hooks: ModelHooks<Model> = {
-    beforeSet: [],
-    afterSet: [],
-  };
+  public static hooks = new Hooks<Model>();
 
   /**
    * Attach schema information to the property
@@ -75,9 +65,9 @@ export class Model {
     const proxy = new Proxy(this, {
       set(target, key, value, receiver) {
         if (schema[key]) {
-          constructor.hooks.beforeSet.forEach(hook => hook(receiver, {[key]: value}));
+          constructor.hooks.run('beforeSet', {instance: receiver, data: {[key]: value}});
           target[key] = sanitize(schema[key], value);
-          constructor.hooks.afterSet.forEach(hook => hook(receiver, {[key]: value}));
+          constructor.hooks.run('afterSet', {instance: receiver, data: {[key]: value}});
         } else {
           target[key] = value;
         }
@@ -85,9 +75,9 @@ export class Model {
       },
       deleteProperty(target, key) {
         if (schema[key]) {
-          constructor.hooks.beforeSet.forEach(hook => hook(proxy, {[key]: undefined}));
+          constructor.hooks.run('beforeSet', {instance: proxy, data: {[key]: undefined}});
           delete target[key];
-          constructor.hooks.afterSet.forEach(hook => hook(proxy, {[key]: undefined}));
+          constructor.hooks.run('afterSet', {instance: proxy, data: {[key]: undefined}});
         } else {
           delete target[key];
         }
@@ -110,11 +100,9 @@ export class Model {
   // TODO: sanitize is called twice when this is called via the proxy
   public set(data: Partial<this>, options: ISanitizeOptions = {}) {
     const constructor = this.constructor as typeof Model;
-    constructor.hooks.beforeSet.forEach(hook => hook(this, data as any, options));
-
+    constructor.hooks.run('beforeSet', {instance: this, data});
     setObjectSanitized(constructor.schema, this, data, options);
-
-    constructor.hooks.afterSet.forEach(hook => hook(this, data as any, options));
+    constructor.hooks.run('afterSet', {instance: this, data});
   }
 
   public toObject(options?: IToObjectOptions): Partial<this> {
