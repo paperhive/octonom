@@ -1,0 +1,29 @@
+{
+  "name": "octonom-timestamp",
+  "version": "1.0.0-alpha.1",
+  "description": "Timestamp mixin for Octonom models",
+  "main": "build/lib/main.js",
+  "types": "build/lib/main.d.ts",
+  "scripts": {
+    "build": "rm -rf ./build && tsc -p tsconfig.build.json",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "octonom-plugin",
+    "mixin",
+    "timestamp",
+    "ODM",
+    "ORM",
+    "document",
+    "object",
+    "model"
+  ],
+  "author": "André Gaul <andre@paperhive.org>",
+  "license": "MIT",
+  "repository": "paperhive/octonom",
+  "bugs": "https://github.com/paperhive/octonom/issues",
+  "dependencies": {
+    "octonom": "^1.0.0-alpha.13",
+    "ts-node": "^3.3.0"
+  }
+}
