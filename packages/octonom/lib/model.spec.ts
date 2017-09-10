@@ -42,22 +42,44 @@ describe('Hook decorator', () => {
     expect((Hooked.hooks as any).handlers.afterSet).to.eql([afterSet]);
   });
 
-  it('should run handlers when constructed', () => {
-    const hooked = new Hooked({foo: 'bar'});
-    expect(beforeSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar'}});
-    expect(beforeObj).to.eql({});
-    expect(afterSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar'}});
-    expect(afterObj).to.eql({foo: 'bar'});
-  });
+  describe('set handlers', () => {
+    it('should run handlers when constructed', () => {
+      const hooked = new Hooked({foo: 'bar'});
+      expect(beforeSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar'}});
+      expect(beforeObj).to.eql({});
+      expect(afterSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar'}});
+      expect(afterObj).to.eql({foo: 'bar'});
+    });
 
-  it('should run handlers when calling set()', () => {
-    const hooked = new Hooked({});
-    resetSpies();
-    hooked.set({foo: 'bar', baz: 'lol'});
-    expect(beforeSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar', baz: 'lol'}});
-    expect(beforeObj).to.eql({});
-    expect(afterSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar', baz: 'lol'}});
-    expect(afterObj).to.eql({foo: 'bar', baz: 'lol'});
+    it('should run handlers when calling set()', () => {
+      const hooked = new Hooked({});
+      resetSpies();
+      hooked.set({foo: 'bar', baz: 'lol'});
+      expect(beforeSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar', baz: 'lol'}});
+      expect(beforeObj).to.eql({});
+      expect(afterSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar', baz: 'lol'}});
+      expect(afterObj).to.eql({foo: 'bar', baz: 'lol'});
+    });
+
+    it('should run handlers when setting a value', () => {
+      const hooked = new Hooked({});
+      resetSpies();
+      hooked.foo = 'bar';
+      expect(beforeSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar'}});
+      expect(beforeObj).to.eql({});
+      expect(afterSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: 'bar'}});
+      expect(afterObj).to.eql({foo: 'bar'});
+    });
+
+    it('should run handlers when deleting a value', () => {
+      const hooked = new Hooked({foo: 'bar'});
+      resetSpies();
+      delete hooked.foo;
+      expect(beforeSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: undefined}});
+      expect(beforeObj).to.eql({foo: 'bar'});
+      expect(afterSet).to.be.calledOnce.and.calledWith({instance: hooked, data: {foo: undefined}});
+      expect(afterObj).to.eql({});
+    });
   });
 });
 
