@@ -1,18 +1,8 @@
+import { cloneDeep } from 'lodash';
+
 import { Collection } from './collection';
 import { Model } from './model';
 import { ISanitizeOptions } from './sanitize';
-
-export class HookHandlers<THookOptions, TModel extends Model> {
-  private handlers: Array<(options: THookOptions) => void> = [];
-
-  public register(handler: (options: THookOptions) => void) {
-    this.handlers.push(handler);
-  }
-
-  public run(options: THookOptions) {
-    this.handlers.forEach(handler => handler(options));
-  }
-}
 
 export interface ISetHookOptions<TModel extends Model> {
   instance: TModel;
@@ -25,23 +15,17 @@ export interface ISaveHookOptions<TModel extends Model> {
   collection: Collection<TModel>;
 }
 
-export type hookHandler<THookOptions> = (options: THookOptions) => void;
-
-export interface IHookOptionMap<TModel extends Model> {
+export interface IHookOptionsMap<TModel extends Model> {
   beforeSet: ISetHookOptions<TModel>;
   afterSet: ISetHookOptions<TModel>;
   beforeSave: ISaveHookOptions<TModel>;
   afterSave: ISaveHookOptions<TModel>;
 }
 
-export type handlerNames<TModel extends Model> = keyof IHookOptionMap<TModel>;
-
-export type HookHandlerMap<TModel extends Model> = {
-  [k in handlerNames<TModel>]: (options: IHookOptionMap<TModel>[k]) => void;
-};
+export type hookHandlers<TOptions> = Array<(options: TOptions) => void>;
 
 export type HookHandlersMap<TModel extends Model> = {
-  [k in handlerNames<TModel>]: Array<HookHandlerMap<TModel>[k]>;
+  [k in keyof IHookOptionsMap<TModel>]: hookHandlers<IHookOptionsMap<TModel>[k]>;
 };
 
 export class Hooks<TModel extends Model> {
@@ -52,13 +36,22 @@ export class Hooks<TModel extends Model> {
     afterSave: [],
   };
 
-  public add<K extends keyof HookHandlersMap<TModel>>(name: K, handler: HookHandlersMap<TModel>[K][0]) {
+  constructor(hooks?: Hooks<TModel>) {
+    // copy hooks from passed Hooks instance
+    if (hooks) {
+      Object.keys(this.handlers).forEach(key => {
+        this.handlers[key] = hooks.handlers[key].slice();
+      });
+    }
+  }
+
+  public register<K extends keyof HookHandlersMap<TModel>>(name: K, handler: HookHandlersMap<TModel>[K][0]) {
     this.handlers[name] = this.handlers[name].slice();
     const handlers = this.handlers[name] as Array<HookHandlersMap<TModel>[K][0]>;
     handlers.push(handler);
   }
 
-  public run<K extends keyof IHookOptionMap<TModel>>(name: K, options: IHookOptionMap<TModel>[K]) {
+  public run<K extends keyof IHookOptionsMap<TModel>>(name: K, options: IHookOptionsMap<TModel>[K]) {
     const handlers = this.handlers[name] as Array<HookHandlersMap<TModel>[K][0]>;
     handlers.forEach(handler => handler(options));
   }
