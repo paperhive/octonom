@@ -113,6 +113,20 @@ describe('Property decorator', () => {
 });
 
 describe('Model', () => {
+  it('should allow non-schema properties', () => {
+    class TestModel extends Model {
+      @Property({type: 'string'})
+      public foo: string;
+
+      public bar: string;
+    }
+    const instance = new TestModel({foo: 'test'});
+    instance.bar = 'baz';
+    expect(instance).to.eql({foo: 'test', bar: 'baz'});
+    delete instance.bar;
+    expect(instance).to.eql({foo: 'test'});
+  });
+
   describe('simple (CatModel)', () => {
     describe('constructor', () => {
       it('should create an empty instance with generated id via default function', () => {
