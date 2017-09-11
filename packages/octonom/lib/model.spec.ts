@@ -93,7 +93,23 @@ describe('Hook decorator', () => {
 });
 
 describe('Property decorator', () => {
-  it('should register a schema property');
+  class TestModel extends Model {
+    @Property({type: 'string'})
+    public foo: string;
+  }
+
+  it('should register a schema property', () => {
+    expect(TestModel.schema).to.eql({foo: {type: 'string'}});
+  });
+
+  it('should create a separate for new classes', () => {
+    class Derived extends TestModel {
+      @Property({type: 'string'})
+      public bar: string;
+    }
+    expect(TestModel.schema).to.eql({foo: {type: 'string'}});
+    expect(Derived.schema).to.eql({foo: {type: 'string'}, bar: {type: 'string'}});
+  });
 });
 
 describe('Model', () => {
