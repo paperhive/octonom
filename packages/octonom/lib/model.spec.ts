@@ -42,6 +42,15 @@ describe('Hook decorator', () => {
     expect((Hooked.hooks as any).handlers.afterSet).to.eql([afterSet]);
   });
 
+  it('should create separate Hook instances for new classes', () => {
+    @Hook('beforeSet', beforeSet)
+    class DoubleHooked extends Hooked {}
+    expect((Hooked.hooks as any).handlers.beforeSet).to.eql([beforeSet]);
+    expect((Hooked.hooks as any).handlers.afterSet).to.eql([afterSet]);
+    expect((DoubleHooked.hooks as any).handlers.beforeSet).to.eql([beforeSet, beforeSet]);
+    expect((DoubleHooked.hooks as any).handlers.afterSet).to.eql([afterSet]);
+  });
+
   describe('set handlers', () => {
     it('should run handlers when constructed', () => {
       const hooked = new Hooked({foo: 'bar'});
