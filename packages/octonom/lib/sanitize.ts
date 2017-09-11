@@ -134,7 +134,7 @@ export function setObjectSanitized(schemaMap: SchemaMap, target: object, data: o
   }
 
   forEach(schemaMap, (schemaValue, key) => {
-    if (options.replace) {
+    if (options.replace || key in data) {
       delete target[key];
     }
 
