@@ -1,5 +1,3 @@
-import { cloneDeep } from 'lodash';
-
 import { Collection } from './collection';
 import { Model } from './model';
 import { ISanitizeOptions } from './sanitize';
