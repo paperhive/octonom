@@ -8,12 +8,41 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 describe('Timestamp mixin', () => {
   class Base extends Model {
     @Property({type: 'string'})
-    public base: string;
+    public name: string;
   }
 
   function testInstance(instance) {
     expect(instance).to.have.property('createdAt').which.is.an.instanceOf(Date);
     expect(instance).to.have.property('updatedAt').which.is.an.instanceOf(Date);
+  }
+
+  function testClass(timestampedClass) {
+    it('should set createdAt and updatedAt on a new instance', () => {
+      const instance = new timestampedClass();
+      testInstance(instance);
+      expect(instance.createdAt.getTime()).to.equal(instance.updatedAt.getTime());
+    });
+
+    it('should update updatedAt when calling set()', async () => {
+      const instance = new timestampedClass();
+      await sleep(10);
+      instance.set({name: 'test'});
+      expect(instance.createdAt.getTime()).to.be.lessThan(instance.updatedAt.getTime());
+    });
+
+    it('should update updatedAt when setting a property', async () => {
+      const instance = new timestampedClass();
+      await sleep(10);
+      instance.name = 'test';
+      expect(instance.createdAt.getTime()).to.be.lessThan(instance.updatedAt.getTime());
+    });
+
+    it('should update updatedAt when deleting a property', async () => {
+      const instance = new timestampedClass({name: 'test'});
+      await sleep(10);
+      delete instance.name;
+      expect(instance.createdAt.getTime()).to.be.lessThan(instance.updatedAt.getTime());
+    });
   }
 
   describe('Direct mixin extending from Model', () => {
@@ -22,31 +51,12 @@ describe('Timestamp mixin', () => {
       public name: string;
     }
 
-    it('should set createdAt and updatedAt on a new instance', () => {
-      const instance = new Timestamped();
-      testInstance(instance);
-      expect(instance.createdAt.getTime()).to.equal(instance.updatedAt.getTime());
-    });
+    testClass(Timestamped);
+  });
 
-    it('should update updatedAt when calling set()', async () => {
-      const instance = new Timestamped();
-      await sleep(10);
-      instance.set({name: 'test'});
-      expect(instance.createdAt.getTime()).to.be.lessThan(instance.updatedAt.getTime());
-    });
+  describe('Mixin extending a base class', () => {
+    class Timestamped extends Timestamp(Base) {}
 
-    it('should update updatedAt when setting a property', async () => {
-      const instance = new Timestamped();
-      await sleep(10);
-      instance.name = 'test';
-      expect(instance.createdAt.getTime()).to.be.lessThan(instance.updatedAt.getTime());
-    });
-
-    it('should update updatedAt when deleting a property', async () => {
-      const instance = new Timestamped({name: 'test'});
-      await sleep(10);
-      delete instance.name;
-      expect(instance.createdAt.getTime()).to.be.lessThan(instance.updatedAt.getTime());
-    });
+    testClass(Timestamped);
   });
 });
