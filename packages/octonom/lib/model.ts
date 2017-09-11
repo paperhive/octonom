@@ -2,7 +2,7 @@ import { cloneDeep } from 'lodash';
 
 import { HookHandlersMap, Hooks } from './hooks';
 import { IPopulateMap, populateObject } from './populate';
-import { ISanitizeOptions, sanitize, setObjectSanitized } from './sanitize';
+import { ISanitizeOptions, setObjectSanitized } from './sanitize';
 import { SchemaMap, SchemaValue } from './schema';
 import { IToObjectOptions, toObject } from './to-object';
 import { validateObject } from './validate';
