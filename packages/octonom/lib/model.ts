@@ -57,17 +57,19 @@ export class Model {
     // set initial data
     this.set(data || {}, {defaults: true, replace: true});
 
-    // create proxy that intercepts set operations
-    // for running sanitization if the key is in the schema
-    // note: we use proxy for the hooks so they don't need to
-    //       worry about sanitizing values (they do need to worry
-    //       about recursive set calls though!)
+    // create proxy that intercepts set/delete operations and redirects
+    // them to set() on the unproxied instance
+    const rawSet = this.set.bind(this);
     const proxy = new Proxy(this, {
+      get(target, key, receiver) {
+        if (key === 'set') {
+          return rawSet;
+        }
+        return target[key];
+      },
       set(target, key, value, receiver) {
         if (schema[key]) {
-          constructor.hooks.run('beforeSet', {instance: receiver, data: {[key]: value}});
-          target[key] = sanitize(schema[key], value);
-          constructor.hooks.run('afterSet', {instance: receiver, data: {[key]: value}});
+          rawSet({[key]: value} as any);
         } else {
           target[key] = value;
         }
@@ -75,9 +77,7 @@ export class Model {
       },
       deleteProperty(target, key) {
         if (schema[key]) {
-          constructor.hooks.run('beforeSet', {instance: proxy, data: {[key]: undefined}});
-          delete target[key];
-          constructor.hooks.run('afterSet', {instance: proxy, data: {[key]: undefined}});
+          rawSet({[key]: undefined} as any);
         } else {
           delete target[key];
         }
@@ -97,7 +97,9 @@ export class Model {
     return populateObject(this, constructor.schema, populateMap);
   }
 
-  // TODO: sanitize is called twice when this is called via the proxy
+  // note: set runs with `this` bound to the unproxied instance, therefore
+  //       the hooks will be called with the unproxied instance as well.
+  //       This prevents recursion when handlers set properties.
   public set(data: Partial<this>, options: ISanitizeOptions = {}) {
     const constructor = this.constructor as typeof Model;
     constructor.hooks.run('beforeSet', {instance: this, data});
