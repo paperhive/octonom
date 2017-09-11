@@ -27,7 +27,7 @@ export function Property(schema: SchemaValue): PropertyDecorator {
   };
 }
 
-export function Hook<TModel extends Model,  K extends keyof HookHandlersMap<TModel>>(
+export function Hook<TModel extends Model, K extends keyof HookHandlersMap<TModel>>(
   name: K, handler: HookHandlersMap<TModel>[K][0],
 ) {
   return (constructor: IModelConstructor<TModel>) => {
