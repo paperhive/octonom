@@ -1,6 +1,6 @@
 {
   "name": "octonom-timestamp",
-  "version": "1.0.0-alpha.3",
+  "version": "1.0.0-alpha.4",
   "description": "Timestamp mixin for Octonom models",
   "main": "build/lib/main.js",
   "types": "build/lib/main.d.ts",
