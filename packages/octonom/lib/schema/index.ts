@@ -2,6 +2,7 @@ import { IModel, Model } from '../model';
 import { AnySchema, IAnyOptions } from './any';
 import { ArraySchema, IArrayOptions } from './array';
 import { BooleanSchema, IBooleanOptions } from './boolean';
+import { DateSchema, IDateOptions } from './date';
 import { IModelOptions, ModelSchema } from './model';
 import { ISchema } from './schema';
 
@@ -17,6 +18,7 @@ export function getSchemaDecorator(createSchema: () => ISchema<any, Model>): Pro
 export const AnyProperty = (options: IAnyOptions = {}) => getSchemaDecorator(() => new AnySchema(options));
 export const ArrayProperty = (options: IArrayOptions) => getSchemaDecorator(() => new ArraySchema(options));
 export const BooleanProperty = (options: IBooleanOptions = {}) => getSchemaDecorator(() => new BooleanSchema(options));
+export const DateProperty = (options: IDateOptions = {}) => getSchemaDecorator(() => new DateSchema(options));
 export const ModelProperty = (options: IModelOptions) => getSchemaDecorator(() => new ModelSchema(options));
 /* tslint:enable:variable-name */
 
@@ -30,7 +32,10 @@ class Person extends Model {
   public array: boolean[];
 
   @BooleanProperty()
-  public enabled: boolean;
+  public boolean: boolean;
+
+  @DateProperty()
+  public date: Date;
 
   @ModelProperty({model: Account})
   public account: Account;
