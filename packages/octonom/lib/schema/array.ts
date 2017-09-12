@@ -9,7 +9,7 @@ export interface IArrayOptions {
   elementSchema: ISchema<any, Model>;
   minLength?: number;
   maxLength?: number;
-  validate?: (value: any[], path: Array<string | number>, instance: Model) => Promise<void>;
+  validate?: (value: any[], path: Path, instance: Model) => Promise<void>;
 }
 
 export class ArraySchema<TModel extends Model = Model> implements ISchema<any[], TModel> {
