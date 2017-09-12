@@ -9,6 +9,7 @@ import { INumberOptions, NumberSchema } from './number';
 import { IObjectOptions, ObjectSchema } from './object';
 import { IReferenceOptions, ReferenceSchema } from './reference';
 import { ISchema } from './schema';
+import { IStringOptions, StringSchema } from './string';
 
 export function getSchemaDecorator(createSchema: () => ISchema<any, Model>): PropertyDecorator {
   return (target: IModel, key: string) => {
@@ -31,6 +32,7 @@ export const ModelProperty = (options: IModelOptions) => getSchemaDecorator(() =
 export const NumberProperty = (options: INumberOptions = {}) => getSchemaDecorator(() => new NumberSchema(options));
 export const ObjectProperty = (options: IObjectOptions) => getSchemaDecorator(() => new ObjectSchema(options));
 export const ReferenceProperty = (options: IReferenceOptions) => getSchemaDecorator(() => new ReferenceSchema(options));
+export const StringProperty = (options: IStringOptions = {}) => getSchemaDecorator(() => new StringSchema(options));
 /* tslint:enable:variable-name */
 
 class Account extends Model {
@@ -61,4 +63,7 @@ class Person extends Model {
 
   @ReferenceProperty({collection: () => accounts})
   public reference: string | Account;
+
+  @StringProperty()
+  public string: string;
 }
