@@ -25,6 +25,13 @@ export class ModelSchema<TModel extends Model = Model> implements ISchema<Model,
   }
 
   public async validate(value: Model, path: Path, instance: TModel) {
+    if (value === undefined) {
+      if (this.options.required) {
+        throw new ValidationError('Required value is undefined.', 'required', value, path, instance);
+      }
+      return;
+    }
+
     if (!(value instanceof this.options.model)) {
       throw new ValidationError(
         `Value is not an instance of ${this.options.model.name}.`,

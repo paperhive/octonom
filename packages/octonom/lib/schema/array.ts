@@ -48,6 +48,13 @@ export class ArraySchema<TModel extends Model = Model> implements ISchema<any[],
   }
 
   public async validate(value: any[], path: Path, instance: TModel) {
+    if (value === undefined) {
+      if (this.options.required) {
+        throw new ValidationError('Required value is undefined.', 'required', value, path, instance);
+      }
+      return;
+    }
+
     if (!(value instanceof Array)) {
       throw new ValidationError('Value is not an array.', 'no-array', value, path, instance);
     }

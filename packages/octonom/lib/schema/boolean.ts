@@ -5,7 +5,7 @@ import { ISanitizeOptions, ISchema, Path, runValidator } from './schema';
 export interface IBooleanOptions {
   required?: boolean;
   default?: boolean | (() => boolean);
-  validate?: (value: boolean, path: Array<string | number>, instance: Model) => Promise<void>;
+  validate?: (value: boolean, path: Path, instance: Model) => Promise<void>;
 }
 
 export class BooleanSchema<TModel extends Model = Model> implements ISchema<boolean, TModel> {
