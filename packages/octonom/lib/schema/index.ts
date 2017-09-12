@@ -1,3 +1,4 @@
+import { ArrayCollection } from '../array-collection';
 import { IModel, Model } from '../model';
 import { AnySchema, IAnyOptions } from './any';
 import { ArraySchema, IArrayOptions } from './array';
@@ -6,6 +7,7 @@ import { DateSchema, IDateOptions } from './date';
 import { IModelOptions, ModelSchema } from './model';
 import { INumberOptions, NumberSchema } from './number';
 import { IObjectOptions, ObjectSchema } from './object';
+import { IReferenceOptions, ReferenceSchema } from './reference';
 import { ISchema } from './schema';
 
 export function getSchemaDecorator(createSchema: () => ISchema<any, Model>): PropertyDecorator {
@@ -28,12 +30,15 @@ export const DateProperty = (options: IDateOptions = {}) => getSchemaDecorator((
 export const ModelProperty = (options: IModelOptions) => getSchemaDecorator(() => new ModelSchema(options));
 export const NumberProperty = (options: INumberOptions = {}) => getSchemaDecorator(() => new NumberSchema(options));
 export const ObjectProperty = (options: IObjectOptions) => getSchemaDecorator(() => new ObjectSchema(options));
+export const ReferenceProperty = (options: IReferenceOptions) => getSchemaDecorator(() => new ReferenceSchema(options));
 /* tslint:enable:variable-name */
 
 class Account extends Model {
   @AnyProperty()
   public any: any;
 }
+
+const accounts = new ArrayCollection<Account>(Account);
 
 class Person extends Model {
   @ArrayProperty({elementSchema: new BooleanSchema()})
@@ -53,4 +58,7 @@ class Person extends Model {
 
   @ObjectProperty({schema: {enabled: new BooleanSchema()}})
   public object: object;
+
+  @ReferenceProperty({collection: () => accounts})
+  public reference: string | Account;
 }
