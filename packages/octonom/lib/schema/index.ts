@@ -9,6 +9,10 @@ import { ISchema } from './schema';
 
 export function getSchemaDecorator(createSchema: () => ISchema<any, Model>): PropertyDecorator {
   return (target: IModel, key: string) => {
+    if (target.constructor.schema[key]) {
+      throw new Error(`Key ${key} already has a schema.`);
+    }
+
     // clone schema map
     target.constructor.schema = Object.assign({}, target.constructor.schema);
     target.constructor.schema[key] = createSchema();
