@@ -2,12 +2,10 @@ import { SanitizationError, ValidationError } from '../errors';
 import { IModelConstructor, Model } from '../model';
 import { ModelArray } from '../model-array';
 import { ModelSchema } from './model';
-import { ISanitizeOptions, ISchema, Path, runValidator } from './schema';
+import { ISanitizeOptions, ISchema, ISchemaOptions, Path, runValidator } from './schema';
 
-export interface IAnyOptions {
-  required?: boolean;
+export interface IAnyOptions extends ISchemaOptions<any> {
   default?: any | (() => any);
-  validate?: (value: any, path: Path, instance: Model) => Promise<void>;
 }
 
 export class AnySchema<TModel extends Model = Model> implements ISchema<any, TModel> {

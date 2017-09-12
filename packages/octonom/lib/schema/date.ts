@@ -1,13 +1,11 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { ISanitizeOptions, ISchema, Path, runValidator } from './schema';
+import { ISanitizeOptions, ISchema, ISchemaOptions, Path, runValidator } from './schema';
 
-export interface IDateOptions {
-  required?: boolean;
+export interface IDateOptions extends ISchemaOptions<Date> {
   default?: Date | (() => Date);
   min?: Date;
   max?: Date;
-  validate?: (value: Date, path: Path, instance: Model) => Promise<void>;
 }
 
 export class DateSchema<TModel extends Model = Model> implements ISchema<Date, TModel> {
@@ -27,6 +25,8 @@ export class DateSchema<TModel extends Model = Model> implements ISchema<Date, T
     if (!(value instanceof Date)) {
       throw new SanitizationError('Value is not a date.', 'no-date', value, path, instance);
     }
+
+    return value;
   }
 
   public async validate(value: Date, path: Path, instance: TModel) {

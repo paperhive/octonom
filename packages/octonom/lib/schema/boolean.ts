@@ -1,11 +1,9 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { ISanitizeOptions, ISchema, Path, runValidator } from './schema';
+import { ISanitizeOptions, ISchema, ISchemaOptions, Path, runValidator } from './schema';
 
-export interface IBooleanOptions {
-  required?: boolean;
+export interface IBooleanOptions extends ISchemaOptions<boolean> {
   default?: boolean | (() => boolean);
-  validate?: (value: boolean, path: Path, instance: Model) => Promise<void>;
 }
 
 export class BooleanSchema<TModel extends Model = Model> implements ISchema<boolean, TModel> {
@@ -25,6 +23,8 @@ export class BooleanSchema<TModel extends Model = Model> implements ISchema<bool
     if (value !== true && value !== false) {
       throw new SanitizationError('Value is not a boolean.', 'no-boolean', value, path, instance);
     }
+
+    return value;
   }
 
   public async validate(value: boolean, path: Path, instance: TModel) {

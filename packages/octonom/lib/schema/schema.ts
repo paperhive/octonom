@@ -21,6 +21,11 @@ export interface ISchemaMap {
   [field: string]: ISchema<any, Model>;
 }
 
+export interface ISchemaOptions<T> {
+  required?: boolean;
+  validate?: (value: T, path: Path, instance: Model) => Promise<void>;
+}
+
 export async function runValidator<T, TModel extends Model>(
   validate: Validator<T, TModel>,
   value: T,

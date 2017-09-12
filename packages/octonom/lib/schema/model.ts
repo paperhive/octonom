@@ -1,11 +1,9 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { IModelConstructor, Model } from '../model';
-import { ISanitizeOptions, ISchema, Path, runValidator } from './schema';
+import { ISanitizeOptions, ISchema, ISchemaOptions, Path, runValidator } from './schema';
 
-export interface IModelOptions<TModel extends Model = Model> {
-  required?: boolean;
+export interface IModelOptions<TModel extends Model = Model> extends ISchemaOptions<TModel> {
   model: IModelConstructor<TModel>;
-  validate?: (value: TModel, path: Array<string | number>, instance: Model) => Promise<void>;
 }
 
 export class ModelSchema<TModel extends Model = Model> implements ISchema<Model, TModel> {
