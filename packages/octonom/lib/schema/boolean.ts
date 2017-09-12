@@ -5,8 +5,6 @@ import { ISanitizeOptions, ISchema, Path, runValidator } from './schema';
 export interface IBooleanOptions {
   required?: boolean;
   default?: boolean | (() => boolean);
-  // note: instance is not necessarily an instance of the Model where the property is defined
-  //       (it could be a nested model!)
   validate?: (value: boolean, path: Array<string | number>, instance: Model) => Promise<void>;
 }
 
