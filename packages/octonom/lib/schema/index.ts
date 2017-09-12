@@ -1,4 +1,5 @@
 import { IModel, Model } from '../model';
+import { AnySchema, IAnyOptions } from './any';
 import { ArraySchema, IArrayOptions } from './array';
 import { BooleanSchema, IBooleanOptions } from './boolean';
 import { IModelOptions, ModelSchema } from './model';
@@ -13,14 +14,15 @@ export function getSchemaDecorator(createSchema: () => ISchema<any, Model>): Pro
 }
 
 /* tslint:disable:variable-name */
+export const AnyProperty = (options: IAnyOptions = {}) => getSchemaDecorator(() => new AnySchema(options));
 export const ArrayProperty = (options: IArrayOptions) => getSchemaDecorator(() => new ArraySchema(options));
 export const BooleanProperty = (options: IBooleanOptions = {}) => getSchemaDecorator(() => new BooleanSchema(options));
 export const ModelProperty = (options: IModelOptions) => getSchemaDecorator(() => new ModelSchema(options));
 /* tslint:enable:variable-name */
 
 class Account extends Model {
-  @BooleanProperty()
-  public blocked: boolean;
+  @AnyProperty()
+  public any: any;
 }
 
 class Person extends Model {
