@@ -31,7 +31,9 @@ export function Timestamp<T extends Constructor<Model>>(base: T): ITimestampStat
       instance.createdAt = date;
     }
 
-    instance.updatedAt = date;
+    if (data.updatedAt === undefined) {
+      instance.updatedAt = date;
+    }
   })(newClass as any);
 
   return newClass;

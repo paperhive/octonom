@@ -23,6 +23,13 @@ describe('Timestamp mixin', () => {
       expect(instance.createdAt.getTime()).to.equal(instance.updatedAt.getTime());
     });
 
+    it('should use createdAt and updatedAt from initialization data', () => {
+      const createdAt = new Date('2016-09-15T20:00:00.000Z');
+      const updatedAt = new Date('2016-09-16T07:00:00.000Z');
+      const instance = new timestampedClass({name: 'test', createdAt, updatedAt});
+      expect(instance).to.eql({name: 'test', createdAt, updatedAt});
+    });
+
     it('should update updatedAt when calling set()', async () => {
       const instance = new timestampedClass();
       await sleep(10);
