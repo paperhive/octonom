@@ -4,6 +4,7 @@ import { ArraySchema, IArrayOptions } from './array';
 import { BooleanSchema, IBooleanOptions } from './boolean';
 import { DateSchema, IDateOptions } from './date';
 import { IModelOptions, ModelSchema } from './model';
+import { INumberOptions, NumberSchema } from './number';
 import { ISchema } from './schema';
 
 export function getSchemaDecorator(createSchema: () => ISchema<any, Model>): PropertyDecorator {
@@ -20,6 +21,7 @@ export const ArrayProperty = (options: IArrayOptions) => getSchemaDecorator(() =
 export const BooleanProperty = (options: IBooleanOptions = {}) => getSchemaDecorator(() => new BooleanSchema(options));
 export const DateProperty = (options: IDateOptions = {}) => getSchemaDecorator(() => new DateSchema(options));
 export const ModelProperty = (options: IModelOptions) => getSchemaDecorator(() => new ModelSchema(options));
+export const NumberProperty = (options: INumberOptions = {}) => getSchemaDecorator(() => new NumberSchema(options));
 /* tslint:enable:variable-name */
 
 class Account extends Model {
@@ -38,5 +40,8 @@ class Person extends Model {
   public date: Date;
 
   @ModelProperty({model: Account})
-  public account: Account;
+  public model: Account;
+
+  @NumberProperty()
+  public number: number;
 }
