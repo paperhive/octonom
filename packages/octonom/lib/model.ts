@@ -3,28 +3,20 @@ import { cloneDeep } from 'lodash';
 import { HookHandlersMap, Hooks } from './hooks';
 import { IPopulateMap, populateObject } from './populate';
 import { ISanitizeOptions, setObjectSanitized } from './sanitize';
-import { SchemaMap, SchemaValue } from './schema';
+import { ISchemaMap } from './schema/schema';
 import { IToObjectOptions, toObject } from './to-object';
 import { validateObject } from './validate';
 
 export type Constructor<T = {}> = new (...args: any[]) => T;
 
 export interface IModelConstructor<T extends Model> {
-  schema: SchemaMap;
+  schema: ISchemaMap;
   hooks: Hooks<T>;
   new (data: Partial<T>): T;
 }
 
 export interface IModel {
   constructor: typeof Model;
-}
-
-export function Property(schema: SchemaValue): PropertyDecorator {
-  return (target: IModel, key: string) => {
-    const constructor = target.constructor;
-    constructor.schema = cloneDeep(constructor.schema);
-    constructor.schema[key] = schema;
-  };
 }
 
 export function Hook<TModel extends Model, K extends keyof HookHandlersMap<TModel>>(
@@ -39,15 +31,9 @@ export function Hook<TModel extends Model, K extends keyof HookHandlersMap<TMode
 // TODO: Model can be made an abstract class but the type Constructor<Model>
 //       doesn't work anymore (e.g., used in mixins)
 export class Model {
-  public static schema: SchemaMap = {};
+  public static schema: ISchemaMap = {};
 
   public static hooks = new Hooks<Model>();
-
-  /**
-   * Attach schema information to the property
-   * @param schema Schema definition
-   */
-  public static Property = Property;
 
   // TODO: ideally we'd also use Partial<this> as the type for data
   constructor(data?) {
