@@ -1,28 +1,8 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { IModelConstructor, Model } from '../model';
 import { ModelArray } from '../model-array';
+import { ModelSchema } from './model';
 import { ISanitizeOptions, ISchema, Path, runValidator } from './schema';
-
-// TODO: import
-
-export interface IModelOptions<TModel extends Model = Model> {
-  required?: boolean;
-  model: IModelConstructor<TModel>;
-  validate?: (value: TModel, path: Array<string | number>, instance: Model) => Promise<void>;
-}
-
-export class ModelSchema<TModel extends Model = Model> implements ISchema<Model, TModel> {
-  constructor(public options?: IModelOptions) {}
-
-  public sanitize(value: any, path: Path, instance: TModel, options?: ISanitizeOptions) {
-    // TODO
-    return new Model();
-  }
-
-  public async validate(value: Model, path: Path, instance: TModel) {
-    // TODO
-  }
-}
 
 export interface IArrayOptions {
   required?: boolean;
