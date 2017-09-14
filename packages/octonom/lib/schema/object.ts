@@ -52,6 +52,10 @@ export async function validateObject(
   path: Array<string | number>,
   instance: Model,
 ) {
+  if (typeof obj !== 'object') {
+    throw new ValidationError('Data is not an object.', 'no-object', obj, path, instance);
+  }
+
   const keys = Object.keys(obj);
   const schemaKeys = Object.keys(schemaMap);
 
@@ -60,7 +64,7 @@ export async function validateObject(
     const newPath = path.slice();
     newPath.push(invalidKeys[0]);
     throw new ValidationError(
-      `Key ${invalidKeys[0]} not in schema.`,
+      `Key ${invalidKeys[0]} not found in schema.`,
       'key-unknown', obj[invalidKeys[0]], newPath, instance,
     );
   }
@@ -75,7 +79,7 @@ export async function validateObject(
 export class ObjectSchema<TModel extends Model = Model> implements ISchema<object, TModel> {
   constructor(public options?: IObjectOptions) {}
 
-  public sanitize(value: any, path: Path, instance: TModel, options?: ISanitizeOptions) {
+  public sanitize(value: object, path: Path, instance: TModel, options?: ISanitizeOptions) {
     // return empty object if no data given but a value is required
     if (value === undefined) {
       return this.options.required ? {} : undefined;

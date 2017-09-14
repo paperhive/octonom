@@ -1,6 +1,6 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { setObjectSanitized } from './object';
+import { ObjectSchema, setObjectSanitized, validateObject } from './object';
 import { StringSchema } from './string';
 
 describe('setObjectSanitized', () => {
@@ -49,11 +49,88 @@ describe('setObjectSanitized', () => {
   });
 });
 
+describe('validateObject()', () => {
+  const schemaMap = {foo: new StringSchema({required: true, default: 'default'})};
+
+  it('should throw if data is not an object', async () => {
+    await expect(validateObject(schemaMap, 42 as any, [], {} as Model))
+      .to.be.rejectedWith(ValidationError, 'Data is not an object.');
+  });
+
+  it('should throw if key is not in schema', async () => {
+    await expect(validateObject(schemaMap, {bar: 'foo'}, [], {} as Model))
+      .to.be.rejectedWith(ValidationError, 'Key bar not found in schema.');
+  });
+
+  it('should throw if nested validation fails', async () => {
+    await expect(validateObject(schemaMap, {foo: 42}, [], {} as Model))
+      .to.be.rejectedWith(ValidationError, 'Value is not a string.');
+  });
+
+  it('should pass for a valid object', async () => {
+    await validateObject(schemaMap, {foo: 'bar'}, [], {} as Model);
+  });
+});
+
 describe('ObjectSchema', () => {
   describe('sanitize()', () => {
+    it('should throw a SanitizationError if value is not an object', () => {
+      const schema = new ObjectSchema({schema: {}});
+      expect(() => schema.sanitize(42 as any, [], {} as Model))
+        .to.throw(SanitizationError, 'Data is not an object.');
+    });
+
+    it('should return undefined', () => {
+      const schema = new ObjectSchema({schema: {}});
+      expect(schema.sanitize(undefined, [], {} as Model)).to.eql(undefined);
+    });
+
+    it('should return an empty object if required', () => {
+      const schema = new ObjectSchema({required: true, schema: {}});
+      expect(schema.sanitize(undefined, [], {} as Model)).to.eql({});
+    });
+
+    it('should return an object', () => {
+      const schema = new ObjectSchema({required: true, schema: {foo: new StringSchema()}});
+      expect(schema.sanitize({foo: 'bar'}, [], {} as Model)).to.eql({foo: 'bar'});
+    });
   });
 
   describe('validate()', () => {
+    it('should throw a ValidationError if required but undefined', async () => {
+      const schema = new ObjectSchema({required: true, schema: {}});
+      await expect(schema.validate(undefined, [], {} as Model))
+        .to.be.rejectedWith(ValidationError, 'Required value is undefined.');
+    });
 
+    it('should throw a ValidationError if nested validation fails', async () => {
+      const schema = new ObjectSchema({schema: {foo: new StringSchema()}});
+      await expect(schema.validate({foo: 42}, [], {} as Model))
+        .to.be.rejectedWith(ValidationError, 'Value is not a string.');
+    });
+
+    it('should run custom validator', async () => {
+      const schema = new ObjectSchema({
+        schema: {foo: new StringSchema()},
+        validate: async value => {
+          if ((value as any).foo === 'bar') {
+            throw new ValidationError('foobar is not allowed.');
+          }
+        },
+      });
+      await schema.validate({foo: 'foo'}, ['key'], {} as Model);
+      await expect(schema.validate({foo: 'bar'}, ['key'], {} as Model))
+        .to.be.rejectedWith(ValidationError, 'foobar is not allowed.');
+    });
+
+    it('should validate undefined', async () => {
+      const schema = new ObjectSchema({schema: {}});
+      await schema.validate(undefined, [], {} as Model);
+    });
+
+    it('should validate an object', async () => {
+      const schema = new ObjectSchema({schema: {foo: new StringSchema()}});
+      await schema.validate({foo: 'bar'}, ['key'], {} as Model);
+    });
   });
 });
