@@ -13,7 +13,7 @@ export function setObjectSanitized(
   path: Path, instance: Model, options: ISanitizeOptions = {},
 ) {
   if (typeof data !== 'object') {
-    throw new SanitizationError('data is not an object', 'no-object', data, path, instance);
+    throw new SanitizationError('Data is not an object.', 'no-object', data, path, instance);
   }
 
   const dataKeys = Object.keys(data);
@@ -21,7 +21,7 @@ export function setObjectSanitized(
   const disallowedKeys = difference(dataKeys, schemaKeys);
   if (disallowedKeys.length > 0) {
     throw new SanitizationError(
-      `key ${disallowedKeys[0]} not found in schema`, 'key-not-in-schema',
+      `Key ${disallowedKeys[0]} not found in schema.`, 'key-not-in-schema',
       data, path, instance,
     );
   }
@@ -31,7 +31,7 @@ export function setObjectSanitized(
       delete target[key];
     }
 
-    if (data[key] === undefined && !options.replace) {
+    if (data[key] === undefined && !options.defaults) {
       return;
     }
 
