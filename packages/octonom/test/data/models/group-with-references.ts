@@ -1,13 +1,13 @@
-import { Model, utils } from '../../../lib/main';
+import { ArrayProperty, Model, ReferenceSchema, StringProperty, utils } from '../../../lib/main';
 
 import { collections } from '../collections';
 import { PersonModel } from './person';
 
 export class GroupWithReferencesModel extends Model {
-  @Model.Property({type: 'string', default: utils.generateId})
+  @StringProperty({default: utils.generateId})
   public id: string;
 
-  @Model.Property({type: 'array', definition: {type: 'reference', collection: () => collections.people}})
+  @ArrayProperty({elementSchema: new ReferenceSchema({collection: () => collections.people})})
   public members: Array<string | PersonModel>;
 
   constructor(data?: Partial<GroupWithReferencesModel>) {

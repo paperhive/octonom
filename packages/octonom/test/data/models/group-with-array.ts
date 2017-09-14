@@ -1,12 +1,12 @@
-import { Model, ModelArray, utils } from '../../../lib/main';
+import { ArrayProperty, Model, ModelArray, ModelSchema, StringProperty, utils } from '../../../lib/main';
 
 import { PersonModel } from './person';
 
 export class GroupWithArrayModel extends Model {
-  @Model.Property({type: 'string', default: utils.generateId})
+  @StringProperty({default: utils.generateId})
   public id: string;
 
-  @Model.Property({type: 'array', definition: {type: 'model', model: PersonModel}})
+  @ArrayProperty({elementSchema: new ModelSchema({model: PersonModel})})
   public members: ModelArray<PersonModel> | Array<Partial<PersonModel>>;
 
   constructor(data?: Partial<GroupWithArrayModel>) {
