@@ -8,7 +8,7 @@ export interface IReferenceOptions<TModel extends Model = Model> extends ISchema
 }
 
 export class ReferenceSchema<TModel extends Model = Model> implements ISchema<Model, TModel> {
-  constructor(public options?: IReferenceOptions) {}
+  constructor(public options: IReferenceOptions) {}
 
   public sanitize(value: any, path: Path, instance: TModel, options?: ISanitizeOptions) {
     if (value === undefined) {
@@ -17,7 +17,7 @@ export class ReferenceSchema<TModel extends Model = Model> implements ISchema<Mo
 
     // valid data?
     if (!(value instanceof this.options.collection().model) && !(typeof value === 'string')) {
-      throw new Error('not an instance or an id');
+      throw new SanitizationError('Value is not an instance or an id.');
     }
 
     return value;
@@ -29,6 +29,14 @@ export class ReferenceSchema<TModel extends Model = Model> implements ISchema<Mo
         throw new ValidationError('Required value is undefined.', 'required', value, path, instance);
       }
       return;
+    }
+
+    // valid data?
+    if (!(value instanceof this.options.collection().model) && !(typeof value === 'string')) {
+      throw new ValidationError(
+        'Value is not an instance or an id.', 'no-id-or-instance',
+        value, path, instance,
+      );
     }
 
     // note: we do not run validation on a populated reference since it's not part of
