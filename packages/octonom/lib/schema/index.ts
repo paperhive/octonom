@@ -12,15 +12,7 @@ import { ISchema } from './schema';
 import { IStringOptions, StringSchema } from './string';
 
 export function getSchemaDecorator(createSchema: () => ISchema<any, Model>): PropertyDecorator {
-  return (target: IModel, key: string) => {
-    if (target.constructor.schema[key]) {
-      throw new Error(`Key ${key} already has a schema.`);
-    }
-
-    // clone schema map
-    target.constructor.schema = Object.assign({}, target.constructor.schema);
-    target.constructor.schema[key] = createSchema();
-  };
+  return (target: IModel, key: string) => target.constructor.setSchema(key, createSchema());
 }
 
 /* tslint:disable:variable-name */
@@ -34,6 +26,18 @@ export const ObjectProperty = (options: IObjectOptions) => getSchemaDecorator(()
 export const ReferenceProperty = (options: IReferenceOptions) => getSchemaDecorator(() => new ReferenceSchema(options));
 export const StringProperty = (options: IStringOptions = {}) => getSchemaDecorator(() => new StringSchema(options));
 /* tslint:enable:variable-name */
+
+export {
+  AnySchema,
+  ArraySchema,
+  BooleanSchema,
+  DateSchema,
+  ModelSchema,
+  NumberSchema,
+  ObjectSchema,
+  ReferenceSchema,
+  StringSchema,
+};
 
 class Account extends Model {
   @AnyProperty()

@@ -14,7 +14,7 @@ export class StringSchema<TModel extends Model = Model> implements ISchema<strin
   constructor(public options: IStringOptions = {}) {}
 
   public sanitize(value: any, path: Path, instance: TModel, options?: ISanitizeOptions) {
-    if (options.defaults && value === undefined) {
+    if (options && options.defaults && value === undefined) {
       return typeof this.options.default === 'function'
         ? this.options.default()
         : this.options.default;
@@ -25,7 +25,7 @@ export class StringSchema<TModel extends Model = Model> implements ISchema<strin
     }
 
     if (typeof value !== 'string') {
-      throw new ValidationError('Value is not a string.', 'no-string', value, path, instance);
+      throw new SanitizationError('Value is not a string.', 'no-string', value, path, instance);
     }
 
     return value;
