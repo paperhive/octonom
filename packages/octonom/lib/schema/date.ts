@@ -11,7 +11,7 @@ export interface IDateOptions extends ISchemaOptions<Date> {
 export class DateSchema<TModel extends Model = Model> implements ISchema<Date, TModel> {
   constructor(public options: IDateOptions = {}) {}
 
-  public sanitize(value: any, path: Path, instance: TModel, options?: ISanitizeOptions) {
+  public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
     if (options.defaults && value === undefined) {
       return typeof this.options.default === 'function'
         ? this.options.default()
@@ -42,11 +42,17 @@ export class DateSchema<TModel extends Model = Model> implements ISchema<Date, T
     }
 
     if (this.options.min !== undefined && value < this.options.min) {
-      throw new ValidationError(`Date must not be before ${this.options.min}.`, 'date-min', value, path, instance);
+      throw new ValidationError(
+        `Date must not be before ${this.options.min.toISOString()}.`, 'date-min',
+        value, path, instance,
+      );
     }
 
     if (this.options.max !== undefined && value > this.options.max) {
-      throw new ValidationError(`Date must not be after ${this.options.max}.`, 'date-max', value, path, instance);
+      throw new ValidationError(
+        `Date must not be after ${this.options.max.toISOString()}.`, 'date-max',
+        value, path, instance,
+      );
     }
 
     if (this.options.validate) {
