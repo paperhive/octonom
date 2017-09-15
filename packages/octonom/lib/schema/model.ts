@@ -7,19 +7,27 @@ export interface IModelOptions<TModel extends Model = Model> extends ISchemaOpti
 }
 
 export class ModelSchema<TModel extends Model = Model> implements ISchema<Model, TModel> {
-  constructor(public options?: IModelOptions) {}
+  constructor(public options: IModelOptions) {}
 
   public sanitize(value: any, path: Path, instance: TModel, options?: ISanitizeOptions) {
     if (value instanceof this.options.model) {
       // already a model
       return value;
-    } else {
-      if (value === undefined && !this.options.required) {
-        return undefined;
-      }
-      // create new instance
-      return new this.options.model(value || {});
     }
+
+    if (value === undefined) {
+      return this.options.required ? new this.options.model({}) : undefined;
+    }
+
+    if (typeof value !== 'object') {
+      throw new SanitizationError(
+        'Value is not an object or a model instance.', 'no-object-or-instance',
+        value, path, instance,
+      );
+    }
+
+    // create new instance
+    return new this.options.model(value);
   }
 
   public async validate(value: Model, path: Path, instance: TModel) {
