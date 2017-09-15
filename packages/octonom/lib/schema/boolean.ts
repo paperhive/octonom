@@ -9,7 +9,7 @@ export interface IBooleanOptions extends ISchemaOptions<boolean> {
 export class BooleanSchema<TModel extends Model = Model> implements ISchema<boolean, TModel> {
   constructor(public options: IBooleanOptions = {}) {}
 
-  public sanitize(value: any, path: Path, instance: TModel, options?: ISanitizeOptions) {
+  public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
     if (options.defaults && value === undefined) {
       return typeof this.options.default === 'function'
         ? this.options.default()
