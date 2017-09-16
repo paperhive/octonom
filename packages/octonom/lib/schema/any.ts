@@ -21,7 +21,7 @@ export class AnySchema<TModel extends Model = Model> implements ISchema<any, TMo
     return value;
   }
 
-  public async validate(value: any[], path: Path, instance: TModel) {
+  public async validate(value: any, path: Path, instance: TModel) {
     if (value === undefined) {
       if (this.options.required) {
         throw new ValidationError('Required value is undefined.', 'required', value, path, instance);
