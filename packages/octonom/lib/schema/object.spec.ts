@@ -36,6 +36,12 @@ describe('setObjectSanitized', () => {
     expect(result).to.equal(target).and.to.eql({foo: 'bar'});
   });
 
+  it('should not modify an existing property', () => {
+    const target = {bar: 'baz'};
+    const result = setObjectSanitized(schemaMap, target, {foo: 'bar'}, [], {} as Model);
+    expect(result).to.equal(target).and.to.eql({foo: 'bar', bar: 'baz'});
+  });
+
   it('should set a default value', () => {
     const target = {};
     const result = setObjectSanitized(schemaMap, target, {bar: 'bar'}, [], {} as Model, {defaults: true});
