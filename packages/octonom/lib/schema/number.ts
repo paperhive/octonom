@@ -12,8 +12,8 @@ export interface INumberOptions extends ISchemaOptions<number> {
 export class NumberSchema<TModel extends Model = Model> implements ISchema<number, TModel> {
   constructor(public options: INumberOptions = {}) {}
 
-  public sanitize(value: any, path: Path, instance: TModel, options?: ISanitizeOptions) {
-    if (options && options.defaults && value === undefined) {
+  public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
+    if (options.defaults && value === undefined) {
       return typeof this.options.default === 'function'
         ? this.options.default()
         : this.options.default;

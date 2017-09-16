@@ -13,7 +13,7 @@ export interface IArrayOptions extends ISchemaOptions<any[]> {
 export class ArraySchema<TModel extends Model = Model> implements ISchema<any[], TModel> {
   constructor(public options: IArrayOptions) {}
 
-  public sanitize(value: any, path: Path, instance: TModel, options?: ISanitizeOptions) {
+  public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
     if (value === undefined) {
       return this.options.required ? [] : undefined;
     }

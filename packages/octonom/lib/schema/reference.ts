@@ -10,7 +10,7 @@ export interface IReferenceOptions<TModel extends Model = Model> extends ISchema
 export class ReferenceSchema<TModel extends Model = Model> implements ISchema<Model, TModel> {
   constructor(public options: IReferenceOptions) {}
 
-  public sanitize(value: any, path: Path, instance: TModel, options?: ISanitizeOptions) {
+  public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
     if (value === undefined) {
       return undefined;
     }

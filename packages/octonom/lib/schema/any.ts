@@ -11,7 +11,7 @@ export interface IAnyOptions extends ISchemaOptions<any> {
 export class AnySchema<TModel extends Model = Model> implements ISchema<any, TModel> {
   constructor(public options: IAnyOptions = {}) {}
 
-  public sanitize(value: any, path: Path, instance: TModel, options?: ISanitizeOptions) {
+  public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
     if (options.defaults && value === undefined) {
       return typeof this.options.default === 'function'
         ? this.options.default()

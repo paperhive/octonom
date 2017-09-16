@@ -13,8 +13,8 @@ export interface IStringOptions extends ISchemaOptions<string> {
 export class StringSchema<TModel extends Model = Model> implements ISchema<string, TModel> {
   constructor(public options: IStringOptions = {}) {}
 
-  public sanitize(value: any, path: Path, instance: TModel, options?: ISanitizeOptions) {
-    if (options && options.defaults && value === undefined) {
+  public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
+    if (options.defaults && value === undefined) {
       return typeof this.options.default === 'function'
         ? this.options.default()
         : this.options.default;

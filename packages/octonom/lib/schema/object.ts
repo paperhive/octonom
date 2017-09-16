@@ -79,7 +79,7 @@ export async function validateObject(
 export class ObjectSchema<TModel extends Model = Model> implements ISchema<object, TModel> {
   constructor(public options?: IObjectOptions) {}
 
-  public sanitize(value: object, path: Path, instance: TModel, options?: ISanitizeOptions) {
+  public sanitize(value: object, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
     // return empty object if no data given but a value is required
     if (value === undefined) {
       return this.options.required ? {} : undefined;

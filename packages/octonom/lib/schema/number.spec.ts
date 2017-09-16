@@ -7,7 +7,7 @@ describe('NumberSchema', () => {
     it('should throw a SanitizationError if value is not a number', () => {
       const schema = new NumberSchema();
       expect(() => schema.sanitize('foo', ['key'], {} as Model))
-        .to.throw(SanitizationError, 'Value is not a number');
+        .to.throw(SanitizationError, 'Value is not a number.');
     });
 
     it('should return undefined', () => {

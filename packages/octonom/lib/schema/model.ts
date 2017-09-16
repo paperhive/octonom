@@ -9,7 +9,7 @@ export interface IModelOptions<TModel extends Model = Model> extends ISchemaOpti
 export class ModelSchema<TModel extends Model = Model> implements ISchema<Model, TModel> {
   constructor(public options: IModelOptions) {}
 
-  public sanitize(value: any, path: Path, instance: TModel, options?: ISanitizeOptions) {
+  public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
     if (value instanceof this.options.model) {
       // already a model
       return value;
