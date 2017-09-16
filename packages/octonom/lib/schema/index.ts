@@ -39,6 +39,8 @@ export {
   StringSchema,
 };
 
+/*
+// TODO: remove
 class Account extends Model {
   @AnyProperty()
   public any: any;
@@ -71,3 +73,4 @@ class Person extends Model {
   @StringProperty()
   public string: string;
 }
+*/
