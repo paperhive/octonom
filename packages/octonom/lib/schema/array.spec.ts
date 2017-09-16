@@ -2,7 +2,7 @@ import { ArrayCollection } from '../array-collection';
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
 import { ModelArray } from '../model-array';
-import { ArraySchema, IArrayOptions } from './array';
+import { ArraySchema } from './array';
 import { ModelSchema } from './model';
 import { ReferenceSchema } from './reference';
 import { StringSchema } from './string';

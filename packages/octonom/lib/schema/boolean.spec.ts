@@ -1,6 +1,6 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { BooleanSchema, IBooleanOptions } from './boolean';
+import { BooleanSchema } from './boolean';
 
 describe('BooleanSchema', () => {
   describe('sanitize()', () => {

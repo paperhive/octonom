@@ -1,7 +1,5 @@
 import { ValidationError } from '../errors';
-import { IModel, Model } from '../model';
-
-import { BooleanSchema } from './boolean';
+import { Model } from '../model';
 
 export type PopulateReference = IPopulateMap | true;
 

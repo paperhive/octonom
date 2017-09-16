@@ -1,4 +1,3 @@
-import { ArrayCollection } from '../array-collection';
 import { IModel, Model } from '../model';
 import { AnySchema, IAnyOptions } from './any';
 import { ArraySchema, IArrayOptions } from './array';

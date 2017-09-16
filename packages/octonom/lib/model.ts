@@ -1,9 +1,8 @@
-import { cloneDeep } from 'lodash';
-
 import { HookHandlersMap, Hooks } from './hooks';
-import { ISanitizeOptions } from './sanitize';
 import { populateObject, setObjectSanitized, toObject, validateObject } from './schema/object';
-import { IPopulateMap, ISchema, ISchemaMap, IToObjectOptions } from './schema/schema';
+import { IPopulateMap, ISanitizeOptions, ISchema, ISchemaMap,
+         IToObjectOptions,
+       } from './schema/schema';
 
 export type Constructor<T = {}> = new (...args: any[]) => T;
 

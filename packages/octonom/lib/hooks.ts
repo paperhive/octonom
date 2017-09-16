@@ -1,6 +1,6 @@
 import { Collection } from './collection';
 import { Model } from './model';
-import { ISanitizeOptions } from './sanitize';
+import { ISanitizeOptions } from './schema/schema';
 
 export interface ISetHookOptions<TModel extends Model> {
   instance: TModel;

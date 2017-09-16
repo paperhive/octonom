@@ -1,6 +1,6 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { INumberOptions, NumberSchema } from './number';
+import { NumberSchema } from './number';
 
 describe('NumberSchema', () => {
   describe('sanitize()', () => {

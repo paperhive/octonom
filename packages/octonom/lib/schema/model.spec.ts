@@ -1,6 +1,6 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { IModelOptions, ModelSchema } from './model';
+import { ModelSchema } from './model';
 import { StringSchema } from './string';
 
 describe('ModelSchema', () => {

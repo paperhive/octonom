@@ -1,5 +1,5 @@
 import { SanitizationError, ValidationError } from '../errors';
-import { IModelConstructor, Model } from '../model';
+import { Model } from '../model';
 import { ModelArray } from '../model-array';
 import { ModelSchema } from './model';
 import { ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions,

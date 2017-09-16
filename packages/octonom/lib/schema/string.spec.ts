@@ -1,6 +1,6 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { IStringOptions, StringSchema } from './string';
+import { StringSchema } from './string';
 
 describe('StringSchema', () => {
   describe('sanitize()', () => {

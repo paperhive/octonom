@@ -1,6 +1,6 @@
 import { Collection } from '../collection';
 import { PopulationError, SanitizationError, ValidationError } from '../errors';
-import { IModelConstructor, Model } from '../model';
+import { Model } from '../model';
 import { ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions,
          Path, PopulateReference, runValidator,
        } from './schema';

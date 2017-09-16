@@ -1,6 +1,6 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { IModelConstructor, Model } from '../model';
-import { IPopulateMap, ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions,
+import { ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions,
          Path, PopulateReference, runValidator,
        } from './schema';
 

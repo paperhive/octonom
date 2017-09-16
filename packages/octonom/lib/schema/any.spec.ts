@@ -1,6 +1,6 @@
-import { SanitizationError, ValidationError } from '../errors';
+import { ValidationError } from '../errors';
 import { Model } from '../model';
-import { AnySchema, IAnyOptions } from './any';
+import { AnySchema } from './any';
 
 describe('AnySchema', () => {
   describe('sanitize()', () => {

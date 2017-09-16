@@ -1,7 +1,7 @@
 import { ArrayCollection } from '../array-collection';
 import { PopulationError, SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { IReferenceOptions, ReferenceSchema } from './reference';
+import { ReferenceSchema } from './reference';
 import { StringSchema } from './string';
 
 describe('ReferenceSchema', () => {
@@ -110,7 +110,6 @@ describe('ReferenceSchema', () => {
     });
 
     it('should run custom validator', async () => {
-      const model = new TestModel();
       const schema = new ReferenceSchema({
         collection,
         validate: async value => {

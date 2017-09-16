@@ -1,12 +1,12 @@
 import { difference } from 'lodash';
 
 import { SanitizationError, ValidationError } from '../errors';
-import { IModelConstructor, Model } from '../model';
+import { Model } from '../model';
 import { ISanitizeOptions, ISchema, ISchemaMap, ISchemaOptions,
          IToObjectOptions, Path, PopulateReference, runValidator,
        } from './schema';
 
-export interface IObjectOptions<TModel extends Model = Model> extends ISchemaOptions<object> {
+export interface IObjectOptions extends ISchemaOptions<object> {
   schema: ISchemaMap;
 }
 

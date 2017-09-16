@@ -1,9 +1,7 @@
 import { cloneDeep } from 'lodash';
 
-import { SanitizationError, ValidationError } from '../errors';
-import { IModelConstructor, Model } from '../model';
-import { ModelArray } from '../model-array';
-import { ModelSchema } from './model';
+import { ValidationError } from '../errors';
+import { Model } from '../model';
 import { ISanitizeOptions, ISchema, ISchemaOptions, Path, runValidator } from './schema';
 
 export interface IAnyOptions extends ISchemaOptions<any> {
