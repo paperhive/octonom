@@ -3,6 +3,12 @@ import { IModel, Model } from '../model';
 
 import { BooleanSchema } from './boolean';
 
+export type PopulateReference = IPopulateMap | true;
+
+export interface IPopulateMap {
+  [k: string]: PopulateReference;
+}
+
 export interface ISanitizeOptions {
   /** Set undefined values to defaults (if configured). Defaults to false. */
   defaults?: boolean;
@@ -19,6 +25,8 @@ export type Path = Array<string | number>;
 export type Validator<T, TModel> = (value: T, path: Path, instance: TModel) => Promise<void>;
 
 export interface ISchema<T, TModel extends Model> {
+  /** Populate a value (possibly nested) */
+  populate?: (value: T, populateReference: PopulateReference) => Promise<T>;
   /** Sanitize a value (e.g., used when setting properties on an instance). */
   sanitize: (value: any, path: Path, instance: TModel, options?: ISanitizeOptions) => T;
   /** Create a plain object representation of the value. */

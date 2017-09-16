@@ -10,6 +10,12 @@ export class ExtendableError extends Error {
   }
 }
 
+export class PopulationError extends ExtendableError {
+  constructor(message: string) {
+    super(message, PopulationError.prototype);
+  }
+}
+
 export class SanitizationError extends ExtendableError {
   constructor(
     message: string,

@@ -1,7 +1,9 @@
 import { Collection } from '../collection';
-import { SanitizationError, ValidationError } from '../errors';
+import { PopulationError, SanitizationError, ValidationError } from '../errors';
 import { IModelConstructor, Model } from '../model';
-import { ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions, Path, runValidator } from './schema';
+import { ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions,
+         Path, PopulateReference, runValidator,
+       } from './schema';
 
 export interface IReferenceOptions<TModel extends Model = Model> extends ISchemaOptions<string | TModel> {
   collection: () => Collection<TModel>;
@@ -9,6 +11,25 @@ export interface IReferenceOptions<TModel extends Model = Model> extends ISchema
 
 export class ReferenceSchema<TModel extends Model = Model> implements ISchema<Model, TModel> {
   constructor(public options: IReferenceOptions) {}
+
+  public async populate(value: string | Model, populateReference: PopulateReference) {
+    let instance: Model;
+    if (typeof value === 'string') {
+      instance = await this.options.collection().findById(value);
+
+      if (instance === undefined) {
+        throw new PopulationError(`Instance with id ${value} not found.`);
+      }
+    } else {
+      instance = value;
+    }
+
+    if (populateReference === true) {
+      return instance;
+    }
+
+    return instance.populate(populateReference);
+  }
 
   public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
     if (value === undefined) {
