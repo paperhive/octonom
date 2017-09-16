@@ -1,11 +1,9 @@
 import { cloneDeep } from 'lodash';
 
 import { HookHandlersMap, Hooks } from './hooks';
-import { IPopulateMap, populateObject } from './populate';
-import { ISanitizeOptions, setObjectSanitized } from './sanitize';
-import { ISchemaMap } from './schema/schema';
-import { IToObjectOptions, toObject } from './to-object';
-import { validateObject } from './validate';
+import { ISanitizeOptions } from './sanitize';
+import { populateObject, setObjectSanitized, toObject, validateObject } from './schema/object';
+import { IPopulateMap, ISchema, ISchemaMap, IToObjectOptions } from './schema/schema';
 
 export type Constructor<T = {}> = new (...args: any[]) => T;
 
@@ -34,6 +32,14 @@ export class Model {
   public static schema: ISchemaMap = {};
 
   public static hooks = new Hooks<Model>();
+
+  public static setSchema(key: string, schema: ISchema<any, Model>) {
+    if (this.schema[key]) {
+      throw new Error(`Key ${key} is already set.`);
+    }
+    this.schema = Object.assign({}, this.schema);
+    this.schema[key] = schema;
+  }
 
   // TODO: ideally we'd also use Partial<this> as the type for data
   constructor(data?) {
@@ -80,7 +86,17 @@ export class Model {
 
   public async populate(populateMap: IPopulateMap) {
     const constructor = this.constructor as typeof Model;
-    return populateObject(this, constructor.schema, populateMap);
+    const populatedObj = await populateObject(constructor.schema, this, populateMap);
+
+    const newObj = {};
+    Object.keys(populateMap).forEach(key => {
+      if (populatedObj[key] !== this[key]) {
+        newObj[key] = populatedObj[key];
+      }
+    });
+    Object.assign(this, newObj);
+
+    return this;
   }
 
   // note: set runs with `this` bound to the unproxied instance, therefore
@@ -89,7 +105,7 @@ export class Model {
   public set(data: Partial<this>, options: ISanitizeOptions = {}) {
     const constructor = this.constructor as typeof Model;
     constructor.hooks.run('beforeSet', {instance: this, data});
-    setObjectSanitized(constructor.schema, this, data, options);
+    setObjectSanitized(constructor.schema, this, data, [], this, options);
     constructor.hooks.run('afterSet', {instance: this, data});
   }
 
