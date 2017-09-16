@@ -15,7 +15,12 @@ export class ArraySchema<TModel extends Model = Model> implements ISchema<any[],
 
   public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
     if (value === undefined) {
-      return this.options.required ? [] : undefined;
+      if (this.options.required) {
+        return this.options.elementSchema instanceof ModelSchema
+          ? new ModelArray(this.options.elementSchema.options.model)
+          : [];
+      }
+      return undefined;
     }
 
     if (!(value instanceof Array)) {
@@ -40,7 +45,7 @@ export class ArraySchema<TModel extends Model = Model> implements ISchema<any[],
       return value.map((element, index) => {
         const newPath = path.slice();
         newPath.push(index);
-        this.options.elementSchema.sanitize(element, newPath, instance, options);
+        return this.options.elementSchema.sanitize(element, newPath, instance, options);
       });
     }
   }
@@ -53,7 +58,11 @@ export class ArraySchema<TModel extends Model = Model> implements ISchema<any[],
       return;
     }
 
-    if (!(value instanceof Array)) {
+    if (this.options.elementSchema instanceof ModelSchema) {
+      if (!(value instanceof ModelArray)) {
+        throw new ValidationError('Value is not a ModelArray.', 'no-array', value, path, instance);
+      }
+    } else if (!(value instanceof Array)) {
       throw new ValidationError('Value is not an array.', 'no-array', value, path, instance);
     }
 
