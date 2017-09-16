@@ -9,8 +9,9 @@ import { PersonModel } from '../test/data/models/person';
 import { PersonAccountModel } from '../test/data/models/person-account';
 
 import { ValidationError } from './errors';
-import { Hook, Model, Property } from './model';
+import { Hook, Model } from './model';
 import { ModelArray } from './model-array';
+import { ArrayProperty, ModelProperty, ObjectProperty, StringProperty, StringSchema } from './schema/index';
 
 describe('Hook decorator', () => {
   let beforeObj;
@@ -30,10 +31,10 @@ describe('Hook decorator', () => {
   @Hook('beforeSet', beforeSet)
   @Hook('afterSet', afterSet)
   class Hooked extends Model {
-    @Property({type: 'string'})
+    @StringProperty()
     public foo: string;
 
-    @Property({type: 'string'})
+    @StringProperty()
     public baz: string;
   }
 
@@ -94,28 +95,28 @@ describe('Hook decorator', () => {
 
 describe('Property decorator', () => {
   class TestModel extends Model {
-    @Property({type: 'string'})
+    @StringProperty()
     public foo: string;
   }
 
   it('should register a schema property', () => {
-    expect(TestModel.schema).to.eql({foo: {type: 'string'}});
+    expect(TestModel.schema.foo).to.be.an.instanceOf(StringSchema);
   });
 
   it('should create a separate for new classes', () => {
     class Derived extends TestModel {
-      @Property({type: 'string'})
+      @StringProperty()
       public bar: string;
     }
-    expect(TestModel.schema).to.eql({foo: {type: 'string'}});
-    expect(Derived.schema).to.eql({foo: {type: 'string'}, bar: {type: 'string'}});
+    expect(TestModel.schema).to.not.have.property('bar');
+    expect(Derived.schema.bar).to.be.an.instanceOf(StringSchema);
   });
 });
 
 describe('Model', () => {
   it('should allow non-schema properties', () => {
     class TestModel extends Model {
-      @Property({type: 'string'})
+      @StringProperty()
       public foo: string;
 
       public bar: string;
@@ -380,7 +381,7 @@ describe('Model', () => {
       it('should throw if id does not exist', async () => {
         const discussion = new DiscussionModel({author: 'non-existent'});
         await expect(discussion.populate({author: true}))
-          .to.be.rejectedWith('Id non-existent not found.');
+          .to.be.rejectedWith('Instance with id non-existent not found.');
       });
 
       it('should populate an id with an instance', async () => {
@@ -453,7 +454,7 @@ describe('Model', () => {
 
       it('should throw if id does not exist', async () => {
         const discussion = new DiscussionModel({author: 'non-existent'});
-        await expect(discussion.populate({author: true})).to.be.rejectedWith('Id non-existent not found');
+        await expect(discussion.populate({author: true})).to.be.rejectedWith('Instance with id non-existent not found');
       });
 
       it('should populate ids with an instance', async () => {
@@ -491,16 +492,16 @@ describe('Model', () => {
 
   describe('validate()', () => {
     class TestModel extends Model {
-      @Model.Property({type: 'string', required: true})
+      @StringProperty({required: true})
       public required: string;
 
-      @Model.Property({type: 'array', definition: {type: 'string', enum: ['foo', 'bar']}})
+      @ArrayProperty({elementSchema: new StringSchema({enum: ['foo', 'bar']})})
       public array: string[];
 
-      @Model.Property({type: 'model', model: TestModel})
+      @ModelProperty({model: TestModel})
       public model: TestModel;
 
-      @Model.Property({type: 'object', definition: {foo: {type: 'string', enum: ['bar']}}})
+      @ObjectProperty({schema: {foo: new StringSchema({enum: ['bar']})}})
       public object: {foo: string};
     }
 
