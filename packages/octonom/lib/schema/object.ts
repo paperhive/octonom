@@ -19,7 +19,7 @@ export async function populateObject(schemaMap: ISchemaMap, obj: object, populat
   await Promise.all(Object.keys(populateReference).map(async key => {
     const schema = schemaMap[key];
     if (!schema.populate) {
-      throw new Error(`Key ${key} cannot be populated.`);
+      throw new Error(`Key ${key} is not populatable.`);
     }
 
     if (obj[key] === undefined) {

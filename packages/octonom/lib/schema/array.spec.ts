@@ -1,8 +1,10 @@
+import { ArrayCollection } from '../array-collection';
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
 import { ModelArray } from '../model-array';
 import { ArraySchema, IArrayOptions } from './array';
 import { ModelSchema } from './model';
+import { ReferenceSchema } from './reference';
 import { StringSchema } from './string';
 
 describe('ArraySchema', () => {
@@ -10,6 +12,47 @@ describe('ArraySchema', () => {
     public foo: string;
   }
   TestModel.setSchema('foo', new StringSchema());
+
+  describe('populate()', () => {
+    class ReferenceModel extends Model {
+      public id: string;
+    }
+    ReferenceModel.setSchema('id', new StringSchema());
+
+    const collection = new ArrayCollection<ReferenceModel>(ReferenceModel, {modelIdField: 'id'});
+    collection.insert(new ReferenceModel({id: '0xACAB'}));
+    collection.insert(new ReferenceModel({id: '4711'}));
+
+    it('should populate an array of strings', async () => {
+      const schema = new ArraySchema({
+        elementSchema: new ReferenceSchema({collection: () => collection}),
+      });
+      const instances = await schema.populate(['0xACAB', '4711'], true);
+      expect(instances).to.eql([{id: '0xACAB'}, {id: '4711'}]);
+    });
+
+    it('should populate a ModelArray', async () => {
+      class ElementModel extends Model {
+        public reference: string | ReferenceModel;
+      }
+      ElementModel.setSchema('reference', new ReferenceSchema({collection: () => collection}));
+
+      const schema = new ArraySchema({
+        elementSchema: new ModelSchema({model: ElementModel}),
+      });
+      const modelArray = new ModelArray<ElementModel>(ElementModel, [
+        {reference: '0xACAB'},
+        {reference: '4711'},
+      ]);
+      const instances = await schema.populate(modelArray, {reference: true});
+      expect(instances).to.be.an.instanceOf(ModelArray);
+      expect(instances).to.not.equal(modelArray);
+      expect(instances).to.eql([
+        {reference: {id: '0xACAB'}},
+        {reference: {id: '4711'}},
+      ]);
+    });
+  });
 
   describe('sanitize()', () => {
     it('should throw a SanitizationError if value is not an array', () => {

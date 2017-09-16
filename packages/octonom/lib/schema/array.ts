@@ -2,7 +2,9 @@ import { SanitizationError, ValidationError } from '../errors';
 import { IModelConstructor, Model } from '../model';
 import { ModelArray } from '../model-array';
 import { ModelSchema } from './model';
-import { ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions, Path, runValidator } from './schema';
+import { ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions,
+         Path, PopulateReference, runValidator,
+       } from './schema';
 
 export interface IArrayOptions extends ISchemaOptions<any[]> {
   elementSchema: ISchema<any, Model>;
@@ -12,6 +14,22 @@ export interface IArrayOptions extends ISchemaOptions<any[]> {
 
 export class ArraySchema<TModel extends Model = Model> implements ISchema<any[], TModel> {
   constructor(public options: IArrayOptions) {}
+
+  public async populate(value: any[], populateReference: PopulateReference) {
+    if (!this.options.elementSchema.populate) {
+      throw new Error('Array is not populatable.');
+    }
+
+    const instances = await Promise.all(value.map(element => {
+      return this.options.elementSchema.populate(element, populateReference);
+    }));
+
+    if (this.options.elementSchema instanceof ModelSchema) {
+      return new ModelArray(this.options.elementSchema.options.model, instances);
+    }
+
+    return instances;
+  }
 
   public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
     if (value === undefined) {

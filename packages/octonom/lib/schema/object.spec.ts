@@ -27,7 +27,7 @@ describe('populateObject()', () => {
 
   it('should throw if a key is not populatable', async () => {
     await expect(populateObject(schemaMap, {foo: '0xACAB', bar: 'baz'}, {bar: true}))
-      .to.be.rejectedWith(Error, 'Key bar cannot be populated.');
+      .to.be.rejectedWith(Error, 'Key bar is not populatable.');
   });
 
   it('should populate a key', async () => {

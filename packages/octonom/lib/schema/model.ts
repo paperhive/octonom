@@ -1,6 +1,8 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { IModelConstructor, Model } from '../model';
-import { ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions, Path, runValidator } from './schema';
+import { IPopulateMap, ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions,
+         Path, PopulateReference, runValidator,
+       } from './schema';
 
 export interface IModelOptions<TModel extends Model = Model> extends ISchemaOptions<TModel> {
   model: IModelConstructor<TModel>;
@@ -8,6 +10,14 @@ export interface IModelOptions<TModel extends Model = Model> extends ISchemaOpti
 
 export class ModelSchema<TModel extends Model = Model> implements ISchema<Model, TModel> {
   constructor(public options: IModelOptions) {}
+
+  public async populate(value: Model, populateReference: PopulateReference) {
+    if (typeof populateReference !== 'object') {
+      throw new Error('populateReference must be an object.');
+    }
+
+    return value.populate(populateReference);
+  }
 
   public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
     if (value instanceof this.options.model) {
