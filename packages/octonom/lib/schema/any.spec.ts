@@ -17,6 +17,16 @@ describe('AnySchema', () => {
     });
   });
 
+  describe('toObject()', () => {
+    it('should return any value cloned', () => {
+      const schema = new AnySchema();
+      const obj = {foo: 'bar'};
+      const result = schema.toObject(obj);
+      expect(result).to.not.equal(obj);
+      expect(result).to.eql(obj);
+    });
+  });
+
   describe('validate()', () => {
     it('should throw a ValidationError if required but undefined', async () => {
       const schema = new AnySchema({required: true});

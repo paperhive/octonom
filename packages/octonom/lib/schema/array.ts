@@ -2,7 +2,7 @@ import { SanitizationError, ValidationError } from '../errors';
 import { IModelConstructor, Model } from '../model';
 import { ModelArray } from '../model-array';
 import { ModelSchema } from './model';
-import { ISanitizeOptions, ISchema, ISchemaOptions, Path, runValidator } from './schema';
+import { ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions, Path, runValidator } from './schema';
 
 export interface IArrayOptions extends ISchemaOptions<any[]> {
   elementSchema: ISchema<any, Model>;
@@ -48,6 +48,15 @@ export class ArraySchema<TModel extends Model = Model> implements ISchema<any[],
         return this.options.elementSchema.sanitize(element, newPath, instance, options);
       });
     }
+  }
+
+  public toObject(value: any[], options?: IToObjectOptions) {
+    return value.map(element => {
+      if (this.options.elementSchema.toObject) {
+        return this.options.elementSchema.toObject(element, options);
+      }
+      return element;
+    });
   }
 
   public async validate(value: any[], path: Path, instance: TModel) {

@@ -9,11 +9,21 @@ export interface ISanitizeOptions {
   /** Unset all properties that are not provided in the data. Defaults to false. */
   replace?: boolean;
 }
+
+export interface IToObjectOptions {
+  /** Turn populated references into references */
+  unpopulate?: boolean;
+}
+
 export type Path = Array<string | number>;
 export type Validator<T, TModel> = (value: T, path: Path, instance: TModel) => Promise<void>;
 
 export interface ISchema<T, TModel extends Model> {
+  /** Sanitize a value (e.g., used when setting properties on an instance). */
   sanitize: (value: any, path: Path, instance: TModel, options?: ISanitizeOptions) => T;
+  /** Create a plain object representation of the value. */
+  toObject?: (value: T, options?: IToObjectOptions) => any;
+  /** Validate a value (e.g., used before saving an instance in a collection). */
   validate: Validator<T, TModel>;
 }
 

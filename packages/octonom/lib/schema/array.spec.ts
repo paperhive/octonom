@@ -56,6 +56,24 @@ describe('ArraySchema', () => {
     });
   });
 
+  describe('toObject()', () => {
+    it('should return a new array', () => {
+      const schema = new ArraySchema({elementSchema: new StringSchema()});
+      const array = ['foo'];
+      const result = schema.toObject(array);
+      expect(result).to.not.equal(array);
+      expect(result).to.eql(array);
+    });
+
+    it('should return a new array from a ModelArray', () => {
+      const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel})});
+      const array = new ModelArray<TestModel>(TestModel, [{foo: 'bar'}]);
+      const result = schema.toObject(array);
+      expect(result).to.not.equal(array);
+      expect(result).to.eql([{foo: 'bar'}]);
+    });
+  });
+
   describe('validate()', () => {
     it('should throw a ValidationError if required but undefined', async () => {
       const schema = new ArraySchema({elementSchema: new StringSchema(), required: true});

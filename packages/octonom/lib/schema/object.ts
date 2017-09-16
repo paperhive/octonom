@@ -2,7 +2,7 @@ import { difference } from 'lodash';
 
 import { SanitizationError, ValidationError } from '../errors';
 import { IModelConstructor, Model } from '../model';
-import { ISanitizeOptions, ISchema, ISchemaMap, ISchemaOptions, Path, runValidator } from './schema';
+import { ISanitizeOptions, ISchema, ISchemaMap, ISchemaOptions, IToObjectOptions, Path, runValidator } from './schema';
 
 export interface IObjectOptions<TModel extends Model = Model> extends ISchemaOptions<object> {
   schema: ISchemaMap;
@@ -46,6 +46,28 @@ export function setObjectSanitized(
   return target;
 }
 
+export function toObject(schemaMap: ISchemaMap, obj: object, options?: IToObjectOptions) {
+  const newObj = {};
+  Object.keys(schemaMap).forEach(key => {
+    const value = obj[key];
+    if (value === undefined) {
+      return;
+    }
+
+    const schema = schemaMap[key];
+    if (schema.toObject) {
+      const newValue = schemaMap[key].toObject(value, options);
+      if (newValue !== undefined) {
+        newObj[key] = newValue;
+      }
+    } else {
+      newObj[key] = value;
+    }
+  });
+
+  return newObj;
+}
+
 export async function validateObject(
   schemaMap: ISchemaMap,
   obj: object,
@@ -87,6 +109,10 @@ export class ObjectSchema<TModel extends Model = Model> implements ISchema<objec
 
     // sanitize object
     return setObjectSanitized(this.options.schema, {}, value, path, instance, options);
+  }
+
+  public toObject(value: object, options?: IToObjectOptions) {
+    return toObject(this.options.schema, value, options);
   }
 
   public async validate(value: object, path: Path, instance: TModel) {

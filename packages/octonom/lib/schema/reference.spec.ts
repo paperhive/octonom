@@ -2,31 +2,53 @@ import { ArrayCollection } from '../array-collection';
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
 import { IReferenceOptions, ReferenceSchema } from './reference';
+import { StringSchema } from './string';
 
 describe('ReferenceSchema', () => {
-  const collection = () => new ArrayCollection<Model>(Model);
+  class TestModel extends Model {
+    public id: string;
+  }
+  TestModel.setSchema('id', new StringSchema());
+
+  const collection = () => new ArrayCollection<TestModel>(TestModel, {modelIdField: 'id'});
 
   describe('sanitize()', () => {
+    const schema = new ReferenceSchema({collection});
+
     it('should throw a SanitizationError if value is not a string or model', () => {
-      const schema = new ReferenceSchema({collection});
       expect(() => schema.sanitize(42, ['key'], {} as Model))
         .to.throw(SanitizationError, 'Value is not an instance or an id.');
     });
 
     it('should return undefined', () => {
-      const schema = new ReferenceSchema({collection});
       expect(schema.sanitize(undefined, ['key'], {} as Model)).to.eql(undefined);
     });
 
     it('should return a string', () => {
-      const schema = new ReferenceSchema({collection});
       expect(schema.sanitize('id', ['key'], {} as Model)).to.eql('id');
     });
 
-    it('should return a Model', () => {
-      const schema = new ReferenceSchema({collection});
-      const model = new Model();
-      expect(schema.sanitize(model, ['key'], {} as Model)).to.eql(model);
+    it('should return a model instance ', () => {
+      const instance  = new TestModel();
+      expect(schema.sanitize(instance, ['key'], {} as Model)).to.eql(instance);
+    });
+  });
+
+  describe('toObject()', () => {
+    const schema = new ReferenceSchema({collection});
+
+    it('should return an id', () => {
+      expect(schema.toObject('id')).to.equal('id');
+    });
+
+    it('should return an object for a populated reference', () => {
+      expect(schema.toObject(new TestModel({id: '0xACAB'})))
+        .to.eql({id: '0xACAB'});
+    });
+
+    it('should return an id for a populated reference with unpopulate', () => {
+      expect(schema.toObject(new TestModel({id: '0xACAB'}), {unpopulate: true}))
+        .to.eql('0xACAB');
     });
   });
 
@@ -44,7 +66,7 @@ describe('ReferenceSchema', () => {
     });
 
     it('should run custom validator', async () => {
-      const model = new Model();
+      const model = new TestModel();
       const schema = new ReferenceSchema({
         collection,
         validate: async value => {
@@ -54,7 +76,7 @@ describe('ReferenceSchema', () => {
         },
       });
       await schema.validate('bar', ['key'], {} as Model);
-      await schema.validate(new Model(), ['key'], {} as Model);
+      await schema.validate(new TestModel(), ['key'], {} as Model);
       await expect(schema.validate('foo', ['key'], {} as Model))
         .to.be.rejectedWith(ValidationError, 'foo is not allowed.');
     });

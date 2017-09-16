@@ -46,6 +46,16 @@ describe('ModelSchema', () => {
     });
   });
 
+  describe('toObject()', () => {
+    it('should return an object', () => {
+      const schema = new ModelSchema({model: TestModel});
+      const instance = new TestModel({foo: 'bar'});
+      const obj = schema.toObject(instance);
+      expect(obj).to.not.equal(instance);
+      expect(obj).to.eql({foo: 'bar'});
+    });
+  });
+
   describe('validate()', () => {
     it('should throw a ValidationError if required but undefined', async () => {
       const schema = new ModelSchema({required: true, model: TestModel});

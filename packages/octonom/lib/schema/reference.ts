@@ -1,7 +1,7 @@
 import { Collection } from '../collection';
 import { SanitizationError, ValidationError } from '../errors';
 import { IModelConstructor, Model } from '../model';
-import { ISanitizeOptions, ISchema, ISchemaOptions, Path, runValidator } from './schema';
+import { ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions, Path, runValidator } from './schema';
 
 export interface IReferenceOptions<TModel extends Model = Model> extends ISchemaOptions<string | TModel> {
   collection: () => Collection<TModel>;
@@ -21,6 +21,15 @@ export class ReferenceSchema<TModel extends Model = Model> implements ISchema<Mo
     }
 
     return value;
+  }
+
+  public toObject(value: string | Model, options: IToObjectOptions = {}) {
+    if (typeof value === 'string') {
+      return value;
+    }
+    return options.unpopulate
+      ? value[this.options.collection().modelIdField]
+      : value.toObject(options);
   }
 
   public async validate(value: string | Model, path: Path, instance: TModel) {

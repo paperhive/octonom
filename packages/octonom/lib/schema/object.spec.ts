@@ -1,6 +1,6 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { ObjectSchema, setObjectSanitized, validateObject } from './object';
+import { ObjectSchema, setObjectSanitized, toObject, validateObject } from './object';
 import { StringSchema } from './string';
 
 describe('setObjectSanitized', () => {
@@ -46,6 +46,18 @@ describe('setObjectSanitized', () => {
     const target = {foo: 'bar'};
     const result = setObjectSanitized(schemaMap, target, {bar: 'bar'}, [], {} as Model, {replace: true});
     expect(result).to.equal(target).and.to.eql({bar: 'bar'});
+  });
+});
+
+describe('toObject()', () => {
+  const schemaMap = {foo: new StringSchema()};
+
+  it('should return an object', () => {
+    expect(toObject(schemaMap, {foo: 'bar'})).to.eql({foo: 'bar'});
+  });
+
+  it('should ignore additional keys', () => {
+    expect(toObject(schemaMap, {baz: 'bar'})).to.eql({});
   });
 });
 

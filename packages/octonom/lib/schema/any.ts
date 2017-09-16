@@ -1,3 +1,5 @@
+import { cloneDeep } from 'lodash';
+
 import { SanitizationError, ValidationError } from '../errors';
 import { IModelConstructor, Model } from '../model';
 import { ModelArray } from '../model-array';
@@ -19,6 +21,10 @@ export class AnySchema<TModel extends Model = Model> implements ISchema<any, TMo
     }
 
     return value;
+  }
+
+  public toObject(value: any) {
+    return cloneDeep(value);
   }
 
   public async validate(value: any, path: Path, instance: TModel) {

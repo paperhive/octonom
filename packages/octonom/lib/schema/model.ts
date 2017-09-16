@@ -1,6 +1,6 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { IModelConstructor, Model } from '../model';
-import { ISanitizeOptions, ISchema, ISchemaOptions, Path, runValidator } from './schema';
+import { ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions, Path, runValidator } from './schema';
 
 export interface IModelOptions<TModel extends Model = Model> extends ISchemaOptions<TModel> {
   model: IModelConstructor<TModel>;
@@ -28,6 +28,10 @@ export class ModelSchema<TModel extends Model = Model> implements ISchema<Model,
 
     // create new instance
     return new this.options.model(value);
+  }
+
+  public toObject(value: Model, options?: IToObjectOptions) {
+    return value.toObject(options);
   }
 
   public async validate(value: Model, path: Path, instance: TModel) {
