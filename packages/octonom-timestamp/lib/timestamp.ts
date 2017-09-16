@@ -1,4 +1,4 @@
-import { Hook, Model } from 'octonom';
+import { DateProperty, Hook, Model } from 'octonom';
 
 export type Constructor<T = {}> = new (...args: any[]) => T;
 
@@ -22,8 +22,8 @@ export function Timestamp<T extends Constructor<Model>>(base: T): ITimestampStat
   // ideally we'd use the decorators on the property as usual but
   // typescript doesn't like this yet, see
   // https://github.com/Microsoft/TypeScript/issues/7342
-  Model.Property({type: 'date'})(newClass.prototype, 'createdAt');
-  Model.Property({type: 'date'})(newClass.prototype, 'updatedAt');
+  DateProperty()(newClass.prototype, 'createdAt');
+  DateProperty()(newClass.prototype, 'updatedAt');
   Hook<ITimestamp & Model, 'afterSet'>('afterSet', ({instance, data}) => {
     const date = new Date();
 
