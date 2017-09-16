@@ -18,6 +18,9 @@ export async function populateObject(schemaMap: ISchemaMap, obj: object, populat
   const newObj = Object.assign({}, obj);
   await Promise.all(Object.keys(populateReference).map(async key => {
     const schema = schemaMap[key];
+    if (!schema) {
+      throw new Error(`Key ${key} not found in schema.`);
+    }
     if (!schema.populate) {
       throw new Error(`Key ${key} is not populatable.`);
     }
