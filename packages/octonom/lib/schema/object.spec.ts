@@ -1,7 +1,42 @@
+import { ArrayCollection } from '../array-collection';
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { ObjectSchema, setObjectSanitized, toObject, validateObject } from './object';
+import { ObjectSchema, populateObject, setObjectSanitized, toObject, validateObject } from './object';
+import { ReferenceSchema } from './reference';
 import { StringSchema } from './string';
+
+describe('populateObject()', () => {
+  class TestModel extends Model {
+    public id: string;
+  }
+  TestModel.setSchema('id', new StringSchema());
+
+  const collection = new ArrayCollection<TestModel>(TestModel, {modelIdField: 'id'});
+  const instance = new  TestModel({id: '0xACAB'});
+  collection.insert(instance);
+
+  const schemaMap = {
+    foo: new ReferenceSchema({collection: () => collection}),
+    bar: new StringSchema(),
+  };
+
+  it('should throw if populateReference is not an object', async () => {
+    await expect(populateObject(schemaMap, {foo: '0xACAB', bar: 'baz'}, true))
+      .to.be.rejectedWith(Error, 'populateReference must be an object.');
+  });
+
+  it('should throw if a key is not populatable', async () => {
+    await expect(populateObject(schemaMap, {foo: '0xACAB', bar: 'baz'}, {bar: true}))
+      .to.be.rejectedWith(Error, 'Key bar cannot be populated.');
+  });
+
+  it('should populate a key', async () => {
+    const obj = {foo: '0xACAB', bar: 'test'};
+    const result = await populateObject(schemaMap, obj, {foo: true});
+    expect(result).to.not.equal(obj);
+    expect(result).to.eql({foo: {id: '0xACAB'}, bar: 'test'});
+  });
+});
 
 describe('setObjectSanitized', () => {
   const schemaMap = {

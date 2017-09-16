@@ -24,11 +24,11 @@ export class ReferenceSchema<TModel extends Model = Model> implements ISchema<Mo
       instance = value;
     }
 
-    if (populateReference === true) {
-      return instance;
+    if (populateReference !== true) {
+      await instance.populate(populateReference);
     }
 
-    return instance.populate(populateReference);
+    return instance;
   }
 
   public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {

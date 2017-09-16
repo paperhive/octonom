@@ -2,10 +2,34 @@ import { difference } from 'lodash';
 
 import { SanitizationError, ValidationError } from '../errors';
 import { IModelConstructor, Model } from '../model';
-import { ISanitizeOptions, ISchema, ISchemaMap, ISchemaOptions, IToObjectOptions, Path, runValidator } from './schema';
+import { ISanitizeOptions, ISchema, ISchemaMap, ISchemaOptions,
+         IToObjectOptions, Path, PopulateReference, runValidator,
+       } from './schema';
 
 export interface IObjectOptions<TModel extends Model = Model> extends ISchemaOptions<object> {
   schema: ISchemaMap;
+}
+
+export async function populateObject(schemaMap: ISchemaMap, obj: object, populateReference: PopulateReference) {
+  if (typeof populateReference !== 'object') {
+    throw new Error('populateReference must be an object.');
+  }
+
+  const newObj = Object.assign({}, obj);
+  await Promise.all(Object.keys(populateReference).map(async key => {
+    const schema = schemaMap[key];
+    if (!schema.populate) {
+      throw new Error(`Key ${key} cannot be populated.`);
+    }
+
+    if (obj[key] === undefined) {
+      return;
+    }
+
+    newObj[key] = await schema.populate(obj[key], populateReference[key]);
+  }));
+
+  return newObj;
 }
 
 export function setObjectSanitized(
@@ -100,6 +124,10 @@ export async function validateObject(
 
 export class ObjectSchema<TModel extends Model = Model> implements ISchema<object, TModel> {
   constructor(public options?: IObjectOptions) {}
+
+  public async populate(value: object, populateReference: PopulateReference) {
+    return populateObject(this.options.schema, value, populateReference);
+  }
 
   public sanitize(value: object, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
     // return empty object if no data given but a value is required
