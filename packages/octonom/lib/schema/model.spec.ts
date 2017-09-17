@@ -9,6 +9,14 @@ describe('ModelSchema', () => {
   }
   TestModel.setSchema('foo', new StringSchema());
 
+  describe('populate()', () => {
+    it('should throw if populateReference is not an object', async () => {
+      const  schema = new ModelSchema({model: TestModel});
+      await expect(schema.populate(new TestModel(), true))
+        .to.be.rejectedWith(Error, 'populateReference must be an object.');
+    });
+  });
+
   describe('sanitize()', () => {
     it('should throw a SanitizationError if value is not an object and not a model instance', () => {
       const schema = new ModelSchema({model: TestModel});
@@ -69,6 +77,28 @@ describe('ModelSchema', () => {
         .to.be.rejectedWith(ValidationError, 'Value is not an instance of TestModel.');
     });
 
+    it('should throw if nested validator fails', async () => {
+      class FailModel extends Model {
+        public foo: string;
+      }
+      FailModel.setSchema('foo', new StringSchema({
+        validate: async (value: string) => {
+          if (value === 'baz') {
+            throw new ValidationError('baz is not allowed.');
+          }
+          if (value === 'err') {
+            throw new Error('Critical error.');
+          }
+        },
+      }));
+      const schema = new ModelSchema({model: FailModel});
+      await schema.validate(new FailModel({foo: 'bar'}), ['key'], {} as Model);
+      await expect(schema.validate(new FailModel({foo: 'baz'}), ['key'], {} as Model))
+        .to.be.rejectedWith(ValidationError, 'baz is not allowed.');
+      await expect(schema.validate(new FailModel({foo: 'err'}), ['key'], {} as Model))
+      .to.be.rejectedWith(Error, 'Critical error.');
+    });
+
     it('should run custom validator', async () => {
       const schema = new ModelSchema({
         model: TestModel,
@@ -76,11 +106,16 @@ describe('ModelSchema', () => {
           if (value.foo === 'baz') {
             throw new ValidationError('baz is not allowed.');
           }
+          if (value.foo === 'err') {
+            throw new Error('Critical error.');
+          }
         },
       });
       await schema.validate(new TestModel({foo: 'bar'}), ['key'], {} as Model);
       await expect(schema.validate(new TestModel({foo: 'baz'}), ['key'], {} as Model))
         .to.be.rejectedWith(ValidationError, 'baz is not allowed.');
+      await expect(schema.validate(new TestModel({foo: 'err'}), ['key'], {} as Model))
+      .to.be.rejectedWith(Error, 'Critical error.');
     });
 
     it('should validate undefined', async () => {
