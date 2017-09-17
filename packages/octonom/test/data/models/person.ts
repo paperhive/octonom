@@ -1,15 +1,15 @@
-import { Model, utils } from '../../../lib/main';
+import { Model, ModelProperty, StringProperty, utils } from '../../../lib/main';
 
 import { PersonAccountModel } from './person-account';
 
 export class PersonModel extends Model {
-  @Model.Property({type: 'string', default: utils.generateId})
+  @StringProperty({default: utils.generateId})
   public id: string;
 
-  @Model.Property({type: 'string'})
+  @StringProperty()
   public name: string;
 
-  @Model.Property({type: 'model', model: PersonAccountModel})
+  @ModelProperty({model: PersonAccountModel})
   public account?: Partial<PersonAccountModel>;
 
   constructor(data?: Partial<PersonModel>) {

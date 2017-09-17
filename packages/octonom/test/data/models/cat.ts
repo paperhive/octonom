@@ -1,10 +1,10 @@
-import { Model, utils } from '../../../lib/main';
+import { Model, StringProperty, utils } from '../../../lib/main';
 
 export class CatModel extends Model {
-  @Model.Property({type: 'string', default: utils.generateId})
+  @StringProperty({default: utils.generateId})
   public id: string;
 
-  @Model.Property({type: 'string'})
+  @StringProperty()
   public name: string;
 
   public nonSchemaProperty: string;

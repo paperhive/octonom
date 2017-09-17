@@ -1,7 +1,7 @@
-import { Model } from '../../../lib/main';
+import { Model, StringProperty } from '../../../lib/main';
 
 export class PersonAccountModel extends Model {
-  @Model.Property({type: 'string'})
+  @StringProperty()
   public username: string;
 
   constructor(data?: Partial<PersonAccountModel>) {

@@ -1,4 +1,5 @@
 import { Model } from './model';
+import { Path } from './schema/schema';
 
 export class ExtendableError extends Error {
   constructor(message: string, prototype: object) {
@@ -9,12 +10,30 @@ export class ExtendableError extends Error {
   }
 }
 
+export class PopulationError extends ExtendableError {
+  constructor(message: string) {
+    super(message, PopulationError.prototype);
+  }
+}
+
+export class SanitizationError extends ExtendableError {
+  constructor(
+    message: string,
+    public reason?: string,
+    public value?: any,
+    public path?: Path,
+    public instance?: Model,
+  ) {
+    super(message, SanitizationError.prototype);
+  }
+}
+
 export class ValidationError extends ExtendableError {
   constructor(
     message: string,
     public reason?: string,
     public value?: any,
-    public path?: Array<string | number>,
+    public path?: Path,
     public instance?: Model,
   ) {
     super(message, ValidationError.prototype);
