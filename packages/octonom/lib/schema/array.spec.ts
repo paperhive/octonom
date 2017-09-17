@@ -103,6 +103,12 @@ describe('ArraySchema', () => {
       expect(schema.sanitize(undefined, ['key'], {} as Model))
         .to.eql([]);
     });
+
+    it('should return empty ModelArray if required and undefined', () => {
+      const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel}), required: true});
+      expect(schema.sanitize(undefined, ['key'], {} as Model))
+        .to.be.an.instanceOf(ModelArray).and.to.eql([]);
+    });
   });
 
   describe('toObject()', () => {
