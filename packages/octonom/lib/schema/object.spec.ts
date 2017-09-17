@@ -5,16 +5,16 @@ import { ObjectSchema, populateObject, setObjectSanitized, toObject, validateObj
 import { ReferenceSchema } from './reference';
 import { StringSchema } from './string';
 
+class TestModel extends Model {
+  public id: string;
+}
+TestModel.setSchema('id', new StringSchema());
+
+const collection = new ArrayCollection<TestModel>(TestModel, {modelIdField: 'id'});
+const instance = new  TestModel({id: '0xACAB'});
+collection.insert(instance);
+
 describe('populateObject()', () => {
-  class TestModel extends Model {
-    public id: string;
-  }
-  TestModel.setSchema('id', new StringSchema());
-
-  const collection = new ArrayCollection<TestModel>(TestModel, {modelIdField: 'id'});
-  const instance = new  TestModel({id: '0xACAB'});
-  collection.insert(instance);
-
   const schemaMap = {
     foo: new ReferenceSchema({collection: () => collection}),
     bar: new StringSchema(),
@@ -28,6 +28,13 @@ describe('populateObject()', () => {
   it('should throw if a key is not populatable', async () => {
     await expect(populateObject(schemaMap, {foo: '0xACAB', bar: 'baz'}, {bar: true}))
       .to.be.rejectedWith(Error, 'Key bar is not populatable.');
+  });
+
+  it('should ignore a key if it\'s undefined', async () => {
+    const obj = {bar: 'test'};
+    const result = await populateObject(schemaMap, obj, {foo: true});
+    expect(result).to.not.equal(obj);
+    expect(result).to.eql({bar: 'test'});
   });
 
   it('should populate a key', async () => {
@@ -126,6 +133,17 @@ describe('validateObject()', () => {
 });
 
 describe('ObjectSchema', () => {
+  describe('populate()', () => {
+    // note: details are tested in populateObject() above
+    it('should populate a key', async () => {
+      const  schema = new ObjectSchema({schema: {foo: new ReferenceSchema({collection: () => collection})}});
+      const obj = {foo: '0xACAB', bar: 'test'};
+      const result = await schema.populate(obj, {foo: true});
+      expect(result).to.not.equal(obj);
+      expect(result).to.eql({foo: {id: '0xACAB'}, bar: 'test'});
+    });
+  });
+
   describe('sanitize()', () => {
     it('should throw a SanitizationError if value is not an object', () => {
       const schema = new ObjectSchema({schema: {}});
@@ -149,11 +167,26 @@ describe('ObjectSchema', () => {
     });
   });
 
+  describe('toObject()', () => {
+    // note: details are tested in toObject() above
+    it('should return an object', () => {
+      const schema = new ObjectSchema({schema: {foo: new StringSchema()}});
+      const result = schema.toObject({foo: 'bar', bar: 'baz'});
+      expect(result).to.eql({foo: 'bar'});
+    });
+  });
+
   describe('validate()', () => {
     it('should throw a ValidationError if required but undefined', async () => {
       const schema = new ObjectSchema({required: true, schema: {}});
       await expect(schema.validate(undefined, [], {} as Model))
         .to.be.rejectedWith(ValidationError, 'Required value is undefined.');
+    });
+
+    it('should throw a ValidationError if value is not an object', async () => {
+      const schema = new ObjectSchema({schema: {}});
+      await expect(schema.validate('foo' as any, [], {} as Model))
+        .to.be.rejectedWith(ValidationError, 'Value is not an object.');
     });
 
     it('should throw a ValidationError if nested validation fails', async () => {
