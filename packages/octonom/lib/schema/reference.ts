@@ -61,14 +61,6 @@ export class ReferenceSchema<TModel extends Model = Model> implements ISchema<Mo
       return;
     }
 
-    // valid data?
-    if (!(value instanceof this.options.collection().model) && !(typeof value === 'string')) {
-      throw new ValidationError(
-        'Value is not an instance or an id.', 'no-id-or-instance',
-        value, path, instance,
-      );
-    }
-
     // note: we do not run validation on a populated reference since it's not part of
     //       the model instance
     const collection = this.options.collection();

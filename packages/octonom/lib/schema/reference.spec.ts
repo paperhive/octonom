@@ -106,7 +106,7 @@ describe('ReferenceSchema', () => {
     it('should throw a SanitizationError if value is not a string or model', async () => {
       const schema = new ReferenceSchema({collection});
       await expect(schema.validate(42 as any, ['key'], {} as Model))
-        .to.be.rejectedWith(ValidationError, 'Value is not an instance or an id');
+        .to.be.rejectedWith(ValidationError, 'Value is not an id or TestModel instance.');
     });
 
     it('should run custom validator', async () => {
