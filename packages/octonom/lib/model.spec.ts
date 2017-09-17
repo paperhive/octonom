@@ -128,6 +128,24 @@ describe('Model', () => {
     expect(instance).to.eql({foo: 'test'});
   });
 
+  it('should set a schema property', () => {
+    class TestModel extends Model {
+      public foo: string;
+    }
+    const schema = new StringSchema();
+    TestModel.setSchema('foo', schema);
+    expect(TestModel.schema).to.have.property('foo', schema);
+  });
+
+  it('should throw if a schema property is already set', () => {
+    class TestModel extends Model {
+      public foo: string;
+    }
+    TestModel.setSchema('foo', new StringSchema());
+    expect(() => TestModel.setSchema('foo', new StringSchema()))
+      .to.throw(Error, 'Key foo is already set.');
+  });
+
   describe('simple (CatModel)', () => {
     describe('constructor', () => {
       it('should create an empty instance with generated id via default function', () => {

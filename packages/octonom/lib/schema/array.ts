@@ -17,7 +17,7 @@ export class ArraySchema<TModel extends Model = Model> implements ISchema<any[],
 
   public async populate(value: any[], populateReference: PopulateReference) {
     if (!this.options.elementSchema.populate) {
-      throw new Error('Array is not populatable.');
+      throw new Error('Array elements are not populatable.');
     }
 
     const instances = await Promise.all(value.map(element => {

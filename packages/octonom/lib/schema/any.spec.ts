@@ -15,6 +15,12 @@ describe('AnySchema', () => {
       expect(schema.sanitize(undefined, ['key'], {} as Model, {defaults: true}))
         .to.eql('foo');
     });
+
+    it('should return any value', () => {
+      const schema = new AnySchema();
+      const obj = {foo: 'bar'};
+      expect(schema.sanitize(obj, ['key'], {} as Model)).to.equal(obj);
+    });
   });
 
   describe('toObject()', () => {

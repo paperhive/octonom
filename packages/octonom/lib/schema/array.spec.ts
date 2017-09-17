@@ -23,6 +23,12 @@ describe('ArraySchema', () => {
     collection.insert(new ReferenceModel({id: '0xACAB'}));
     collection.insert(new ReferenceModel({id: '4711'}));
 
+    it('should throw if elements are not populatable', async () => {
+      const schema = new ArraySchema({elementSchema: new StringSchema()});
+      await expect(schema.populate(['0xACAB'], true))
+        .to.be.rejectedWith(Error, 'Array elements are not populatable.');
+    });
+
     it('should populate an array of strings', async () => {
       const schema = new ArraySchema({
         elementSchema: new ReferenceSchema({collection: () => collection}),
