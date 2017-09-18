@@ -1,6 +1,6 @@
 {
   "name": "octonom-timestamp",
-  "version": "1.0.0-alpha.5",
+  "version": "1.0.0-alpha.6",
   "description": "Timestamp mixin for Octonom models",
   "main": "build/lib/main.js",
   "types": "build/lib/main.d.ts",
@@ -23,7 +23,7 @@
   "repository": "paperhive/octonom",
   "bugs": "https://github.com/paperhive/octonom/issues",
   "dependencies": {
-    "octonom": "^1.0.0-alpha.15",
+    "octonom": "^1.0.0-alpha.16",
     "ts-node": "^3.3.0"
   }
 }
