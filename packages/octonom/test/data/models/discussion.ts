@@ -1,16 +1,16 @@
-import { Model, ReferenceProperty, StringProperty, utils } from '../../../lib/main';
+import { Model, Property, utils } from '../../../lib/main';
 
 import { collections } from '../collections';
 import { PersonModel } from './person';
 
 export class DiscussionModel extends Model {
-  @StringProperty({default: utils.generateId})
+  @Property.String({default: utils.generateId})
   public id: string;
 
-  @ReferenceProperty({collection: () => collections.people})
+  @Property.Reference({collection: () => collections.people})
   public author: string | Partial<PersonModel>;
 
-  @StringProperty()
+  @Property.String()
   public title: string;
 
   constructor(data?: Partial<DiscussionModel>) {

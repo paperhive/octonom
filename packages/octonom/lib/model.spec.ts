@@ -1,6 +1,8 @@
 import { spy } from 'sinon';
 
 import { collections } from '../test/data/collections';
+
+import { AllModel, nestedCollection, NestedModel } from '../test/data/models/all';
 import { CatModel } from '../test/data/models/cat';
 import { DiscussionModel } from '../test/data/models/discussion';
 import { GroupWithArrayModel } from '../test/data/models/group-with-array';
@@ -11,7 +13,7 @@ import { PersonAccountModel } from '../test/data/models/person-account';
 import { ValidationError } from './errors';
 import { Hook, Model } from './model';
 import { ModelArray } from './model-array';
-import { ArrayProperty, ModelProperty, ObjectProperty, StringProperty, StringSchema } from './schema/index';
+import { Property, Schema } from './schema/index';
 
 describe('Hook decorator', () => {
   let beforeObj;
@@ -31,10 +33,10 @@ describe('Hook decorator', () => {
   @Hook('beforeSet', beforeSet)
   @Hook('afterSet', afterSet)
   class Hooked extends Model {
-    @StringProperty()
+    @Property.String()
     public foo: string;
 
-    @StringProperty()
+    @Property.String()
     public baz: string;
   }
 
@@ -95,28 +97,28 @@ describe('Hook decorator', () => {
 
 describe('Property decorator', () => {
   class TestModel extends Model {
-    @StringProperty()
+    @Property.String()
     public foo: string;
   }
 
   it('should register a schema property', () => {
-    expect(TestModel.schema.foo).to.be.an.instanceOf(StringSchema);
+    expect(TestModel.schema.foo).to.be.an.instanceOf(Schema.String);
   });
 
   it('should create a separate for new classes', () => {
     class Derived extends TestModel {
-      @StringProperty()
+      @Property.String()
       public bar: string;
     }
     expect(TestModel.schema).to.not.have.property('bar');
-    expect(Derived.schema.bar).to.be.an.instanceOf(StringSchema);
+    expect(Derived.schema.bar).to.be.an.instanceOf(Schema.String);
   });
 });
 
 describe('Model', () => {
   it('should allow non-schema properties', () => {
     class TestModel extends Model {
-      @StringProperty()
+      @Property.String()
       public foo: string;
 
       public bar: string;
@@ -132,7 +134,7 @@ describe('Model', () => {
     class TestModel extends Model {
       public foo: string;
     }
-    const schema = new StringSchema();
+    const schema = new Schema.String();
     TestModel.setSchema('foo', schema);
     expect(TestModel.schema).to.have.property('foo', schema);
   });
@@ -141,8 +143,8 @@ describe('Model', () => {
     class TestModel extends Model {
       public foo: string;
     }
-    TestModel.setSchema('foo', new StringSchema());
-    expect(() => TestModel.setSchema('foo', new StringSchema()))
+    TestModel.setSchema('foo', new Schema.String());
+    expect(() => TestModel.setSchema('foo', new Schema.String()))
       .to.throw(Error, 'Key foo is already set.');
   });
 
@@ -508,18 +510,42 @@ describe('Model', () => {
     });
   });
 
+  describe('all schemas (AllModel)', () => {
+    const nested = new NestedModel({id: 'alice', name: 'Alice'});
+
+    before(() => {
+      nestedCollection.clear();
+      nestedCollection.insert(nested);
+    });
+
+    it('should create an instance with all schemas', async () => {
+      const data: Partial<AllModel> = {
+        any: {foo: 'bar'},
+        array: [true, false],
+        boolean: false,
+        date: new Date(),
+        model: new NestedModel({id: 'bob', name: 'Bob'}),
+        number: 42,
+        object: {enabled: true},
+        reference: nested.id,
+        string: 'foo',
+      };
+      const all = new AllModel(data);
+    });
+  });
+
   describe('validate()', () => {
     class TestModel extends Model {
-      @StringProperty({required: true})
+      @Property.String({required: true})
       public required: string;
 
-      @ArrayProperty({elementSchema: new StringSchema({enum: ['foo', 'bar']})})
+      @Property.Array({elementSchema: new Schema.String({enum: ['foo', 'bar']})})
       public array: string[];
 
-      @ModelProperty({model: TestModel})
+      @Property.Model({model: TestModel})
       public model: TestModel;
 
-      @ObjectProperty({schema: {foo: new StringSchema({enum: ['bar']})}})
+      @Property.Object({schema: {foo: new Schema.String({enum: ['bar']})}})
       public object: {foo: string};
     }
 
