@@ -1,6 +1,6 @@
 {
   "name": "octonom-mongodb",
-  "version": "1.0.0-alpha.10",
+  "version": "1.0.0-alpha.11",
   "description": "MongoDB collection for Octonom",
   "main": "build/lib/main.js",
   "types": "build/lib/main.d.ts",
@@ -25,7 +25,7 @@
   "dependencies": {
     "@types/mongodb": "^2.2.6",
     "mongodb": "^2.2.29",
-    "octonom": "^1.0.0-alpha.15",
+    "octonom": "^1.0.0-alpha.16",
     "ts-node": "^3.3.0"
   }
 }
