@@ -531,6 +531,7 @@ describe('Model', () => {
         string: 'foo',
       };
       const all = new AllModel(data);
+      expect(all).to.eql(data);
     });
   });
 
