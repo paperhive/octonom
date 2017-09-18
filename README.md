@@ -35,16 +35,16 @@ Octonom brings you TypeScript-based models and collections for any database with
 Let's define a model:
 
 ```typescript
-import { Model, NumberProperty, StringProperty } from 'octonom';
+import { Model, Property } from 'octonom';
 
 export class Person extends Model {
-  @StringProperty()
+  @Property.String()
   public id: string;
 
-  @StringProperty()
+  @Property.String()
   public name: string;
 
-  @NumberProperty({integer: true, min: 0})
+  @Property.Number({integer: true, min: 0})
   public age: number;
 
   public makeOlder() {

@@ -15,61 +15,27 @@ export function getSchemaDecorator(createSchema: () => ISchema<any, Model>): Pro
 }
 
 /* tslint:disable:variable-name */
-export const AnyProperty = (options: IAnyOptions = {}) => getSchemaDecorator(() => new AnySchema(options));
-export const ArrayProperty = (options: IArrayOptions) => getSchemaDecorator(() => new ArraySchema(options));
-export const BooleanProperty = (options: IBooleanOptions = {}) => getSchemaDecorator(() => new BooleanSchema(options));
-export const DateProperty = (options: IDateOptions = {}) => getSchemaDecorator(() => new DateSchema(options));
-export const ModelProperty = (options: IModelOptions) => getSchemaDecorator(() => new ModelSchema(options));
-export const NumberProperty = (options: INumberOptions = {}) => getSchemaDecorator(() => new NumberSchema(options));
-export const ObjectProperty = (options: IObjectOptions) => getSchemaDecorator(() => new ObjectSchema(options));
-export const ReferenceProperty = (options: IReferenceOptions) => getSchemaDecorator(() => new ReferenceSchema(options));
-export const StringProperty = (options: IStringOptions = {}) => getSchemaDecorator(() => new StringSchema(options));
-/* tslint:enable:variable-name */
-
-export {
-  AnySchema,
-  ArraySchema,
-  BooleanSchema,
-  DateSchema,
-  ModelSchema,
-  NumberSchema,
-  ObjectSchema,
-  ReferenceSchema,
-  StringSchema,
+export const Property = {
+  Any: (options: IAnyOptions = {}) => getSchemaDecorator(() => new AnySchema(options)),
+  Array: (options: IArrayOptions) => getSchemaDecorator(() => new ArraySchema(options)),
+  Boolean: (options: IBooleanOptions = {}) => getSchemaDecorator(() => new BooleanSchema(options)),
+  Date: (options: IDateOptions = {}) => getSchemaDecorator(() => new DateSchema(options)),
+  Model: (options: IModelOptions) => getSchemaDecorator(() => new ModelSchema(options)),
+  Number: (options: INumberOptions = {}) => getSchemaDecorator(() => new NumberSchema(options)),
+  Object: (options: IObjectOptions) => getSchemaDecorator(() => new ObjectSchema(options)),
+  Reference: (options: IReferenceOptions) => getSchemaDecorator(() => new ReferenceSchema(options)),
+  String: (options: IStringOptions = {}) => getSchemaDecorator(() => new StringSchema(options)),
 };
 
-/*
-// TODO: remove
-class Account extends Model {
-  @AnyProperty()
-  public any: any;
-}
-
-const accounts = new ArrayCollection<Account>(Account);
-
-class Person extends Model {
-  @ArrayProperty({elementSchema: new BooleanSchema()})
-  public array: boolean[];
-
-  @BooleanProperty()
-  public boolean: boolean;
-
-  @DateProperty()
-  public date: Date;
-
-  @ModelProperty({model: Account})
-  public model: Account;
-
-  @NumberProperty()
-  public number: number;
-
-  @ObjectProperty({schema: {enabled: new BooleanSchema()}})
-  public object: object;
-
-  @ReferenceProperty({collection: () => accounts})
-  public reference: string | Account;
-
-  @StringProperty()
-  public string: string;
-}
-*/
+export const Schema = {
+  Any: AnySchema,
+  Array: ArraySchema,
+  Boolean: BooleanSchema,
+  Date: DateSchema,
+  Model: ModelSchema,
+  Number: NumberSchema,
+  Object: ObjectSchema,
+  Reference: ReferenceSchema,
+  String: StringSchema,
+};
+/* tslint:enable:variable-name */

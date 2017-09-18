@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { Model, StringProperty } from 'octonom';
+import { Model, Property } from 'octonom';
 
 import { Timestamp } from './timestamp';
 
@@ -7,7 +7,7 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 describe('Timestamp mixin', () => {
   class Base extends Model {
-    @StringProperty()
+    @Property.String()
     public name: string;
   }
 
@@ -54,7 +54,7 @@ describe('Timestamp mixin', () => {
 
   describe('Direct mixin extending from Model', () => {
     class Timestamped extends Timestamp(Model) {
-      @StringProperty()
+      @Property.String()
       public name: string;
     }
 
