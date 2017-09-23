@@ -17,7 +17,7 @@ describe('Hooks', () => {
     const hooks = new Hooks<CatModel>();
     const handler = spy();
     hooks.register('beforeSet', handler);
-    const options = {instance: cat, data: {name: 'Yllim'}};
+    const options = {instance: cat, path: [], data: {name: 'Yllim'}};
     hooks.run('beforeSet', options);
     expect(handler).to.be.calledOnce.and.calledWith(options);
   });

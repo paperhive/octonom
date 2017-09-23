@@ -103,9 +103,9 @@ export class Model {
   //       This prevents recursion when handlers set properties.
   public set(data: Partial<this>, options: ISanitizeOptions = {}) {
     const constructor = this.constructor as typeof Model;
-    constructor.hooks.run('beforeSet', {instance: this, data});
+    constructor.hooks.run('beforeSet', {instance: this, path: [], data});
     setObjectSanitized(constructor.schema, this, data, [], this, options);
-    constructor.hooks.run('afterSet', {instance: this, data});
+    constructor.hooks.run('afterSet', {instance: this, path: [], data});
   }
 
   public toObject(options?: IToObjectOptions): Partial<this> {

@@ -1,9 +1,10 @@
 import { Collection } from './collection';
 import { Model } from './model';
-import { ISanitizeOptions } from './schema/schema';
+import { ISanitizeOptions, Path } from './schema/schema';
 
 export interface ISetHookOptions<TModel extends Model> {
   instance: TModel;
+  path: Path;
   data: Partial<TModel>;
   options?: ISanitizeOptions;
 }
