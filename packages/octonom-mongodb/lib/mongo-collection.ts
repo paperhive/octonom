@@ -1,7 +1,18 @@
-import { Collection as DbCollection, CollectionInsertManyOptions, Cursor,
-  Db, FindOneOptions } from 'mongodb';
+import { Collection as DbCollection, CollectionInsertManyOptions,
+         Cursor, Db, FindOneOptions, ReplaceOneOptions,
+       } from 'mongodb';
 
-import { Collection, ICollectionOptions, IModelConstructor, Model, ModelArray, utils } from 'octonom';
+import { Collection, ICollectionInsertOptions, ICollectionOptions,
+         IModelConstructor, Model, ModelArray, utils,
+       } from 'octonom';
+
+export interface IMongoCollectionInsertOptions extends ICollectionInsertOptions {
+  mongoOptions?: CollectionInsertManyOptions;
+}
+
+export interface IMongoCollectionUpdateOptions extends ICollectionInsertOptions {
+  mongoOptions?: ReplaceOneOptions;
+}
 
 export class MongoCollection<T extends Model> extends Collection<T> {
   protected collection: DbCollection;
@@ -9,19 +20,25 @@ export class MongoCollection<T extends Model> extends Collection<T> {
   constructor(
     protected name: string,
     model: IModelConstructor<T>,
-    options: ICollectionOptions = {},
+    options: ICollectionOptions<T> = {},
   ) {
     super(model, options);
   }
 
-  public async insertMany(models: T[], options?: CollectionInsertManyOptions) {
+  public async insertMany(models: T[], options: IMongoCollectionInsertOptions = {}) {
+    if (options.validate !== false) {
+      await Promise.all(models.map(model => model.validate()));
+    }
     const docs = models.map(model => this.toDb(model));
-    await this.collection.insertMany(docs, options);
+    await this.collection.insertMany(docs, options.mongoOptions);
   }
 
-  public async insertOne(model: T) {
+  public async insertOne(model: T, options: IMongoCollectionInsertOptions = {}) {
+    if (options.validate !== false) {
+      await model.validate();
+    }
     const doc = this.toDb(model);
-    await this.collection.insertOne(doc);
+    await this.collection.insertOne(doc, options.mongoOptions);
   }
 
   public async delete(model: T) {
@@ -68,9 +85,17 @@ export class MongoCollection<T extends Model> extends Collection<T> {
     return super.fromDb(utils.rename(doc, {_id: this.modelIdField}));
   }
 
-  public async update(model: T) {
+  public async update(model: T, options: IMongoCollectionUpdateOptions = {}) {
+    if (options.validate !== false) {
+      await model.validate();
+    }
     const doc = this.toDb(model);
-    const result = await this.collection.replaceOne({_id: model[this.modelIdField]}, doc);
+    const result = await this.collection.replaceOne(
+      {_id: model[this.modelIdField]},
+      doc,
+      options.mongoOptions,
+    );
+
     if (result.matchedCount === 0) {
       throw new Error('document not found in collection');
     }
