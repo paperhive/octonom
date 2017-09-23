@@ -1,8 +1,13 @@
 import { IModelConstructor, Model } from './model';
 import { ModelArray } from './model-array';
 
-export interface ICollectionOptions {
-  modelIdField?: string;
+export interface ICollectionOptions<T extends Model> {
+  modelIdField?: keyof T;
+}
+
+export interface ICollectionInsertOptions {
+  // default is true
+  validate?: boolean;
 }
 
 export abstract class Collection<T extends Model> {
@@ -10,9 +15,15 @@ export abstract class Collection<T extends Model> {
 
   constructor(
     public readonly model: IModelConstructor<T>,
-    protected options: ICollectionOptions = {},
+    protected options: ICollectionOptions<T> = {},
   ) {
     this.modelIdField = options.modelIdField || 'id';
+
+    // check id field in schema
+    const idSchema = model.schema[this.modelIdField];
+    if (!idSchema) {
+      throw new Error(`Id field ${this.modelIdField} not found in model schema.`);
+    }
   }
 
   public abstract async findById(id: string): Promise<T>;
