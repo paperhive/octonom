@@ -18,11 +18,11 @@ describe('ReferenceSchema', () => {
       public friend: string | FriendModel;
     }
 
-    const friendCollection = new ArrayCollection<FriendModel>(FriendModel, {modelIdField: 'id'});
-    const schema = new ReferenceSchema({collection: () => friendCollection});
-
     FriendModel.setSchema('id', new StringSchema({required: true}));
+    const schema = new ReferenceSchema({collection: () => friendCollection});
     FriendModel.setSchema('friend', schema);
+
+    const friendCollection = new ArrayCollection<FriendModel>(FriendModel, {modelIdField: 'id'});
 
     const alice = new FriendModel({id: 'alice', friend: 'bob'});
     const bob = new FriendModel({id: 'bob'});
