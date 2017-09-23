@@ -1,6 +1,6 @@
 import { find } from 'lodash';
 
-import { Collection } from './collection';
+import { Collection, ICollectionInsertOptions } from './collection';
 import { Model } from './model';
 
 // simple collection with an in-memory array
@@ -12,7 +12,11 @@ export class ArrayCollection<T extends Model> extends Collection<T> {
     this.array.splice(0, this.array.length);
   }
 
-  public insert(model: T) {
+  public async insert(model: T, options: ICollectionInsertOptions = {}) {
+    if (options.validate !== false) {
+      await model.validate();
+    }
+
     const doc = find(this.array, {[this.modelIdField]: model[this.modelIdField]});
     if (doc) {
       throw new Error('duplicate key error');
