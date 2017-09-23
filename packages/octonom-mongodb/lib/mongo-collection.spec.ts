@@ -43,6 +43,17 @@ describe('MongoCollection', () => {
       expect(docs).to.deep.include({_id: '23', name: 'Kilf'});
     });
 
+    it('should throw if cat is invalid', async () => {
+      const cats = [new CatModel(catObj), new CatModel({age: -1})];
+      await expect(catCollection.insertMany(cats))
+        .to.be.rejectedWith('Number must not be less than 0.');
+    });
+
+    it('should insert invalid cat validate is false', async () => {
+      const cats = [new CatModel(catObj), new CatModel({age: -1})];
+      await catCollection.insertMany(cats, {validate: false});
+    });
+
     it('should throw if id is duplicate', async () => {
       const cats = [new CatModel(catObj), new CatModel(catObj)];
       await expect(catCollection.insertMany(cats))
@@ -56,6 +67,17 @@ describe('MongoCollection', () => {
       await catCollection.insertOne(cat);
       const doc = await db.collection('cats').findOne({_id: '42'});
       expect(doc).to.eql({_id: '42', name: 'Yllim'});
+    });
+
+    it('should throw if cat is invalid', async () => {
+      const cat = new CatModel({age: -1});
+      await expect(catCollection.insertOne(cat))
+        .to.be.rejectedWith('Number must not be less than 0.');
+    });
+
+    it('should insert invalid cat validate is false', async () => {
+      const cat = new CatModel({age: -1});
+      await catCollection.insertOne(cat, {validate: false});
     });
 
     it('should throw if id is duplicate', async () => {
@@ -112,7 +134,7 @@ describe('MongoCollection', () => {
 
   describe('findByIds()', () => {
     it('should return a ModelArray with instances (or undefined)', async () => {
-      catCollection.insertMany([
+      await catCollection.insertMany([
         new CatModel({id: '42', name: 'Yllim'}),
         new CatModel({id: '1337', name: 'Kilf'}),
       ]);
@@ -152,6 +174,21 @@ describe('MongoCollection', () => {
       await catCollection.update(cat);
       const doc = await db.collection('cats').findOne({_id: '42'});
       expect(doc).to.eql({_id: '42', name: 'Kilf'});
+    });
+
+    it('should throw if cat is invalid', async () => {
+      const cat = new CatModel(catObj);
+      await catCollection.insertOne(cat);
+      cat.age = -1;
+      await expect(catCollection.update(cat))
+        .to.be.rejectedWith('Number must not be less than 0.');
+    });
+
+    it('should update invalid cat validate is false', async () => {
+      const cat = new CatModel(catObj);
+      await catCollection.insertOne(cat);
+      cat.age = -1;
+      await catCollection.update(cat, {validate: false});
     });
   });
 });
