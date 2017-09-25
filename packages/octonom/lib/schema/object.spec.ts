@@ -45,6 +45,13 @@ describe('populateObject()', () => {
   });
 });
 
+describe('proxifyObject()', () => {
+  it('should call beforeSet and afterSet when assigning a key');
+  it('should call beforeSet and afterSet when deleting a key');
+  it('should call beforeSet and afterSet when assigning a nested key');
+  it('should call beforeSet and afterSet when deleting a nested key');
+});
+
 describe('setObjectSanitized', () => {
   const schemaMap = {
     foo: new StringSchema({required: true, default: 'default'}),

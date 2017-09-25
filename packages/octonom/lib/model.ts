@@ -1,7 +1,8 @@
 import { HookHandlersMap, Hooks } from './hooks';
-import { populateObject, setObjectSanitized, toObject, validateObject } from './schema/object';
+import { ModelSchema } from './schema/model';
+import { populateObject, proxifyObject, setObjectSanitized, toObject, validateObject } from './schema/object';
 import { IPopulateMap, ISanitizeOptions, ISchema, ISchemaMap,
-         IToObjectOptions,
+         IToObjectOptions, Path,
        } from './schema/schema';
 
 export type Constructor<T = {}> = new (...args: any[]) => T;
@@ -43,39 +44,17 @@ export class Model {
   // TODO: ideally we'd also use Partial<this> as the type for data
   constructor(data?) {
     const constructor = this.constructor as typeof Model;
-    const schema = constructor.schema;
 
-    // set initial data
-    this.set(data || {}, {defaults: true, replace: true});
-
-    // create proxy that intercepts set/delete operations and redirects
-    // them to set() on the unproxied instance
-    const rawSet = this.set.bind(this);
-    const proxy = new Proxy(this, {
-      get(target, key, receiver) {
-        if (key === 'set') {
-          return rawSet;
-        }
-        return target[key];
-      },
-      set(target, key, value, receiver) {
-        if (schema[key]) {
-          rawSet({[key]: value} as any);
-        } else {
-          target[key] = value;
-        }
-        return true;
-      },
-      deleteProperty(target, key) {
-        if (schema[key]) {
-          rawSet({[key]: undefined} as any);
-        } else {
-          delete target[key];
-        }
-        return true;
-      },
+    // create proxied object
+    const proxy = proxifyObject(constructor.schema, this, [], this, {
+      beforeSet: options => constructor.hooks.run('beforeSet', options),
+      afterSet: options => constructor.hooks.run('afterSet', options),
     });
 
+    // set initial data
+    proxy.set(data || {}, {defaults: true, replace: true});
+
+    // return proxy
     return proxy;
   }
 
@@ -103,9 +82,7 @@ export class Model {
   //       This prevents recursion when handlers set properties.
   public set(data: Partial<this>, options: ISanitizeOptions = {}) {
     const constructor = this.constructor as typeof Model;
-    constructor.hooks.run('beforeSet', {instance: this, path: [], data});
     setObjectSanitized(constructor.schema, this, data, [], this, options);
-    constructor.hooks.run('afterSet', {instance: this, path: [], data});
   }
 
   public toObject(options?: IToObjectOptions): Partial<this> {

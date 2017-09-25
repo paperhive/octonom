@@ -1,4 +1,5 @@
 import { ValidationError } from '../errors';
+import { ISetHookOptions } from '../hooks';
 import { Model } from '../model';
 
 export type PopulateReference = IPopulateMap | true;
@@ -12,6 +13,10 @@ export interface ISanitizeOptions {
   defaults?: boolean;
   /** Unset all properties that are not provided in the data. Defaults to false. */
   replace?: boolean;
+  /** Called before setting data */
+  beforeSet?(options: ISetHookOptions<Model>);
+  /** Called after setting data */
+  afterSet?(options: ISetHookOptions<Model>);
 }
 
 export interface IToObjectOptions {

@@ -98,14 +98,14 @@ describe('Hook decorator', () => {
       hooked.foo = 'bar';
       expect(beforeSet).to.be.calledOnce.and.calledWith({
         instance: hooked,
-        path: [],
-        data: {foo: 'bar'},
+        path: ['foo'],
+        data: 'bar',
       });
       expect(beforeObj).to.eql({});
       expect(afterSet).to.be.calledOnce.and.calledWith({
         instance: hooked,
-        path: [],
-        data: {foo: 'bar'},
+        path: ['foo'],
+        data: 'bar',
       });
       expect(afterObj).to.eql({foo: 'bar'});
     });
@@ -116,14 +116,14 @@ describe('Hook decorator', () => {
       delete hooked.foo;
       expect(beforeSet).to.be.calledOnce.and.calledWith({
         instance: hooked,
-        path: [],
-        data: {foo: undefined},
+        path: ['foo'],
+        data: undefined,
       });
       expect(beforeObj).to.eql({foo: 'bar'});
       expect(afterSet).to.be.calledOnce.and.calledWith({
         instance: hooked,
-        path: [],
-        data: {foo: undefined},
+        path: ['foo'],
+        data: undefined,
       });
       expect(afterObj).to.eql({});
     });
