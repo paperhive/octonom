@@ -2,6 +2,9 @@ import { Collection } from './collection';
 import { Model } from './model';
 import { ISanitizeOptions, Path } from './schema/schema';
 
+/* Hook handlers are always called with instance set to the
+ * instance where the hook is registered
+ **/
 export interface ISetHookOptions<TModel extends Model> {
   instance: TModel;
   path: Path;

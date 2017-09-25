@@ -1,6 +1,7 @@
 import { difference } from 'lodash';
 
 import { SanitizationError, ValidationError } from '../errors';
+import { ISetHookOptions } from '../hooks';
 import { Model } from '../model';
 import { ISanitizeOptions, ISchema, ISchemaMap, ISchemaOptions,
          IToObjectOptions, Path, PopulateReference, runValidator,
@@ -35,6 +36,65 @@ export async function populateObject(schemaMap: ISchemaMap, obj: object, populat
   return newObj;
 }
 
+export interface IHooks {
+  beforeSet?(options: ISetHookOptions<Model>);
+  afterSet?(options: ISetHookOptions<Model>);
+}
+
+export function proxifyObject(
+  schemaMap: ISchemaMap,
+  obj,
+  path: Path,
+  instance: Model,
+  hooks: IHooks,
+) {
+  function wrapSet(setPath, value, fun) {
+    if (hooks.beforeSet) {
+      hooks.beforeSet({instance, path: setPath, data: value});
+    }
+
+    fun();
+
+    if (hooks.afterSet) {
+      hooks.afterSet({instance, path: setPath, data: value});
+    }
+  }
+
+  return new Proxy(obj, {
+    get(target, key, receiver) {
+      if (target instanceof Model && key === 'set') {
+        return (data, options) => wrapSet([], data, () => target.set(data, options));
+      }
+
+      return target[key];
+    },
+    set(target, key, value, receiver) {
+      if (typeof key !== 'symbol' && schemaMap[key]) {
+        wrapSet([key], value, () => {
+          target[key] = schemaMap[key].sanitize(
+            value,
+            path.concat([key]),
+            instance, {
+            beforeSet: options => ({...options, path: [key].concat(options.path)}),
+            afterSet: options => ({...options, path: [key].concat(options.path)}),
+          });
+        });
+      } else {
+        target[key] = value;
+      }
+      return true;
+    },
+    deleteProperty(target, key) {
+      if (typeof key !== 'symbol' && schemaMap[key]) {
+        wrapSet([key], undefined, () => delete target[key]);
+      } else {
+        delete target[key];
+      }
+      return true;
+    },
+  });
+}
+
 export function setObjectSanitized(
   schemaMap: ISchemaMap, target: object, data: object,
   path: Path, instance: Model, options: ISanitizeOptions = {},
@@ -62,9 +122,7 @@ export function setObjectSanitized(
       return;
     }
 
-    const newPath = path.slice();
-    newPath.push(key);
-    const sanitizedValue = schemaMap[key].sanitize(data[key], newPath, instance, options);
+    const sanitizedValue = schemaMap[key].sanitize(data[key], path.concat([key]), instance, options);
     if (sanitizedValue !== undefined) {
       target[key] = sanitizedValue;
     }
@@ -134,12 +192,17 @@ export class ObjectSchema<TModel extends Model = Model> implements ISchema<objec
 
   public sanitize(value: object, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
     // return empty object if no data given but a value is required
-    if (value === undefined) {
-      return this.options.required ? {} : undefined;
+    if (value === undefined && !this.options.required) {
+      return undefined;
     }
 
-    // sanitize object
-    return setObjectSanitized(this.options.schema, {}, value, path, instance, options);
+    // create new object with sanitized values
+    const obj = setObjectSanitized(this.options.schema, {}, value || {}, path, instance, options);
+
+    return proxifyObject(
+      this.options.schema, obj, path, instance,
+      {beforeSet: options.beforeSet, afterSet: options.afterSet},
+    );
   }
 
   public toObject(value: object, options?: IToObjectOptions) {
