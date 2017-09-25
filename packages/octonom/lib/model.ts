@@ -42,7 +42,7 @@ export class Model {
   }
 
   // TODO: ideally we'd also use Partial<this> as the type for data
-  constructor(data?) {
+  constructor(data?, sanitizeOptions: ISanitizeOptions = {}) {
     const constructor = this.constructor as typeof Model;
 
     // create proxied object
@@ -52,7 +52,7 @@ export class Model {
     });
 
     // set initial data
-    proxy.set(data || {}, {defaults: true, replace: true});
+    proxy.set(data || {}, {defaults: true, replace: true, ...sanitizeOptions});
 
     // return proxy
     return proxy;
