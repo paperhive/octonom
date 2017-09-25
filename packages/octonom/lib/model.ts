@@ -10,7 +10,7 @@ export type Constructor<T = {}> = new (...args: any[]) => T;
 export interface IModelConstructor<T extends Model> {
   schema: ISchemaMap;
   hooks: Hooks<T>;
-  new (data: Partial<T>): T;
+  new (data: Partial<T>, sanitizeOptions: ISanitizeOptions): T;
 }
 
 export interface IModel {
@@ -45,14 +45,27 @@ export class Model {
   constructor(data?, sanitizeOptions: ISanitizeOptions = {}) {
     const constructor = this.constructor as typeof Model;
 
+    const newSanitizeOptions = {
+      ...sanitizeOptions,
+      beforeSet: options => {
+        constructor.hooks.run('beforeSet', options);
+        if (sanitizeOptions.beforeSet) {
+          sanitizeOptions.beforeSet(options);
+        }
+      },
+      afterSet: options => {
+        constructor.hooks.run('afterSet', options);
+        if (sanitizeOptions.afterSet) {
+          sanitizeOptions.afterSet(options);
+        }
+      },
+    };
+
     // create proxied object
-    const proxy = proxifyObject(constructor.schema, this, [], this, {
-      beforeSet: options => constructor.hooks.run('beforeSet', options),
-      afterSet: options => constructor.hooks.run('afterSet', options),
-    });
+    const proxy = proxifyObject(constructor.schema, this, [], this, newSanitizeOptions);
 
     // set initial data
-    proxy.set(data || {}, {defaults: true, replace: true, ...sanitizeOptions});
+    proxy.set(data || {}, {defaults: true, replace: true, newSanitizeOptions});
 
     // return proxy
     return proxy;

@@ -63,7 +63,11 @@ export function proxifyObject(
   return new Proxy(obj, {
     get(target, key, receiver) {
       if (target instanceof Model && key === 'set') {
-        return (data, options) => wrapSet([], data, () => target.set(data, options));
+        return (data, options) => wrapSet([], data, () => target.set(data, {
+          ...options,
+          beforeSet: setOptions => hooks.beforeSet({...setOptions, instance: target}),
+          afterSet: setOptions => hooks.afterSet({...setOptions, instance: target}),
+        }));
       }
 
       return target[key];
@@ -75,9 +79,10 @@ export function proxifyObject(
             value,
             path.concat([key]),
             instance, {
-            beforeSet: options => ({...options, path: [key].concat(options.path)}),
-            afterSet: options => ({...options, path: [key].concat(options.path)}),
-          });
+              beforeSet: options => hooks.beforeSet({...options, path: [key].concat(options.path)}),
+              afterSet: options => hooks.afterSet({...options, path: [key].concat(options.path)}),
+            },
+          );
         });
       } else {
         target[key] = value;
@@ -122,7 +127,22 @@ export function setObjectSanitized(
       return;
     }
 
-    const sanitizedValue = schemaMap[key].sanitize(data[key], path.concat([key]), instance, options);
+    const newOptions = {...options};
+    if (options.beforeSet) {
+      newOptions.beforeSet = setOptions => options.beforeSet({
+        ...setOptions,
+        path: [key as string | number].concat(setOptions.path),
+      });
+    }
+    if (options.afterSet) {
+      newOptions.afterSet = setOptions => options.afterSet({
+        ...setOptions,
+        path: [key as string | number].concat(setOptions.path),
+      });
+    }
+
+    const sanitizedValue = schemaMap[key].sanitize(data[key], path.concat([key]), instance, newOptions);
+
     if (sanitizedValue !== undefined) {
       target[key] = sanitizedValue;
     }
