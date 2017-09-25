@@ -20,24 +20,21 @@ export class ModelSchema<TModel extends Model = Model> implements ISchema<Model,
   }
 
   public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
-    if (value instanceof this.options.model) {
-      // already a model
-      return value;
+    if (value === undefined && !this.options.required) {
+      return undefined;
     }
 
-    if (value === undefined) {
-      return this.options.required ? new this.options.model({}) : undefined;
-    }
+    const newValue = value || {};
 
-    if (typeof value !== 'object') {
+    if (typeof newValue !== 'object') {
       throw new SanitizationError(
         'Value is not an object or a model instance.', 'no-object-or-instance',
-        value, path, instance,
+        newValue, path, instance,
       );
     }
 
     // create new instance
-    return new this.options.model(value);
+    return new this.options.model(newValue, options);
   }
 
   public toObject(value: Model, options?: IToObjectOptions) {
