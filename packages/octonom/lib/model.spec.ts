@@ -66,13 +66,13 @@ describe('Hook decorator', () => {
   describe('set handlers', () => {
     describe('on root model', () => {
       it('should run handlers when constructed', () => {
-        const hooked = new Hooked({foo: 'bar'});
+        const hooked = new Hooked({foo: 'bar', object: {name: 'foo'}});
         expect(beforeSet).to.be.calledOnce.and
-          .calledWith({instance: hooked, path: [], data: {foo: 'bar'}});
+          .calledWith({instance: hooked, path: [], data: {foo: 'bar', object: {name: 'foo'}}});
         expect(beforeObj).to.eql({});
         expect(afterSet).to.be.calledOnce.and
-          .calledWith({instance: hooked, path: [], data: {foo: 'bar'}});
-        expect(afterObj).to.eql({foo: 'bar'});
+          .calledWith({instance: hooked, path: [], data: {foo: 'bar', object: {name: 'foo'}}});
+        expect(afterObj).to.eql({foo: 'bar', object: {name: 'foo'}});
       });
 
       it('should run handlers when calling set()', () => {
