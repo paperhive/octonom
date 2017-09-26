@@ -41,6 +41,12 @@ describe('Hook decorator', () => {
 
     @Property.Model({model: NestedModel})
     public model: Partial<NestedModel>;
+
+    @Property.Object({schema: {name: new Schema.String()}})
+    public object: {name: string};
+
+    @Property.Array({elementSchema: new Schema.String()})
+    public array: string[];
   }
 
   it('should register handlers', () => {
@@ -58,128 +64,170 @@ describe('Hook decorator', () => {
   });
 
   describe('set handlers', () => {
-    it('should run handlers when constructed', () => {
-      const hooked = new Hooked({foo: 'bar'});
-      expect(beforeSet).to.be.calledOnce.and.calledWith({
-        instance: hooked,
-        path: [],
-        data: {foo: 'bar'},
+    describe('on root model', () => {
+      it('should run handlers when constructed', () => {
+        const hooked = new Hooked({foo: 'bar'});
+        expect(beforeSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: [],
+          data: {foo: 'bar'},
+        });
+        expect(beforeObj).to.eql({});
+        expect(afterSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: [],
+          data: {foo: 'bar'},
+        });
+        expect(afterObj).to.eql({foo: 'bar'});
       });
-      expect(beforeObj).to.eql({});
-      expect(afterSet).to.be.calledOnce.and.calledWith({
-        instance: hooked,
-        path: [],
-        data: {foo: 'bar'},
+
+      it('should run handlers when calling set()', () => {
+        const hooked = new Hooked({});
+        resetSpies();
+        hooked.set({foo: 'bar', baz: 'lol'});
+        expect(beforeSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: [],
+          data: {foo: 'bar', baz: 'lol'},
+        });
+        expect(beforeObj).to.eql({});
+        expect(afterSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: [],
+          data: {foo: 'bar', baz: 'lol'},
+        });
+        expect(afterObj).to.eql({foo: 'bar', baz: 'lol'});
       });
-      expect(afterObj).to.eql({foo: 'bar'});
+
+      it('should run handlers when setting a value', () => {
+        const hooked = new Hooked({});
+        resetSpies();
+        hooked.foo = 'bar';
+        expect(beforeSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: ['foo'],
+          data: 'bar',
+        });
+        expect(beforeObj).to.eql({});
+        expect(afterSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: ['foo'],
+          data: 'bar',
+        });
+        expect(afterObj).to.eql({foo: 'bar'});
+      });
+
+      it('should run handlers when deleting a value', () => {
+        const hooked = new Hooked({foo: 'bar'});
+        resetSpies();
+        delete hooked.foo;
+        expect(beforeSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: ['foo'],
+          data: undefined,
+        });
+        expect(beforeObj).to.eql({foo: 'bar'});
+        expect(afterSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: ['foo'],
+          data: undefined,
+        });
+        expect(afterObj).to.eql({});
+      });
     });
 
-    it('should run handlers when calling set()', () => {
-      const hooked = new Hooked({});
-      resetSpies();
-      hooked.set({foo: 'bar', baz: 'lol'});
-      expect(beforeSet).to.be.calledOnce.and.calledWith({
-        instance: hooked,
-        path: [],
-        data: {foo: 'bar', baz: 'lol'},
+    describe('nested model', () => {
+      it('should run handlers on root model when calling set() on nested model', () => {
+        const hooked = new Hooked({model: {name: 'foo'}});
+        resetSpies();
+        hooked.model.set({name: 'bar'});
+        expect(beforeSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: ['model'],
+          data: {name: 'bar'},
+        });
+        expect(beforeObj).to.eql({model: {name: 'foo'}});
+        expect(afterSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: ['model'],
+          data: {name: 'bar'},
+        });
+        expect(afterObj).to.eql({model: {name: 'bar'}});
       });
-      expect(beforeObj).to.eql({});
-      expect(afterSet).to.be.calledOnce.and.calledWith({
-        instance: hooked,
-        path: [],
-        data: {foo: 'bar', baz: 'lol'},
+
+      it('should run handlers on root model when setting a value on a nested model', () => {
+        const hooked = new Hooked({model: {name: 'foo'}});
+        resetSpies();
+        hooked.model.name = 'bar';
+        expect(beforeSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: ['model', 'name'],
+          data: 'bar',
+        });
+        expect(beforeObj).to.eql({model: {name: 'foo'}});
+        expect(afterSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: ['model', 'name'],
+          data: 'bar',
+        });
+        expect(afterObj).to.eql({model: {name: 'bar'}});
       });
-      expect(afterObj).to.eql({foo: 'bar', baz: 'lol'});
+
+      it('should run handlers on root model when deleting a value on a nested model ', () => {
+        const hooked = new Hooked({model: {name: 'foo'}});
+        resetSpies();
+        delete hooked.model.name;
+        expect(beforeSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: ['model', 'name'],
+          data: undefined,
+        });
+        expect(beforeObj).to.eql({model: {name: 'foo'}});
+        expect(afterSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: ['model', 'name'],
+          data: undefined,
+        });
+        expect(afterObj).to.eql({model: {}});
+      });
     });
 
-    it('should run handlers when setting a value', () => {
-      const hooked = new Hooked({});
-      resetSpies();
-      hooked.foo = 'bar';
-      expect(beforeSet).to.be.calledOnce.and.calledWith({
-        instance: hooked,
-        path: ['foo'],
-        data: 'bar',
+    describe('nested object', () => {
+      it('should run handlers on root model when setting a value on a nested object', () => {
+        const hooked = new Hooked({object: {name: 'foo'}});
+        resetSpies();
+        hooked.object.name = 'bar';
+        expect(beforeSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: ['object', 'name'],
+          data: 'bar',
+        });
+        expect(beforeObj).to.eql({object: {name: 'foo'}});
+        expect(afterSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: ['object', 'name'],
+          data: 'bar',
+        });
+        expect(afterObj).to.eql({object: {name: 'bar'}});
       });
-      expect(beforeObj).to.eql({});
-      expect(afterSet).to.be.calledOnce.and.calledWith({
-        instance: hooked,
-        path: ['foo'],
-        data: 'bar',
-      });
-      expect(afterObj).to.eql({foo: 'bar'});
-    });
 
-    it('should run handlers when deleting a value', () => {
-      const hooked = new Hooked({foo: 'bar'});
-      resetSpies();
-      delete hooked.foo;
-      expect(beforeSet).to.be.calledOnce.and.calledWith({
-        instance: hooked,
-        path: ['foo'],
-        data: undefined,
+      it('should run handlers on root model when deleting a value on a nested object', () => {
+        const hooked = new Hooked({object: {name: 'foo'}});
+        resetSpies();
+        delete hooked.object.name;
+        expect(beforeSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: ['object', 'name'],
+          data: undefined,
+        });
+        expect(beforeObj).to.eql({object: {name: 'foo'}});
+        expect(afterSet).to.be.calledOnce.and.calledWith({
+          instance: hooked,
+          path: ['object', 'name'],
+          data: undefined,
+        });
+        expect(afterObj).to.eql({object: {}});
       });
-      expect(beforeObj).to.eql({foo: 'bar'});
-      expect(afterSet).to.be.calledOnce.and.calledWith({
-        instance: hooked,
-        path: ['foo'],
-        data: undefined,
-      });
-      expect(afterObj).to.eql({});
-    });
-
-    it('should run handlers when calling set() on a nested model', () => {
-      const hooked = new Hooked({model: {name: 'foo'}});
-      resetSpies();
-      hooked.model.set({name: 'bar'});
-      expect(beforeSet).to.be.calledOnce.and.calledWith({
-        instance: hooked,
-        path: ['model'],
-        data: {name: 'bar'},
-      });
-      expect(beforeObj).to.eql({model: {name: 'foo'}});
-      expect(afterSet).to.be.calledOnce.and.calledWith({
-        instance: hooked,
-        path: ['model'],
-        data: {name: 'bar'},
-      });
-      expect(afterObj).to.eql({model: {name: 'bar'}});
-    });
-
-    it('should run handlers when setting a value on a nested model', () => {
-      const hooked = new Hooked({model: {name: 'foo'}});
-      resetSpies();
-      hooked.model.name = 'bar';
-      expect(beforeSet).to.be.calledOnce.and.calledWith({
-        instance: hooked,
-        path: ['model', 'name'],
-        data: 'bar',
-      });
-      expect(beforeObj).to.eql({model: {name: 'foo'}});
-      expect(afterSet).to.be.calledOnce.and.calledWith({
-        instance: hooked,
-        path: ['model', 'name'],
-        data: 'bar',
-      });
-      expect(afterObj).to.eql({model: {name: 'bar'}});
-    });
-
-    it('should run handlers when deleting a value on a nested model ', () => {
-      const hooked = new Hooked({model: {name: 'foo'}});
-      resetSpies();
-      delete hooked.model.name;
-      expect(beforeSet).to.be.calledOnce.and.calledWith({
-        instance: hooked,
-        path: ['model', 'name'],
-        data: undefined,
-      });
-      expect(beforeObj).to.eql({model: {name: 'foo'}});
-      expect(afterSet).to.be.calledOnce.and.calledWith({
-        instance: hooked,
-        path: ['model', 'name'],
-        data: undefined,
-      });
-      expect(afterObj).to.eql({model: {}});
     });
   });
 });
