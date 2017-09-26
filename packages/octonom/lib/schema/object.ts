@@ -1,7 +1,7 @@
 import { difference } from 'lodash';
 
 import { SanitizationError, ValidationError } from '../errors';
-import { ISetHookOptions } from '../hooks';
+import { IHooks } from '../hooks';
 import { Model } from '../model';
 import { ISanitizeOptions, ISchema, ISchemaMap, ISchemaOptions,
          IToObjectOptions, Path, PopulateReference, runValidator,
@@ -34,11 +34,6 @@ export async function populateObject(schemaMap: ISchemaMap, obj: object, populat
   }));
 
   return newObj;
-}
-
-export interface IHooks {
-  beforeSet?(options: ISetHookOptions<Model>);
-  afterSet?(options: ISetHookOptions<Model>);
 }
 
 export function proxifyObject(

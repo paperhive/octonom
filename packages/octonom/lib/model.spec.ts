@@ -67,17 +67,11 @@ describe('Hook decorator', () => {
     describe('on root model', () => {
       it('should run handlers when constructed', () => {
         const hooked = new Hooked({foo: 'bar'});
-        expect(beforeSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: [],
-          data: {foo: 'bar'},
-        });
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: [], data: {foo: 'bar'}});
         expect(beforeObj).to.eql({});
-        expect(afterSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: [],
-          data: {foo: 'bar'},
-        });
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: [], data: {foo: 'bar'}});
         expect(afterObj).to.eql({foo: 'bar'});
       });
 
@@ -85,17 +79,11 @@ describe('Hook decorator', () => {
         const hooked = new Hooked({});
         resetSpies();
         hooked.set({foo: 'bar', baz: 'lol'});
-        expect(beforeSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: [],
-          data: {foo: 'bar', baz: 'lol'},
-        });
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: [], data: {foo: 'bar', baz: 'lol'}});
         expect(beforeObj).to.eql({});
-        expect(afterSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: [],
-          data: {foo: 'bar', baz: 'lol'},
-        });
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: [], data: {foo: 'bar', baz: 'lol'}});
         expect(afterObj).to.eql({foo: 'bar', baz: 'lol'});
       });
 
@@ -103,17 +91,11 @@ describe('Hook decorator', () => {
         const hooked = new Hooked({});
         resetSpies();
         hooked.foo = 'bar';
-        expect(beforeSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: ['foo'],
-          data: 'bar',
-        });
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['foo'], data: 'bar'});
         expect(beforeObj).to.eql({});
-        expect(afterSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: ['foo'],
-          data: 'bar',
-        });
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['foo'], data: 'bar'});
         expect(afterObj).to.eql({foo: 'bar'});
       });
 
@@ -121,17 +103,11 @@ describe('Hook decorator', () => {
         const hooked = new Hooked({foo: 'bar'});
         resetSpies();
         delete hooked.foo;
-        expect(beforeSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: ['foo'],
-          data: undefined,
-        });
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['foo'], data: undefined});
         expect(beforeObj).to.eql({foo: 'bar'});
-        expect(afterSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: ['foo'],
-          data: undefined,
-        });
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['foo'], data: undefined});
         expect(afterObj).to.eql({});
       });
     });
@@ -141,17 +117,11 @@ describe('Hook decorator', () => {
         const hooked = new Hooked({model: {name: 'foo'}});
         resetSpies();
         hooked.model.set({name: 'bar'});
-        expect(beforeSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: ['model'],
-          data: {name: 'bar'},
-        });
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['model'], data: {name: 'bar'}});
         expect(beforeObj).to.eql({model: {name: 'foo'}});
-        expect(afterSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: ['model'],
-          data: {name: 'bar'},
-        });
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['model'], data: {name: 'bar'}});
         expect(afterObj).to.eql({model: {name: 'bar'}});
       });
 
@@ -159,17 +129,11 @@ describe('Hook decorator', () => {
         const hooked = new Hooked({model: {name: 'foo'}});
         resetSpies();
         hooked.model.name = 'bar';
-        expect(beforeSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: ['model', 'name'],
-          data: 'bar',
-        });
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['model', 'name'], data: 'bar'});
         expect(beforeObj).to.eql({model: {name: 'foo'}});
-        expect(afterSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: ['model', 'name'],
-          data: 'bar',
-        });
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['model', 'name'], data: 'bar'});
         expect(afterObj).to.eql({model: {name: 'bar'}});
       });
 
@@ -177,17 +141,11 @@ describe('Hook decorator', () => {
         const hooked = new Hooked({model: {name: 'foo'}});
         resetSpies();
         delete hooked.model.name;
-        expect(beforeSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: ['model', 'name'],
-          data: undefined,
-        });
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['model', 'name'], data: undefined});
         expect(beforeObj).to.eql({model: {name: 'foo'}});
-        expect(afterSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: ['model', 'name'],
-          data: undefined,
-        });
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['model', 'name'], data: undefined});
         expect(afterObj).to.eql({model: {}});
       });
     });
@@ -197,17 +155,11 @@ describe('Hook decorator', () => {
         const hooked = new Hooked({object: {name: 'foo'}});
         resetSpies();
         hooked.object.name = 'bar';
-        expect(beforeSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: ['object', 'name'],
-          data: 'bar',
-        });
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['object', 'name'], data: 'bar'});
         expect(beforeObj).to.eql({object: {name: 'foo'}});
-        expect(afterSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: ['object', 'name'],
-          data: 'bar',
-        });
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['object', 'name'], data: 'bar'});
         expect(afterObj).to.eql({object: {name: 'bar'}});
       });
 
@@ -215,18 +167,123 @@ describe('Hook decorator', () => {
         const hooked = new Hooked({object: {name: 'foo'}});
         resetSpies();
         delete hooked.object.name;
-        expect(beforeSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: ['object', 'name'],
-          data: undefined,
-        });
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['object', 'name'], data: undefined});
         expect(beforeObj).to.eql({object: {name: 'foo'}});
-        expect(afterSet).to.be.calledOnce.and.calledWith({
-          instance: hooked,
-          path: ['object', 'name'],
-          data: undefined,
-        });
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['object', 'name'], data: undefined});
         expect(afterObj).to.eql({object: {}});
+      });
+    });
+
+    describe('nested array', () => {
+      it('should run handlers on root model when setting a value on a nested array', () => {
+        const hooked = new Hooked({array: ['foo', 'bar']});
+        resetSpies();
+        hooked.array[1] = 'baz';
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array', 1], data: 'baz'});
+        expect(beforeObj).to.eql({array: ['foo', 'bar']});
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array', 1], data: 'baz'});
+        expect(afterObj).to.eql({array: ['foo', 'baz']});
+      });
+
+      it('should run handlers on root model when deleting a value on a nested array', () => {
+        const hooked = new Hooked({array: ['foo', 'bar']});
+        resetSpies();
+        delete hooked.array[1];
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array', 1], data: undefined});
+        expect(beforeObj).to.eql({array: ['foo', 'bar']});
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array', 1], data: undefined});
+        expect(afterObj).to.eql({array: ['foo', undefined]});
+      });
+
+      it('should run handlers on root model when copying within an array', () => {
+        const hooked = new Hooked({array: ['foo', 'bar', 'baz']});
+        resetSpies();
+        hooked.array.copyWithin(2, 0, 1);
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array'], data: ['foo', 'bar', 'foo']});
+        expect(beforeObj).to.eql({array: ['foo', 'bar', 'baz']});
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array'], data: ['foo', 'bar', 'foo']});
+        expect(afterObj).to.eql({array: ['foo', 'bar', 'foo']});
+      });
+
+      it('should run handlers on root model when filling a nested array', () => {
+        const hooked = new Hooked({array: ['foo', 'bar', 'boo']});
+        resetSpies();
+        hooked.array.fill('baz', 1, 3);
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array'], data: ['foo', 'baz', 'baz']});
+        expect(beforeObj).to.eql({array: ['foo', 'bar', 'boo']});
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array'], data: ['foo', 'baz', 'baz']});
+        expect(afterObj).to.eql({array: ['foo', 'baz', 'baz']});
+      });
+
+      it('should run handlers on root model when pushing values to a nested array', () => {
+        const hooked = new Hooked({array: ['foo', 'bar']});
+        resetSpies();
+        const element = hooked.array.pop();
+        expect(element).to.equal('bar');
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array'], data: ['foo']});
+        expect(beforeObj).to.eql({array: ['foo', 'bar']});
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array'], data: ['foo']});
+        expect(afterObj).to.eql({array: ['foo']});
+      });
+
+      it('should run handlers on root model when pushing values to a nested array', () => {
+        const hooked = new Hooked({array: ['foo', 'bar']});
+        resetSpies();
+        hooked.array.push('baz', 'boo');
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array'], data: ['foo', 'bar', 'baz', 'boo']});
+        expect(beforeObj).to.eql({array: ['foo', 'bar']});
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array'], data: ['foo', 'bar', 'baz', 'boo']});
+        expect(afterObj).to.eql({array: ['foo', 'bar', 'baz', 'boo']});
+      });
+
+      it('should run handlers on root model when reversing a nested array', () => {
+        const hooked = new Hooked({array: ['foo', 'bar']});
+        resetSpies();
+        hooked.array.reverse();
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array'], data: ['bar', 'foo']});
+        expect(beforeObj).to.eql({array: ['foo', 'bar']});
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array'], data: ['bar', 'foo']});
+        expect(afterObj).to.eql({array: ['bar', 'foo']});
+      });
+
+      it('should run handlers on root model when splicing a nested array', () => {
+        const hooked = new Hooked({array: ['foo', 'bar', 'baz']});
+        resetSpies();
+        hooked.array.splice(1, 1, 'boo', 'buu');
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array'], data: ['foo', 'boo', 'buu', 'baz']});
+        expect(beforeObj).to.eql({array: ['foo', 'bar', 'baz']});
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array'], data: ['foo', 'boo', 'buu', 'baz']});
+        expect(afterObj).to.eql({array: ['foo', 'boo', 'buu', 'baz']});
+      });
+
+      it('should run handlers on root model when unshifting a nested array', () => {
+        const hooked = new Hooked({array: ['foo', 'bar']});
+        resetSpies();
+        hooked.array.unshift('baz', 'boo');
+        expect(beforeSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array'], data: ['baz', 'boo', 'foo', 'bar']});
+        expect(beforeObj).to.eql({array: ['foo', 'bar']});
+        expect(afterSet).to.be.calledOnce.and
+          .calledWith({instance: hooked, path: ['array'], data: ['baz', 'boo', 'foo', 'bar']});
+        expect(afterObj).to.eql({array: ['baz', 'boo', 'foo', 'bar']});
       });
     });
   });
@@ -352,7 +409,7 @@ describe('Model', () => {
       it('should create a person with account instance', () => {
         const account = new PersonAccountModel({username: 'alice'});
         const person = new PersonModel({id: '42', name: 'Alice', account});
-        expect(person.account).to.be.an.instanceOf(PersonAccountModel).and.equal(account);
+        expect(person.account).to.be.an.instanceOf(PersonAccountModel).and.eql(account);
         expect(person.toJSON()).to.deep.equal({id: '42', name: 'Alice', account: {username: 'alice'}});
       });
     });
@@ -370,7 +427,7 @@ describe('Model', () => {
         const person = new PersonModel({name: 'Alice'});
         const account = new PersonAccountModel({username: 'alice'});
         person.set({account});
-        expect(person.account).to.be.an.instanceOf(PersonAccountModel).and.equal(account);
+        expect(person.account).to.be.an.instanceOf(PersonAccountModel).and.eql(account);
         const personObj = person.toObject();
         expect(personObj).to.deep.equal({id: personObj.id, name: 'Alice', account: {username: 'alice'}});
       });
@@ -389,7 +446,7 @@ describe('Model', () => {
         const person = new PersonModel({name: 'Alice'});
         const account = new PersonAccountModel({username: 'alice'});
         person.account = account;
-        expect(person.account).to.be.an.instanceOf(PersonAccountModel).and.equal(account);
+        expect(person.account).to.be.an.instanceOf(PersonAccountModel).and.eql(account);
         const personObj = person.toObject();
         expect(personObj).to.deep.equal({id: personObj.id, name: 'Alice', account: {username: 'alice'}});
       });
@@ -401,16 +458,15 @@ describe('Model', () => {
       it('should create a group with a raw array with mixed raw person object and person instance', () => {
         const person = new PersonModel({name: 'Bob'});
         const group = new GroupWithArrayModel({members: [{name: 'Alice'}, person]});
-        expect(group.members).to.be.an.instanceOf(ModelArray);
-        expect(group.members).to.have.lengthOf(2);
+        expect(group.members).to.be.an('array').and.have.lengthOf(2);
         expect(group.members[0]).to.be.an.instanceOf(PersonModel).and.have.property('name', 'Alice');
-        expect(group.members[1]).to.equal(person);
+        expect(group.members[1]).to.eql(person);
       });
 
       it('should create a group with a model array with person instances', () => {
         const members = new ModelArray<PersonModel>(PersonModel, [{name: 'Alice'}, {name: 'Bob'}]);
         const group = new GroupWithArrayModel({members});
-        expect(group.members).to.equal(members);
+        expect(group.members).to.eql(members);
       });
 
       it('should throw if a model array is provided with the wrong model', () => {
@@ -424,17 +480,16 @@ describe('Model', () => {
         const person = new PersonModel({name: 'Bob'});
         const group = new GroupWithArrayModel();
         group.set({members: [{name: 'Alice'}, person]});
-        expect(group.members).to.be.an.instanceOf(ModelArray);
-        expect(group.members).to.have.lengthOf(2);
+        expect(group.members).to.be.an('array').and.have.lengthOf(2);
         expect(group.members[0]).to.be.an.instanceOf(PersonModel).and.have.property('name', 'Alice');
-        expect(group.members[1]).to.equal(person);
+        expect(group.members[1]).to.eql(person);
       });
 
       it('should set a model array with person instances', () => {
         const members = new ModelArray<PersonModel>(PersonModel, [{name: 'Alice'}, {name: 'Bob'}]);
         const group = new GroupWithArrayModel();
         group.set({members});
-        expect(group.members).to.equal(members);
+        expect(group.members).to.eql(members);
       });
 
       it('should throw if a model array is provided with the wrong model', () => {
@@ -449,17 +504,16 @@ describe('Model', () => {
         const person = new PersonModel({name: 'Bob'});
         const group = new GroupWithArrayModel();
         group.members = [{name: 'Alice'}, person];
-        expect(group.members).to.be.an.instanceOf(ModelArray);
-        expect(group.members).to.have.lengthOf(2);
+        expect(group.members).to.be.an('array').and.to.have.lengthOf(2);
         expect(group.members[0]).to.be.an.instanceOf(PersonModel).and.have.property('name', 'Alice');
-        expect(group.members[1]).to.equal(person);
+        expect(group.members[1]).to.eql(person);
       });
 
       it('should set a model array with a person instance', () => {
         const members = new ModelArray<PersonModel>(PersonModel, [{name: 'Alice'}, {name: 'Bob'}]);
         const group = new GroupWithArrayModel();
         group.members = members;
-        expect(group.members).to.equal(members);
+        expect(group.members).to.eql(members);
       });
 
       it('should throw if a model array is provided with the wrong model', () => {

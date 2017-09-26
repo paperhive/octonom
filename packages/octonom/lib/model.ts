@@ -1,8 +1,7 @@
 import { HookHandlersMap, Hooks } from './hooks';
-import { ModelSchema } from './schema/model';
 import { populateObject, proxifyObject, setObjectSanitized, toObject, validateObject } from './schema/object';
 import { IPopulateMap, ISanitizeOptions, ISchema, ISchemaMap,
-         IToObjectOptions, Path,
+         IToObjectOptions,
        } from './schema/schema';
 
 export type Constructor<T = {}> = new (...args: any[]) => T;
@@ -10,7 +9,7 @@ export type Constructor<T = {}> = new (...args: any[]) => T;
 export interface IModelConstructor<T extends Model> {
   schema: ISchemaMap;
   hooks: Hooks<T>;
-  new (data: Partial<T>, sanitizeOptions: ISanitizeOptions): T;
+  new (data: Partial<T>, sanitizeOptions?: ISanitizeOptions): T;
 }
 
 export interface IModel {
@@ -65,7 +64,7 @@ export class Model {
     const proxy = proxifyObject(constructor.schema, this, [], this, newSanitizeOptions);
 
     // set initial data
-    proxy.set(data || {}, {defaults: true, replace: true, newSanitizeOptions});
+    proxy.set(data || {}, {...newSanitizeOptions, defaults: true, replace: true});
 
     // return proxy
     return proxy;

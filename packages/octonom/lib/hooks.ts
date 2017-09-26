@@ -12,6 +12,11 @@ export interface ISetHookOptions<TModel extends Model> {
   options?: ISanitizeOptions;
 }
 
+export interface IHooks {
+  beforeSet?(options: ISetHookOptions<Model>);
+  afterSet?(options: ISetHookOptions<Model>);
+}
+
 export interface ISaveHookOptions<TModel extends Model> {
   instance: TModel;
   collection: Collection<TModel>;

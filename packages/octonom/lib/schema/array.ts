@@ -1,10 +1,111 @@
 import { SanitizationError, ValidationError } from '../errors';
+import { IHooks } from '../hooks';
 import { Model } from '../model';
 import { ModelArray } from '../model-array';
 import { ModelSchema } from './model';
 import { ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions,
          Path, PopulateReference, runValidator,
        } from './schema';
+
+function hooksPrependPath(options: IHooks, path: Path) {
+  return {
+    ...options,
+    beforeSet: setOptions => options.beforeSet({...setOptions, path: path.concat(setOptions.path)}),
+    afterSet: setOptions => options.afterSet({...setOptions, path: path.concat(setOptions.path)}),
+  };
+}
+
+export function proxifyArray(
+  elementSchema: ISchema<any, Model>,
+  array: any[],
+  path: Path,
+  instance: Model,
+  hooks: IHooks,
+) {
+  if (!(array instanceof Array)) {
+    throw new Error('Expected an Array.');
+  }
+
+  // execute an operation on an array, resanitize if indices changed and trigger set hooks
+  function wrapArrayMutation(target, operation, args) {
+    // execute on clone
+    const clone = target.slice();
+    const result = clone[operation](...args);
+
+    const sanitizedArray = clone.map((element, index) => {
+      if (index < target.length && element === target[index]) {
+        return element;
+      }
+      return elementSchema.sanitize(element, path.concat([index]), instance, hooksPrependPath(hooks, [index]));
+    });
+
+    if (hooks.beforeSet) {
+      hooks.beforeSet({instance, path: [], data: sanitizedArray});
+    }
+
+    target.splice(0, target.length, ...sanitizedArray);
+
+    if (hooks.afterSet) {
+      hooks.afterSet({instance, path: [], data: sanitizedArray});
+    }
+
+    return result;
+  }
+
+  // execute a function and trigger set hooks if a single element changed
+  function wrapElementOperation(target, key, value, fun) {
+    if (hooks.beforeSet) {
+      hooks.beforeSet({instance, path: [key], data: value});
+    }
+
+    const result = fun();
+
+    if (hooks.afterSet) {
+      hooks.afterSet({instance, path: [key], data: value});
+    }
+
+    return result;
+  }
+
+  return new Proxy(array, {
+    get(target, key, receiver) {
+      switch (key) {
+        case 'copyWithin':
+        case 'fill':
+        case 'pop':
+        case 'push':
+        case 'reverse':
+        case 'splice':
+        case 'unshift':
+          return (...args) => wrapArrayMutation(target, key, args);
+      }
+
+      return target[key];
+    },
+    set(target, key, value, receiver) {
+      if (typeof key === 'number' || typeof key === 'string' && /^\d$/.test(key)) {
+        const numKey = typeof key === 'number' ? key : parseInt(key, 10);
+        wrapElementOperation(target, numKey, value, () => {
+          target[numKey] = elementSchema.sanitize(
+            value, path.concat([numKey]), instance, hooksPrependPath(hooks, [numKey]),
+          );
+        });
+      } else {
+        target[key] = value;
+      }
+      return true;
+    },
+    deleteProperty(target, key) {
+      if (typeof key === 'number' || typeof key === 'string' && /^\d$/.test(key)) {
+        const numKey = typeof key === 'number' ? key : parseInt(key, 10);
+        wrapElementOperation(target, numKey, undefined, () => delete target[numKey]);
+      } else {
+        delete target[key];
+      }
+      return true;
+    },
+  });
+}
 
 export interface IArrayOptions extends ISchemaOptions<any[]> {
   elementSchema: ISchema<any, Model>;
@@ -32,40 +133,26 @@ export class ArraySchema<TModel extends Model = Model> implements ISchema<any[],
   }
 
   public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
-    if (value === undefined) {
-      if (this.options.required) {
-        return this.options.elementSchema instanceof ModelSchema
-          ? new ModelArray(this.options.elementSchema.options.model)
-          : [];
+    let newValue = value;
+    if (newValue === undefined) {
+      if (!this.options.required) {
+        return undefined;
       }
-      return undefined;
+      newValue = [];
     }
 
-    if (!(value instanceof Array)) {
+    if (!(newValue instanceof Array)) {
       throw new SanitizationError('Value is not an array.', 'no-array', value, path, instance);
     }
 
-    if (this.options.elementSchema instanceof ModelSchema) {
-      // is the provided data already a ModelArray?
-      if (value instanceof ModelArray) {
-        // does the ModelArray's model match the definition?
-        if (value.model !== this.options.elementSchema.options.model) {
-          throw new SanitizationError('ModelArray model mismatch.', 'model-mismatch', value, path, instance);
-        }
+    // create sanitized array
+    const array = newValue.map((element, index) => {
+      const newPath = path.concat([index]);
+      return this.options.elementSchema.sanitize(element, newPath, instance, hooksPrependPath(options, [index]));
+    });
 
-        return value;
-      }
-
-      // create new ModelArray instance
-      return new ModelArray(this.options.elementSchema.options.model, value);
-    } else {
-      // return sanitized elements
-      return value.map((element, index) => {
-        const newPath = path.slice();
-        newPath.push(index);
-        return this.options.elementSchema.sanitize(element, newPath, instance, options);
-      });
-    }
+    // return proxied array
+    return proxifyArray(this.options.elementSchema, array, path, instance, options);
   }
 
   public toObject(value: any[], options?: IToObjectOptions) {
