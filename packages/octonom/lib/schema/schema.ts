@@ -38,19 +38,33 @@ export interface IParent<T = any> {
   path: string | number;
 }
 
-export interface ISchemaOptions<TSchema> {
+export interface ISchemaOptions<TMetaValue> {
   required?: boolean;
-  validate?(schema: TSchema): Promise<void>;
+  validate?(schema: TMetaValue): Promise<void>;
 }
 
-export interface IMetaValueConstructor<TSchema extends MetaValue<any> = MetaValue<any>> {
-  new (value: any, schemaOptions: ISchemaOptions<TSchema>, sanitizeOptions: ISanitizeOptions): TSchema;
+export interface IMetaValueConstructor<T = any, TMetaValue extends MetaValue<any> = MetaValue<any>> {
+  new (value: T, schemaOptions: ISchemaOptions<TMetaValue>, sanitizeOptions: ISanitizeOptions): TMetaValue;
+  sanitize(value: any, schemaOptions: ISchemaOptions<TMetaValue>, sanitizeOptions: ISanitizeOptions): T;
 }
 
 export type MetaValueFactory<TMetaValue extends MetaValue<any> = MetaValue<any>> =
   (value: any, sanitizeOptions: ISanitizeOptions) => TMetaValue;
 
 export abstract class MetaValue<T> {
+  public static createSchemaFactory<
+    T,
+    TMetaValue extends MetaValue<any>,
+    TOptions extends ISchemaOptions<TMetaValue>
+  >(metaValueClass: IMetaValueConstructor<T, TMetaValue>, defaultOptions?: TOptions) {
+    return (schemaOptions: TOptions = defaultOptions) => {
+      return (value: any, sanitizeOptions: ISanitizeOptions = {}) => {
+        const sanitizedValue = metaValueClass.sanitize(value, schemaOptions, sanitizeOptions);
+        return new metaValueClass(sanitizedValue, schemaOptions, sanitizeOptions);
+      };
+    };
+  }
+
   public parent: IParent;
 
   constructor(
