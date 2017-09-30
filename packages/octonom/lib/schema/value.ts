@@ -70,7 +70,7 @@ export abstract class OctoValue<T> {
   }
 
   /** Create a plain object representation of the value. */
-  public toObject(options: IToObjectOptions): T {
+  public toObject(options: IToObjectOptions = {}): T {
     return this.value;
   }
 
