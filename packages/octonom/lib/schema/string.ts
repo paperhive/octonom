@@ -1,8 +1,7 @@
 import { SanitizationError, ValidationError } from '../errors';
-import { Model } from '../model';
-import { ISanitizeOptions, ISchema, ISchemaOptions, Path, runValidator } from './schema';
+import { ISanitizeOptions, ISchemaOptions, MetaValue } from './schema';
 
-export interface IStringOptions extends ISchemaOptions<string> {
+export interface IStringOptions extends ISchemaOptions<MetaString> {
   default?: string | (() => string);
   enum?: string[];
   min?: number;
@@ -10,14 +9,12 @@ export interface IStringOptions extends ISchemaOptions<string> {
   regex?: RegExp;
 }
 
-export class StringSchema<TModel extends Model = Model> implements ISchema<string, TModel> {
-  constructor(public options: IStringOptions = {}) {}
-
-  public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
-    if (options.defaults && value === undefined) {
-      return typeof this.options.default === 'function'
-        ? this.options.default()
-        : this.options.default;
+export class MetaString extends MetaValue<string> {
+  public static sanitize(value: any, schemaOptions: IStringOptions = {}, sanitizeOptions: ISanitizeOptions = {}) {
+    if (sanitizeOptions.defaults && value === undefined) {
+      return typeof schemaOptions.default === 'function'
+        ? schemaOptions.default()
+        : schemaOptions.default;
     }
 
     if (value === undefined) {
@@ -25,51 +22,60 @@ export class StringSchema<TModel extends Model = Model> implements ISchema<strin
     }
 
     if (typeof value !== 'string') {
-      throw new SanitizationError('Value is not a string.', 'no-string', value, path, instance);
+      throw new SanitizationError('Value is not a string.', 'no-string', sanitizeOptions.parent);
     }
 
     return value;
   }
 
-  public async validate(value: string, path: Path, instance: TModel) {
-    if (value === undefined) {
-      if (this.options.required) {
-        throw new ValidationError('Required value is undefined.', 'required', value, path, instance);
+  public static getFactory(schemaOptions: IStringOptions = {}) {
+    return (value: any, sanitizeOptions: ISanitizeOptions = {}) => {
+      const sanitizedValue = MetaString.sanitize(value, schemaOptions, sanitizeOptions);
+      return new MetaString(sanitizedValue, schemaOptions, sanitizeOptions);
+    };
+  }
+
+  private constructor(value: string, public schemaOptions: IStringOptions, sanitizeOptions: ISanitizeOptions) {
+    super(
+      value,
+      schemaOptions,
+      sanitizeOptions,
+    );
+  }
+
+  public async validate() {
+    if (this.value === undefined) {
+      if (this.schemaOptions.required) {
+        throw new ValidationError('Required value is undefined.', 'required', this);
       }
       return;
     }
 
-    if (typeof value !== 'string') {
-      throw new ValidationError('Value is not a string.', 'no-string', value, path, instance);
-    }
-
-    if (this.options.enum && this.options.enum.indexOf(value) === -1) {
+    if (this.schemaOptions.enum && this.schemaOptions.enum.indexOf(this.value) === -1) {
       throw new ValidationError(
-        `String not in enum: ${this.options.enum.join(', ')}.`,
-        'string-enum', value, path, instance,
+        `String not in enum: ${this.schemaOptions.enum.join(', ')}.`,
+        'string-enum', this,
       );
     }
 
-    if (this.options.min && value.length < this.options.min) {
+    if (this.schemaOptions.min && this.value.length < this.schemaOptions.min) {
       throw new ValidationError(
-        `String must not have less than ${this.options.min} characters.`,
-        'string-min', value, path, instance,
+        `String must not have less than ${this.schemaOptions.min} characters.`,
+        'string-min', this,
       );
     }
 
-    if (this.options.max && value.length > this.options.max) {
+    if (this.schemaOptions.max && this.value.length > this.schemaOptions.max) {
       throw new ValidationError(
-        `String must not have more than ${this.options.max} characters.`,
-        'string-max', value, path, instance,
+        `String must not have more than ${this.schemaOptions.max} characters.`,
+        'string-max', this,
       );
     }
 
-    if (this.options.regex && !this.options.regex.test(value)) {
-      throw new ValidationError(`String does not match regex.`, 'string-regex', value, path, instance);
+    if (this.schemaOptions.regex && !this.schemaOptions.regex.test(this.value)) {
+      throw new ValidationError(`String does not match regex.`, 'string-regex', this);
     }
 
-    if (this.options.validate) {
-      await runValidator(this.options.validate, value, path, instance);
-    }
+    await super.validate();
   }
 }
