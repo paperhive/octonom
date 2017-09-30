@@ -1,40 +1,42 @@
 import { cloneDeep } from 'lodash';
 
 import { ValidationError } from '../errors';
-import { Model } from '../model';
-import { ISanitizeOptions, ISchema, ISchemaOptions, Path, runValidator } from './schema';
+import { ISanitizeOptions, ISchemaOptions, OctoFactory, OctoValue } from './value';
 
-export interface IAnyOptions extends ISchemaOptions<any> {
+export interface IAnyOptions extends ISchemaOptions<OctoAny> {
   default?: any | (() => any);
 }
 
-export class AnySchema<TModel extends Model = Model> implements ISchema<any, TModel> {
-  constructor(public options: IAnyOptions = {}) {}
-
-  public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
-    if (options.defaults && value === undefined) {
-      return typeof this.options.default === 'function'
-        ? this.options.default()
-        : this.options.default;
+export class OctoAny extends OctoValue<any> {
+  public static sanitize(value: any, schemaOptions: IAnyOptions = {}, sanitizeOptions: ISanitizeOptions = {}) {
+    if (sanitizeOptions.defaults && value === undefined) {
+      return typeof schemaOptions.default === 'function'
+        ? schemaOptions.default()
+        : schemaOptions.default;
     }
 
     return value;
   }
 
-  public toObject(value: any) {
-    return cloneDeep(value);
+  constructor(value: any, public schemaOptions: IAnyOptions, sanitizeOptions: ISanitizeOptions) {
+    super(value, schemaOptions, sanitizeOptions);
   }
 
-  public async validate(value: any, path: Path, instance: TModel) {
-    if (value === undefined) {
-      if (this.options.required) {
-        throw new ValidationError('Required value is undefined.', 'required', value, path, instance);
+  public toObject() {
+    return cloneDeep(this.value);
+  }
+
+  public async validate() {
+    if (this.value === undefined) {
+      if (this.schemaOptions.required) {
+        throw new ValidationError('Required value is undefined.', 'required', this);
       }
       return;
     }
 
-    if (this.options.validate) {
-      await runValidator(this.options.validate, value, path, instance);
-    }
+    await super.validate();
   }
 }
+
+/* tslint:disable-next-line:variable-name */
+export const OctoAnyFactory = new OctoFactory<OctoAny, IAnyOptions>(OctoAny, {});

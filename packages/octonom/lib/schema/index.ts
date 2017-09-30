@@ -1,5 +1,5 @@
 import { IModel, Model } from '../model';
-import { AnySchema, IAnyOptions } from './any';
+import { IAnyOptions, OctoAnyFactory } from './any';
 import { ArraySchema, IArrayOptions } from './array';
 import { BooleanSchema, IBooleanOptions } from './boolean';
 import { DateSchema, IDateOptions } from './date';
@@ -16,8 +16,8 @@ export function getSchemaDecorator(createSchema: () => OctoValueFactory): Proper
 
 /* tslint:disable:variable-name */
 export const Property = {
+  Any: (options: IAnyOptions = {}) => getSchemaDecorator(() => OctoAnyFactory.create(options)),
   /*
-  Any: (options: IAnyOptions = {}) => getSchemaDecorator(() => new AnySchema(options)),
   Array: (options: IArrayOptions) => getSchemaDecorator(() => new ArraySchema(options)),
   Boolean: (options: IBooleanOptions = {}) => getSchemaDecorator(() => new BooleanSchema(options)),
   Date: (options: IDateOptions = {}) => getSchemaDecorator(() => new DateSchema(options)),
@@ -30,8 +30,8 @@ export const Property = {
 };
 
 export const Schema = {
+  Any: OctoAnyFactory.create,
   /*
-  Any: AnySchema,
   Array: ArraySchema,
   Boolean: BooleanSchema,
   Date: DateSchema,
