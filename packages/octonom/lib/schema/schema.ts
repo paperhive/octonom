@@ -28,8 +28,13 @@ export interface IToObjectOptions {
   unpopulate?: boolean;
 }
 
+export interface IParentMetaValue<T = any> {
+  beforeChange(path: Path, metaValue: MetaValue<T>);
+  afterChange(path: Path, metaValue: MetaValue<T>);
+}
+
 export interface IParent<T = any> {
-  metaValue: MetaValue<any>;
+  metaValue: MetaValue<T> & IParentMetaValue<T>;
   path: string | number;
 }
 
