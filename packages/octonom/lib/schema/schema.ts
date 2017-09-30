@@ -1,6 +1,8 @@
 import { ValidationError } from '../errors';
-import { ISetHookOptions } from '../hooks';
+import { IHooks } from '../hooks';
 import { Model } from '../model';
+
+export type Path = Array<string | number>;
 
 export type PopulateReference = IPopulateMap | true;
 
@@ -8,15 +10,17 @@ export interface IPopulateMap {
   [k: string]: PopulateReference;
 }
 
+export interface IPopulateOptions {
+  populateReference: PopulateReference;
+}
+
 export interface ISanitizeOptions {
-  /** Set undefined values to defaults (if configured). Defaults to false. */
+  /** Set undefined values to defaults (if configured). Default is false. */
   defaults?: boolean;
-  /** Unset all properties that are not provided in the data. Defaults to false. */
+  /** Unset all properties that are not provided in the data. Default is false. */
   replace?: boolean;
-  /** Called before setting data */
-  beforeSet?(options: ISetHookOptions<Model>);
-  /** Called after setting data */
-  afterSet?(options: ISetHookOptions<Model>);
+  /** Parent schema node */
+  parent?: IParent;
 }
 
 export interface IToObjectOptions {
@@ -24,45 +28,66 @@ export interface IToObjectOptions {
   unpopulate?: boolean;
 }
 
-export type Path = Array<string | number>;
-export type Validator<T, TModel> = (value: T, path: Path, instance: TModel) => Promise<void>;
+export interface IParent<T = any> {
+  metaValue: MetaValue<any>;
+  path: string | number;
+}
 
-export interface ISchema<T, TModel extends Model> {
+export interface ISchemaOptions<TSchema> {
+  required?: boolean;
+  validate?(schema: TSchema): Promise<void>;
+}
+
+export interface IMetaValueConstructor<TSchema extends MetaValue<any> = MetaValue<any>> {
+  new (value: any, schemaOptions: ISchemaOptions<TSchema>, sanitizeOptions: ISanitizeOptions): TSchema;
+}
+
+export type MetaValueFactory<TMetaValue extends MetaValue<any> = MetaValue<any>> =
+  (value: any, sanitizeOptions: ISanitizeOptions) => TMetaValue;
+
+export abstract class MetaValue<T> {
+  public parent: IParent;
+
+  constructor(
+    public value: T,
+    public schemaOptions: ISchemaOptions<MetaValue<T>>,
+    sanitizeOptions: ISanitizeOptions,
+  ) {
+    this.parent = sanitizeOptions.parent;
+  }
+
   /** Populate a value (possibly nested) */
-  populate?: (value: T, populateReference: PopulateReference) => Promise<T>;
-  /** Sanitize a value (e.g., used when setting properties on an instance). */
-  sanitize: (value: any, path: Path, instance: TModel, options?: ISanitizeOptions) => T;
+  public async populate(options: IPopulateOptions): Promise<T> {
+    throw new Error(`${this.constructor.name} is not populateable.`);
+  }
+
   /** Create a plain object representation of the value. */
-  toObject?: (value: T, options?: IToObjectOptions) => any;
-  /** Validate a value (e.g., used before saving an instance in a collection). */
-  validate: Validator<T, TModel>;
+  public toObject(options: IToObjectOptions): T {
+    return this.value;
+  }
+
+  /** Validate a value (e.g., used before saving an instance in a collection).
+   *  The default implementation calls a custom validator if there is one provided in the
+   *  schema options. Make sure to call this method in derived MetaValue classes.
+   */
+  public async validate(): Promise<void> {
+    if (!this.schemaOptions.validate) {
+      return;
+    }
+
+    try {
+      await this.schemaOptions.validate(this);
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        error.reason = error.reason || 'custom';
+        error.metaValue = this;
+        throw error;
+      }
+      throw error;
+    }
+  }
 }
 
 export interface ISchemaMap {
-  [field: string]: ISchema<any, Model>;
-}
-
-export interface ISchemaOptions<T> {
-  required?: boolean;
-  validate?: (value: T, path: Path, instance: Model) => Promise<void>;
-}
-
-export async function runValidator<T, TModel extends Model>(
-  validate: Validator<T, TModel>,
-  value: T,
-  path: Path,
-  instance: TModel,
-) {
-  try {
-    await validate(value, path, instance);
-  } catch (error) {
-    if (error instanceof ValidationError) {
-      error.reason = error.reason || 'custom';
-      error.value = error.value || value;
-      error.path = error.path || path;
-      error.instance = error.instance || instance;
-      throw error;
-    }
-    throw error;
-  }
+  [field: string]: MetaValueFactory;
 }
