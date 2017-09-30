@@ -1,6 +1,4 @@
 import { ValidationError } from '../errors';
-import { IHooks } from '../hooks';
-import { Model } from '../model';
 
 export type Path = Array<string | number>;
 
