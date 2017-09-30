@@ -7,15 +7,8 @@ import { IModelOptions, ModelSchema } from './model';
 import { INumberOptions, NumberSchema } from './number';
 import { IObjectOptions, ObjectSchema } from './object';
 import { IReferenceOptions, ReferenceSchema } from './reference';
-import { IStringOptions, OctoString } from './string';
-import { ISanitizeOptions, OctoValue } from './value';
-
-export type OctoValueFactory<TOctoValue extends OctoValue<any> = OctoValue<any>> =
-(value: any, sanitizeOptions: ISanitizeOptions) => TOctoValue;
-
-export interface ISchemaMap {
-[field: string]: OctoValueFactory;
-}
+import { IStringOptions, OctoStringFactory } from './string';
+import { ISanitizeOptions, OctoValue, OctoValueFactory } from './value';
 
 export function getSchemaDecorator(createSchema: () => OctoValueFactory): PropertyDecorator {
   return (target: IModel, key: string) => target.constructor.setSchema(key, createSchema());
@@ -33,7 +26,7 @@ export const Property = {
   Object: (options: IObjectOptions) => getSchemaDecorator(() => new ObjectSchema(options)),
   Reference: (options: IReferenceOptions) => getSchemaDecorator(() => new ReferenceSchema(options)),
   */
-  String: (options: IStringOptions = {}) => getSchemaDecorator(() => OctoString.createSchema(options)),
+  String: (options: IStringOptions = {}) => getSchemaDecorator(() => OctoStringFactory.create(options)),
 };
 
 export const Schema = {
@@ -47,6 +40,6 @@ export const Schema = {
   Object: ObjectSchema,
   Reference: ReferenceSchema,
   */
-  String: OctoString.createSchema,
+  String: OctoStringFactory.create,
 };
 /* tslint:enable:variable-name */

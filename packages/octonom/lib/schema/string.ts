@@ -1,5 +1,5 @@
 import { SanitizationError, ValidationError } from '../errors';
-import { ISanitizeOptions, ISchemaOptions, OctoValue } from './value';
+import { ISanitizeOptions, ISchemaOptions, OctoFactory, OctoValue } from './value';
 
 export interface IStringOptions extends ISchemaOptions<OctoString> {
   default?: string | (() => string);
@@ -10,8 +10,6 @@ export interface IStringOptions extends ISchemaOptions<OctoString> {
 }
 
 export class OctoString extends OctoValue<string> {
-  public static createSchema = OctoString.createSchemaFactory<string, OctoString, IStringOptions>(OctoString, {});
-
   public static sanitize(value: any, schemaOptions: IStringOptions = {}, sanitizeOptions: ISanitizeOptions = {}) {
     if (sanitizeOptions.defaults && value === undefined) {
       return typeof schemaOptions.default === 'function'
@@ -74,3 +72,6 @@ export class OctoString extends OctoValue<string> {
     await super.validate();
   }
 }
+
+/* tslint:disable-next-line:variable-name */
+export const OctoStringFactory = new OctoFactory<OctoString, IStringOptions>(OctoString, {});

@@ -1,5 +1,5 @@
 import { SanitizationError, ValidationError } from '../errors';
-import { OctoString } from './string';
+import { OctoString, OctoStringFactory } from './string';
 
 describe('MetaString', () => {
   describe('sanitize()', () => {
@@ -29,37 +29,37 @@ describe('MetaString', () => {
 
   describe('validate()', () => {
     it('should throw a ValidationError if required but undefined', async () => {
-      const schema = OctoString.createSchema({required: true});
+      const schema = OctoStringFactory.create({required: true});
       await expect(schema(undefined).validate())
         .to.be.rejectedWith(ValidationError, 'Required value is undefined.');
     });
 
     it('should throw if value is not in enum', async () => {
-      const schema = OctoString.createSchema({enum: ['foo', 'bar']});
+      const schema = OctoStringFactory.create({enum: ['foo', 'bar']});
       await expect(schema('baz').validate())
         .to.be.rejectedWith(ValidationError, 'String not in enum: foo, bar.');
     });
 
     it('should throw if value is shorter than min', async () => {
-      const schema = OctoString.createSchema({min: 4});
+      const schema = OctoStringFactory.create({min: 4});
       await expect(schema('foo').validate())
         .to.be.rejectedWith(ValidationError, 'String must not have less than 4 characters');
     });
 
     it('should throw if value is longer than max', async () => {
-      const schema = OctoString.createSchema({max: 5});
+      const schema = OctoStringFactory.create({max: 5});
       await expect(schema('foobar').validate())
         .to.be.rejectedWith(ValidationError, 'String must not have more than 5 characters');
     });
 
     it('should throw if value does not match regex', async () => {
-      const schema = OctoString.createSchema({regex: /foo/});
+      const schema = OctoStringFactory.create({regex: /foo/});
       await expect(schema('bar').validate())
         .to.be.rejectedWith(ValidationError, 'String does not match regex.');
     });
 
     it('should run custom validator', async () => {
-      const schema = OctoString.createSchema({
+      const schema = OctoStringFactory.create({
         validate: async metaValue => {
           if (metaValue.value === 'foo') {
             throw new ValidationError('foo is not allowed.');
@@ -72,12 +72,12 @@ describe('MetaString', () => {
     });
 
     it('should validate undefined', async () => {
-      const schema = OctoString.createSchema();
+      const schema = OctoStringFactory.create();
       await schema(undefined).validate();
     });
 
     it('should validate a string', async () => {
-      const schema = OctoString.createSchema();
+      const schema = OctoStringFactory.create();
       await schema('foo').validate();
     });
   });

@@ -54,19 +54,6 @@ export interface IOctoValueConstructor<T = any, TOctoValue extends OctoValue<any
  *  (property 'parent') which is useful for hooks and error messages.
  */
 export abstract class OctoValue<T> {
-  public static createSchemaFactory<
-    T,
-    TOctoValue extends OctoValue<any>,
-    TOptions extends ISchemaOptions<TOctoValue>
-  >(octoValueClass: IOctoValueConstructor<T, TOctoValue>, defaultOptions?: TOptions) {
-    return (schemaOptions: TOptions = defaultOptions) => {
-      return (value: any, sanitizeOptions: ISanitizeOptions = {}) => {
-        const sanitizedValue = octoValueClass.sanitize(value, schemaOptions, sanitizeOptions);
-        return new octoValueClass(sanitizedValue, schemaOptions, sanitizeOptions);
-      };
-    };
-  }
-
   public parent: IParent;
 
   constructor(
@@ -107,4 +94,28 @@ export abstract class OctoValue<T> {
       throw error;
     }
   }
+}
+
+export class OctoFactory<
+  TOctoValue extends OctoValue<any>,
+  TOptions extends ISchemaOptions<TOctoValue>
+> {
+  constructor(
+    private octoValueClass: IOctoValueConstructor,
+    private defaultOptions?: TOptions,
+  ) {}
+
+  public create(schemaOptions: TOptions = this.defaultOptions) {
+    return (value: any, sanitizeOptions: ISanitizeOptions = {}) => {
+      const sanitizedValue = this.octoValueClass.sanitize(value, schemaOptions, sanitizeOptions);
+      return new this.octoValueClass(sanitizedValue, schemaOptions, sanitizeOptions);
+    };
+  }
+}
+
+export type OctoValueFactory<TOctoValue extends OctoValue<any> = OctoValue<any>> =
+  (value: any, sanitizeOptions: ISanitizeOptions) => TOctoValue;
+
+export interface ISchemaMap {
+  [field: string]: OctoValueFactory;
 }
