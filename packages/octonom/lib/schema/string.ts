@@ -1,7 +1,7 @@
 import { SanitizationError, ValidationError } from '../errors';
-import { ISanitizeOptions, ISchemaOptions, MetaValue } from './schema';
+import { ISanitizeOptions, ISchemaOptions, OctoValue } from './value';
 
-export interface IStringOptions extends ISchemaOptions<MetaString> {
+export interface IStringOptions extends ISchemaOptions<OctoString> {
   default?: string | (() => string);
   enum?: string[];
   min?: number;
@@ -9,8 +9,8 @@ export interface IStringOptions extends ISchemaOptions<MetaString> {
   regex?: RegExp;
 }
 
-export class MetaString extends MetaValue<string> {
-  public static createSchema = MetaString.createSchemaFactory<string, MetaString, IStringOptions>(MetaString, {});
+export class OctoString extends OctoValue<string> {
+  public static createSchema = OctoString.createSchemaFactory<string, OctoString, IStringOptions>(OctoString, {});
 
   public static sanitize(value: any, schemaOptions: IStringOptions = {}, sanitizeOptions: ISanitizeOptions = {}) {
     if (sanitizeOptions.defaults && value === undefined) {

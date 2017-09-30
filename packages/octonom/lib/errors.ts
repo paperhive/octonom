@@ -1,5 +1,5 @@
 import { Model } from './model';
-import { Path } from './schema/schema';
+import { IParent, OctoValue } from './schema/value';
 
 export class ExtendableError extends Error {
   constructor(message: string, prototype: object) {
@@ -17,25 +17,13 @@ export class PopulationError extends ExtendableError {
 }
 
 export class SanitizationError extends ExtendableError {
-  constructor(
-    message: string,
-    public reason?: string,
-    public value?: any,
-    public path?: Path,
-    public instance?: Model,
-  ) {
+  constructor(message: string, public reason?: string, public parent?: IParent) {
     super(message, SanitizationError.prototype);
   }
 }
 
 export class ValidationError extends ExtendableError {
-  constructor(
-    message: string,
-    public reason?: string,
-    public value?: any,
-    public path?: Path,
-    public instance?: Model,
-  ) {
+  constructor(message: string, public reason?: string, public value?: OctoValue<any>) {
     super(message, ValidationError.prototype);
   }
 }

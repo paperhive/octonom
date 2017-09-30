@@ -1,6 +1,9 @@
 import { ValidationError } from '../errors';
 
-export type Path = Array<string | number>;
+export interface ISchemaOptions<TOctoValue> {
+  required?: boolean;
+  validate?(schema: TOctoValue): Promise<void>;
+}
 
 export type PopulateReference = IPopulateMap | true;
 
@@ -26,39 +29,40 @@ export interface IToObjectOptions {
   unpopulate?: boolean;
 }
 
-export interface IParentMetaValue<T = any> {
-  beforeChange(path: Path, metaValue: MetaValue<T>);
-  afterChange(path: Path, metaValue: MetaValue<T>);
+export type Path = Array<string | number>;
+
+export interface IParentValue<T = any> {
+  beforeChange(path: Path, octoValue: OctoValue<T>);
+  afterChange(path: Path, octoValue: OctoValue<T>);
 }
 
 export interface IParent<T = any> {
-  metaValue: MetaValue<T> & IParentMetaValue<T>;
+  octoValue: OctoValue<T> & IParentValue<T>;
   path: string | number;
 }
 
-export interface ISchemaOptions<TMetaValue> {
-  required?: boolean;
-  validate?(schema: TMetaValue): Promise<void>;
+export interface IOctoValueConstructor<T = any, TOctoValue extends OctoValue<any> = OctoValue<any>> {
+  new (value: T, schemaOptions: ISchemaOptions<TOctoValue>, sanitizeOptions: ISanitizeOptions): TOctoValue;
+  sanitize(value: any, schemaOptions: ISchemaOptions<TOctoValue>, sanitizeOptions: ISanitizeOptions): T;
 }
 
-export interface IMetaValueConstructor<T = any, TMetaValue extends MetaValue<any> = MetaValue<any>> {
-  new (value: T, schemaOptions: ISchemaOptions<TMetaValue>, sanitizeOptions: ISanitizeOptions): TMetaValue;
-  sanitize(value: any, schemaOptions: ISchemaOptions<TMetaValue>, sanitizeOptions: ISanitizeOptions): T;
-}
-
-export type MetaValueFactory<TMetaValue extends MetaValue<any> = MetaValue<any>> =
-  (value: any, sanitizeOptions: ISanitizeOptions) => TMetaValue;
-
-export abstract class MetaValue<T> {
+/** An OctoValue wraps a value of a specific type.
+ *  OctoValue is abstract, see OctoArray, OctoObject, OctoString, ... for
+ *  non-abstract classes that are derived from OctoValue. The benefit
+ *  of wrapping the value (property 'value') is that the value has
+ *  additional metadata. For example, an OctoValue knows if it has a parent
+ *  (property 'parent') which is useful for hooks and error messages.
+ */
+export abstract class OctoValue<T> {
   public static createSchemaFactory<
     T,
-    TMetaValue extends MetaValue<any>,
-    TOptions extends ISchemaOptions<TMetaValue>
-  >(metaValueClass: IMetaValueConstructor<T, TMetaValue>, defaultOptions?: TOptions) {
+    TOctoValue extends OctoValue<any>,
+    TOptions extends ISchemaOptions<TOctoValue>
+  >(octoValueClass: IOctoValueConstructor<T, TOctoValue>, defaultOptions?: TOptions) {
     return (schemaOptions: TOptions = defaultOptions) => {
       return (value: any, sanitizeOptions: ISanitizeOptions = {}) => {
-        const sanitizedValue = metaValueClass.sanitize(value, schemaOptions, sanitizeOptions);
-        return new metaValueClass(sanitizedValue, schemaOptions, sanitizeOptions);
+        const sanitizedValue = octoValueClass.sanitize(value, schemaOptions, sanitizeOptions);
+        return new octoValueClass(sanitizedValue, schemaOptions, sanitizeOptions);
       };
     };
   }
@@ -67,7 +71,7 @@ export abstract class MetaValue<T> {
 
   constructor(
     public value: T,
-    public schemaOptions: ISchemaOptions<MetaValue<T>>,
+    public schemaOptions: ISchemaOptions<OctoValue<T>>,
     sanitizeOptions: ISanitizeOptions,
   ) {
     this.parent = sanitizeOptions.parent;
@@ -85,7 +89,7 @@ export abstract class MetaValue<T> {
 
   /** Validate a value (e.g., used before saving an instance in a collection).
    *  The default implementation calls a custom validator if there is one provided in the
-   *  schema options. Make sure to call this method in derived MetaValue classes.
+   *  schema options. Make sure to call this method in derived OctoValue classes.
    */
   public async validate(): Promise<void> {
     if (!this.schemaOptions.validate) {
@@ -97,14 +101,10 @@ export abstract class MetaValue<T> {
     } catch (error) {
       if (error instanceof ValidationError) {
         error.reason = error.reason || 'custom';
-        error.metaValue = this;
+        error.value = this;
         throw error;
       }
       throw error;
     }
   }
-}
-
-export interface ISchemaMap {
-  [field: string]: MetaValueFactory;
 }
