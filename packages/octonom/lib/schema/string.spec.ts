@@ -29,56 +29,56 @@ describe('MetaString', () => {
 
   describe('validate()', () => {
     it('should throw a ValidationError if required but undefined', async () => {
-      const factory = MetaString.getFactory({required: true});
-      await expect(factory(undefined, {}).validate())
+      const schema = MetaString.createSchema({required: true});
+      await expect(schema(undefined).validate())
         .to.be.rejectedWith(ValidationError, 'Required value is undefined.');
     });
 
     it('should throw if value is not in enum', async () => {
-      const factory = MetaString.getFactory({enum: ['foo', 'bar']});
-      await expect(factory('baz', {}).validate())
+      const schema = MetaString.createSchema({enum: ['foo', 'bar']});
+      await expect(schema('baz').validate())
         .to.be.rejectedWith(ValidationError, 'String not in enum: foo, bar.');
     });
 
     it('should throw if value is shorter than min', async () => {
-      const factory = MetaString.getFactory({min: 4});
-      await expect(factory('foo', {}).validate())
+      const schema = MetaString.createSchema({min: 4});
+      await expect(schema('foo').validate())
         .to.be.rejectedWith(ValidationError, 'String must not have less than 4 characters');
     });
 
     it('should throw if value is longer than max', async () => {
-      const factory = MetaString.getFactory({max: 5});
-      await expect(factory('foobar', {}).validate())
+      const schema = MetaString.createSchema({max: 5});
+      await expect(schema('foobar').validate())
         .to.be.rejectedWith(ValidationError, 'String must not have more than 5 characters');
     });
 
     it('should throw if value does not match regex', async () => {
-      const factory = MetaString.getFactory({regex: /foo/});
-      await expect(factory('bar', {}).validate())
+      const schema = MetaString.createSchema({regex: /foo/});
+      await expect(schema('bar').validate())
         .to.be.rejectedWith(ValidationError, 'String does not match regex.');
     });
 
     it('should run custom validator', async () => {
-      const factory = MetaString.getFactory({
+      const schema = MetaString.createSchema({
         validate: async metaValue => {
           if (metaValue.value === 'foo') {
             throw new ValidationError('foo is not allowed.');
           }
         },
       });
-      await factory('bar', {}).validate();
-      await expect(factory('foo', {}).validate())
+      await schema('bar', {}).validate();
+      await expect(schema('foo').validate())
         .to.be.rejectedWith(ValidationError, 'foo is not allowed.');
     });
 
     it('should validate undefined', async () => {
-      const factory = MetaString.getFactory();
-      await factory(undefined, {}).validate();
+      const schema = MetaString.createSchema();
+      await schema(undefined).validate();
     });
 
     it('should validate a string', async () => {
-      const factory = MetaString.getFactory();
-      await factory('foo', {}).validate();
+      const schema = MetaString.createSchema();
+      await schema('foo').validate();
     });
   });
 });

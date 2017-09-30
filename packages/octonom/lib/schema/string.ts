@@ -10,6 +10,8 @@ export interface IStringOptions extends ISchemaOptions<MetaString> {
 }
 
 export class MetaString extends MetaValue<string> {
+  public static createSchema = MetaString.createSchemaFactory<string, MetaString, IStringOptions>(MetaString, {});
+
   public static sanitize(value: any, schemaOptions: IStringOptions = {}, sanitizeOptions: ISanitizeOptions = {}) {
     if (sanitizeOptions.defaults && value === undefined) {
       return typeof schemaOptions.default === 'function'
@@ -28,14 +30,7 @@ export class MetaString extends MetaValue<string> {
     return value;
   }
 
-  public static getFactory(schemaOptions: IStringOptions = {}) {
-    return (value: any, sanitizeOptions: ISanitizeOptions = {}) => {
-      const sanitizedValue = MetaString.sanitize(value, schemaOptions, sanitizeOptions);
-      return new MetaString(sanitizedValue, schemaOptions, sanitizeOptions);
-    };
-  }
-
-  private constructor(value: string, public schemaOptions: IStringOptions, sanitizeOptions: ISanitizeOptions) {
+  constructor(value: string, public schemaOptions: IStringOptions, sanitizeOptions: ISanitizeOptions) {
     super(
       value,
       schemaOptions,
