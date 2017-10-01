@@ -1,84 +1,70 @@
 import { difference } from 'lodash';
 
 import { SanitizationError, ValidationError } from '../errors';
-import { IHooks } from '../hooks';
-import { Model } from '../model';
-import { ISanitizeOptions, ISchema, ISchemaMap, ISchemaOptions,
-         IToObjectOptions, Path, PopulateReference, runValidator,
-       } from './schema';
+import { IOctoValueMap, IParentValue, ISanitizeOptions, ISchema,
+         ISchemaMap, ISchemaOptions, IToObjectOptions,
+         OctoValue, Path, PopulateReference,
+       } from './value';
 
-export interface IObjectOptions extends ISchemaOptions<object> {
-  schema: ISchemaMap;
+// export interface IArrayOptions<T = any> extends ISchemaOptions<OctoArray<T>> {}
+export interface IObjectOptions<T extends object = object> extends ISchemaOptions<OctoObject<T>> {
+  schemaMap: ISchemaMap;
 }
 
-export async function populateObject(schemaMap: ISchemaMap, obj: object, populateReference: PopulateReference) {
-  if (typeof populateReference !== 'object') {
-    throw new Error('populateReference must be an object.');
-  }
+// populate an object and octoValueMap simultaneously
+export async function populateObject(
+  obj: object,
+  octoValueMap: IOctoValueMap,
+  schemaMap: ISchemaMap,
+  populateReference: PopulateReference,
+) {
+  const newObj = {};
 
-  const newObj = Object.assign({}, obj);
   await Promise.all(Object.keys(populateReference).map(async key => {
     const schema = schemaMap[key];
     if (!schema) {
       throw new Error(`Key ${key} not found in schema.`);
     }
-    if (!schema.populate) {
-      throw new Error(`Key ${key} is not populatable.`);
-    }
 
-    if (obj[key] === undefined) {
+    if (octoValueMap[key] === undefined) {
       return;
     }
 
-    newObj[key] = await schema.populate(obj[key], populateReference[key]);
+    newObj[key] = await octoValueMap[key].populate(populateReference[key]);
   }));
+
+  Object.keys(newObj).forEach(key => {
+    obj[key] = newObj[key];
+    octoValueMap[key].value = newObj[key];
+  });
 
   return newObj;
 }
 
+// proxify an object to sync changes to an octoValueMap
 export function proxifyObject(
+  obj: object,
+  octoValueMap: IOctoValueMap,
   schemaMap: ISchemaMap,
-  obj,
-  path: Path,
-  instance: Model,
-  hooks: IHooks,
+  parentOctoValue: OctoValue<any> & IParentValue,
 ) {
-  function wrapSet(setPath, value, fun) {
-    if (hooks.beforeSet) {
-      hooks.beforeSet({instance, path: setPath, data: value});
-    }
-
-    fun();
-
-    if (hooks.afterSet) {
-      hooks.afterSet({instance, path: setPath, data: value});
-    }
-  }
-
   return new Proxy(obj, {
-    get(target, key, receiver) {
-      if (target instanceof Model && key === 'set') {
-        return (data, options) => wrapSet([], data, () => target.set(data, {
-          ...options,
-          beforeSet: setOptions => hooks.beforeSet({...setOptions, instance: target}),
-          afterSet: setOptions => hooks.afterSet({...setOptions, instance: target}),
-        }));
-      }
-
-      return target[key];
-    },
     set(target, key, value, receiver) {
       if (typeof key !== 'symbol' && schemaMap[key]) {
-        wrapSet([key], value, () => {
-          target[key] = schemaMap[key].sanitize(
-            value,
-            path.concat([key]),
-            instance, {
-              beforeSet: options => hooks.beforeSet({...options, path: [key].concat(options.path)}),
-              afterSet: options => hooks.afterSet({...options, path: [key].concat(options.path)}),
-            },
-          );
-        });
+        parentOctoValue.beforeChange([key], value, parentOctoValue);
+
+        const oldOctoValue = octoValueMap[key];
+        if (oldOctoValue) {
+          delete oldOctoValue.parent;
+        }
+
+        octoValueMap[key] = schemaMap[key].create(
+          value,
+          {parent: {octoValue: parentOctoValue, path: key}},
+        );
+        target[key] = octoValueMap[key].value;
+
+        parentOctoValue.afterChange([key], value, parentOctoValue);
       } else {
         target[key] = value;
       }
@@ -86,7 +72,17 @@ export function proxifyObject(
     },
     deleteProperty(target, key) {
       if (typeof key !== 'symbol' && schemaMap[key]) {
-        wrapSet([key], undefined, () => delete target[key]);
+        parentOctoValue.beforeChange([key], undefined, parentOctoValue);
+
+        const oldOctoValue = octoValueMap[key];
+        if (oldOctoValue) {
+          delete oldOctoValue.parent;
+        }
+
+        delete octoValueMap[key];
+        delete target[key];
+
+        parentOctoValue.afterChange([key], undefined, parentOctoValue);
       } else {
         delete target[key];
       }
@@ -95,151 +91,136 @@ export function proxifyObject(
   });
 }
 
-export function setObjectSanitized(
-  schemaMap: ISchemaMap, target: object, data: object,
-  path: Path, instance: Model, options: ISanitizeOptions = {},
+// set an object and octoValueMap simultaneously
+export function setObject(
+  data: object,
+  obj: object,
+  octoValueMap: IOctoValueMap,
+  parentOctoValue: OctoValue<any> & IParentValue,
+  schemaMap: ISchemaMap,
+  sanitizeOptions: ISanitizeOptions,
 ) {
-  if (typeof data !== 'object') {
-    throw new SanitizationError('Data is not an object.', 'no-object', data, path, instance);
-  }
-
   const dataKeys = Object.keys(data);
   const schemaKeys = Object.keys(schemaMap);
   const disallowedKeys = difference(dataKeys, schemaKeys);
   if (disallowedKeys.length > 0) {
     throw new SanitizationError(
-      `Key ${disallowedKeys[0]} not found in schema.`, 'key-not-in-schema',
-      data, path, instance,
+      `Key ${disallowedKeys[0]} not found in schema.`, 'key-not-in-schema', sanitizeOptions.parent,
     );
   }
 
-  schemaKeys.forEach(key => {
-    if (options.replace || key in data) {
-      delete target[key];
-    }
+  const newOctoValueMap = {};
 
-    if (data[key] === undefined && !options.defaults) {
+  // sanitize all values before setting
+  schemaKeys.forEach(key => {
+    if (data[key] === undefined && !sanitizeOptions.defaults) {
       return;
     }
 
-    const newOptions = {...options};
-    if (options.beforeSet) {
-      newOptions.beforeSet = setOptions => options.beforeSet({
-        ...setOptions,
-        path: [key as string | number].concat(setOptions.path),
-      });
-    }
-    if (options.afterSet) {
-      newOptions.afterSet = setOptions => options.afterSet({
-        ...setOptions,
-        path: [key as string | number].concat(setOptions.path),
-      });
-    }
-
-    const sanitizedValue = schemaMap[key].sanitize(data[key], path.concat([key]), instance, newOptions);
-
-    if (sanitizedValue !== undefined) {
-      target[key] = sanitizedValue;
-    }
+    newOctoValueMap[key] = schemaMap[key].create(
+      data[key],
+      {...sanitizeOptions, parent: {octoValue: parentOctoValue, path: key}},
+    );
   });
 
-  return target;
+  schemaKeys.forEach(key => {
+    if (sanitizeOptions.replace || key in data) {
+      if (octoValueMap[key]) {
+        delete octoValueMap[key].parent;
+      }
+      delete octoValueMap[key];
+      delete obj[key];
+    }
+
+    if (newOctoValueMap[key]) {
+      obj[key] = newOctoValueMap[key];
+    }
+  });
 }
 
-export function toObject(schemaMap: ISchemaMap, obj: object, options?: IToObjectOptions) {
+export function toObject(octoValueMap: IOctoValueMap, options?: IToObjectOptions) {
   const newObj = {};
-  Object.keys(schemaMap).forEach(key => {
-    const value = obj[key];
+  Object.keys(octoValueMap).forEach(key => {
+    const value = octoValueMap[key].toObject();
     if (value === undefined) {
       return;
     }
 
-    const schema = schemaMap[key];
-    if (schema.toObject) {
-      const newValue = schemaMap[key].toObject(value, options);
-      if (newValue !== undefined) {
-        newObj[key] = newValue;
-      }
-    } else {
-      newObj[key] = value;
-    }
+    newObj[key] = value;
   });
 
   return newObj;
 }
 
-export async function validateObject(
-  schemaMap: ISchemaMap,
-  obj: object,
-  path: Array<string | number>,
-  instance: Model,
-) {
-  if (typeof obj !== 'object') {
-    throw new ValidationError('Data is not an object.', 'no-object', obj, path, instance);
-  }
-
-  const keys = Object.keys(obj);
-  const schemaKeys = Object.keys(schemaMap);
-
-  const invalidKeys = keys.filter(key => schemaKeys.indexOf(key) === -1);
-  if (invalidKeys.length > 0) {
-    const newPath = path.slice();
-    newPath.push(invalidKeys[0]);
-    throw new ValidationError(
-      `Key ${invalidKeys[0]} not found in schema.`,
-      'key-unknown', obj[invalidKeys[0]], newPath, instance,
-    );
-  }
-
-  await Promise.all(schemaKeys.map(async key => {
-    const newPath = path.slice();
-    newPath.push(key);
-    await schemaMap[key].validate(obj[key], newPath, instance);
-  }));
+export async function validateObject(octoValueMap: IOctoValueMap) {
+  await Promise.all(Object.keys(octoValueMap).map(key => octoValueMap[key].validate()));
 }
 
-export class ObjectSchema<TModel extends Model = Model> implements ISchema<object, TModel> {
-  constructor(public options?: IObjectOptions) {}
+export class OctoObject<T extends object = object> extends OctoValue<T> {
+  public octoValueMap: IOctoValueMap;
 
-  public async populate(value: object, populateReference: PopulateReference) {
-    return populateObject(this.options.schema, value, populateReference);
+  constructor(value: any, public schemaOptions: IObjectOptions<T>, sanitizeOptions: ISanitizeOptions) {
+    super(value, schemaOptions, sanitizeOptions);
   }
 
-  public sanitize(value: object, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
-    // return empty object if no data given but a value is required
-    if (value === undefined && !this.options.required) {
-      return undefined;
+  public beforeChange(path: Path, value: any, oldOctoValue: OctoValue<any>) {
+    if (this.parent && this.parent.octoValue.beforeChange) {
+      this.parent.octoValue.beforeChange([this.parent.path].concat(path), value, oldOctoValue);
     }
-
-    // create new object with sanitized values
-    const obj = setObjectSanitized(this.options.schema, {}, value || {}, path, instance, options);
-
-    return proxifyObject(
-      this.options.schema, obj, path, instance,
-      {beforeSet: options.beforeSet, afterSet: options.afterSet},
-    );
   }
 
-  public toObject(value: object, options?: IToObjectOptions) {
-    return toObject(this.options.schema, value, options);
+  public afterChange(path: Path, value: any, newOctoValue: OctoValue<any>) {
+    if (this.parent && this.parent.octoValue.afterChange) {
+      this.parent.octoValue.afterChange([this.parent.path].concat(path), value, newOctoValue);
+    }
   }
 
-  public async validate(value: object, path: Path, instance: TModel) {
-    if (value === undefined) {
-      if (this.options.required) {
-        throw new ValidationError('Required value is undefined.', 'required', value, path, instance);
+  public async populate(populateReference: PopulateReference) {
+    return populateObject(this.value, this.octoValueMap, this.schemaOptions.schemaMap, populateReference) as Promise<T>;
+  }
+
+  public toObject(options?: IToObjectOptions) {
+    return toObject(this.octoValueMap, options) as T;
+  }
+
+  public async validate() {
+    if (this.value === undefined) {
+      if (this.schemaOptions.required) {
+        throw new ValidationError('Required value is undefined.', 'required', this);
       }
       return;
     }
 
-    if (!(value instanceof Object)) {
-      throw new ValidationError('Value is not an object.', 'no-object', value, path, instance);
+    await validateObject(this.octoValueMap);
+
+    await super.validate();
+  }
+
+  protected sanitize(value: any, sanitizeOptions: ISanitizeOptions = {}) {
+    // return undefined if no data and value is not required
+    if (value === undefined && !this.schemaOptions.required) {
+      return undefined;
     }
 
-    await validateObject(this.options.schema, value, path, instance);
-
-    if (this.options.validate) {
-      await runValidator(this.options.validate, value, path, instance);
+    if (typeof value !== 'object') {
+      throw new SanitizationError('Data is not an object.', 'no-object', sanitizeOptions.parent);
     }
+
+    this.octoValueMap = {};
+    const obj = {};
+
+    if (value !== undefined) {
+      setObject(value, obj, this.octoValueMap, this, this.schemaOptions.schemaMap, sanitizeOptions);
+    }
+
+    return proxifyObject(obj, this.octoValueMap, this.schemaOptions.schemaMap, this);
+  }
+}
+
+export class ObjectSchema<T extends object = object> implements ISchema {
+  constructor(public options: IObjectOptions) {}
+
+  public create(value: any, sanitizeOptions: ISanitizeOptions = {}) {
+    return new OctoObject<T>(value, this.options, sanitizeOptions);
   }
 }
