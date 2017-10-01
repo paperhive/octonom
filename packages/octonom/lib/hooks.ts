@@ -1,32 +1,27 @@
 import { Collection } from './collection';
 import { Model } from './model';
-import { ISanitizeOptions, Path } from './schema/schema';
+import { IOctoInstance, Path } from './schema/value';
 
 /* Hook handlers are always called with instance set to the
  * instance where the hook is registered
  **/
-export interface ISetHookOptions<TModel extends Model> {
-  instance: TModel;
+export interface IChangeHookOptions<TModel extends Model> {
   path: Path;
-  data: Partial<TModel>;
-  options?: ISanitizeOptions;
+  value: any;
+  instance: IOctoInstance;
 }
 
-export interface IHooks {
-  beforeSet?(options: ISetHookOptions<Model>);
-  afterSet?(options: ISetHookOptions<Model>);
+export interface IChangeHooks<TModel extends Model = Model> {
+  beforeChange?(options: IChangeHookOptions<TModel>);
+  afterChange?(options: IChangeHookOptions<TModel>);
 }
 
-export interface ISaveHookOptions<TModel extends Model> {
-  instance: TModel;
-  collection: Collection<TModel>;
-}
+// union of all hook interfaces
+export type IHooks<TModel extends Model = Model> = IChangeHooks<TModel>;
 
 export interface IHookOptionsMap<TModel extends Model> {
-  beforeSet: ISetHookOptions<TModel>;
-  afterSet: ISetHookOptions<TModel>;
-  beforeSave: ISaveHookOptions<TModel>;
-  afterSave: ISaveHookOptions<TModel>;
+  beforeChange: IChangeHookOptions<TModel>;
+  afterChange: IChangeHookOptions<TModel>;
 }
 
 export type hookHandlers<TOptions> = Array<(options: TOptions) => void>;
@@ -37,10 +32,8 @@ export type HookHandlersMap<TModel extends Model> = {
 
 export class Hooks<TModel extends Model> {
   private handlers: HookHandlersMap<TModel> = {
-    beforeSet: [],
-    afterSet: [],
-    beforeSave: [],
-    afterSave: [],
+    beforeChange: [],
+    afterChange: [],
   };
 
   constructor(hooks?: Hooks<TModel>) {
