@@ -133,7 +133,8 @@ export function setObject(
     }
 
     if (newOctoValueMap[key]) {
-      obj[key] = newOctoValueMap[key];
+      octoValueMap[key] = newOctoValueMap[key];
+      obj[key] = newOctoValueMap[key].value;
     }
   });
 }
