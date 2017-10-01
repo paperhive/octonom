@@ -80,6 +80,11 @@ export class OctoArray<T = any> extends OctoValue<T[]> {
     await super.validate();
   }
 
+  /** Creates a proxy array that a user can interact with.
+   *  All change operations on the array are intercepted for reflecting the changes
+   *  in the octoValues array and calling the beforeChange/afterChange handlers.
+   *  Note: this is a bit lengthy since we need to cover the full js array API.
+   */
   protected getProxy() {
     const array = this.octoValues.map(el => el.value);
     return new Proxy(array, {
