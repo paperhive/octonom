@@ -11,10 +11,6 @@ export interface IPopulateMap {
   [k: string]: PopulateReference;
 }
 
-export interface IPopulateOptions {
-  populateReference: PopulateReference;
-}
-
 export interface ISanitizeOptions {
   /** Set undefined values to defaults (if configured). Default is false. */
   defaults?: boolean;
@@ -32,18 +28,17 @@ export interface IToObjectOptions {
 export type Path = Array<string | number>;
 
 export interface IParentValue<T = any> {
-  beforeChange(path: Path, octoValue: OctoValue<T>);
-  afterChange(path: Path, octoValue: OctoValue<T>);
+  beforeChange(path: Path, rawValue: any, oldOctoValue: OctoValue<T>);
+  afterChange(path: Path, rawValue: any, newOctoValue: OctoValue<T>);
 }
 
 export interface IParent<T = any> {
-  octoValue: OctoValue<T> & IParentValue<T>;
+  octoValue: OctoValue<T> & IParentValue<any>;
   path: string | number;
 }
 
 export interface IOctoValueConstructor<T = any, TOctoValue extends OctoValue<any> = OctoValue<any>> {
-  new (value: T, schemaOptions: ISchemaOptions<TOctoValue>, sanitizeOptions: ISanitizeOptions): TOctoValue;
-  sanitize(value: any, schemaOptions: ISchemaOptions<TOctoValue>, sanitizeOptions: ISanitizeOptions): T;
+  new (value: any, schemaOptions: ISchemaOptions<TOctoValue>, sanitizeOptions: ISanitizeOptions): TOctoValue;
 }
 
 /** An OctoValue wraps a value of a specific type.
@@ -54,18 +49,20 @@ export interface IOctoValueConstructor<T = any, TOctoValue extends OctoValue<any
  *  (property 'parent') which is useful for hooks and error messages.
  */
 export abstract class OctoValue<T> {
+  public value: T;
   public parent: IParent;
 
   constructor(
-    public value: T,
+    value: any,
     public schemaOptions: ISchemaOptions<OctoValue<T>>,
     sanitizeOptions: ISanitizeOptions,
   ) {
     this.parent = sanitizeOptions.parent;
+    this.value = this.sanitize(value, sanitizeOptions);
   }
 
   /** Populate a value (possibly nested) */
-  public async populate(options: IPopulateOptions): Promise<T> {
+  public async populate(populateReference: PopulateReference): Promise<T> {
     throw new Error(`${this.constructor.name} is not populateable.`);
   }
 
@@ -94,6 +91,9 @@ export abstract class OctoValue<T> {
       throw error;
     }
   }
+
+  // TODO: rename to setValue? (and then also actually set the value instead of in constructor)
+  protected abstract sanitize(value: any, sanitizeOptions: ISanitizeOptions): T;
 }
 
 export class OctoFactory<
@@ -107,8 +107,7 @@ export class OctoFactory<
 
   public create(schemaOptions: TOptions = this.defaultOptions) {
     return (value: any, sanitizeOptions: ISanitizeOptions = {}) => {
-      const sanitizedValue = this.octoValueClass.sanitize(value, schemaOptions, sanitizeOptions);
-      return new this.octoValueClass(sanitizedValue, schemaOptions, sanitizeOptions);
+      return new this.octoValueClass(value, schemaOptions, sanitizeOptions);
     };
   }
 }

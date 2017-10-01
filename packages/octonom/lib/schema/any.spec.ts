@@ -2,20 +2,20 @@ import { ValidationError } from '../errors';
 import { OctoAny, OctoAnyFactory } from './any';
 
 describe('AnySchema', () => {
-  describe('sanitize()', () => {
+  describe('constructor()', () => {
     it('should return a default value', () => {
-      expect(OctoAny.sanitize(undefined, {default: {foo: 'bar'}}, {defaults: true}))
-        .to.eql({foo: 'bar'});
+      expect(new OctoAny(undefined, {default: {foo: 'bar'}}, {defaults: true}))
+        .to.have.property('value').that.eql({foo: 'bar'});
     });
 
     it('should return a default value from a function', () => {
-      expect(OctoAny.sanitize(undefined, {default: () => 'foo'}, {defaults: true}))
-        .to.eql('foo');
+      expect(new OctoAny(undefined, {default: () => 'foo'}, {defaults: true}))
+        .to.contain({value: 'foo'});
     });
 
     it('should return any value', () => {
       const obj = {foo: 'bar'};
-      expect(OctoAny.sanitize(obj)).to.equal(obj);
+      expect(new OctoAny(obj)).to.have.property('value').that.equal(obj);
     });
   });
 
