@@ -2,28 +2,28 @@ import { SanitizationError, ValidationError } from '../errors';
 import { OctoString, OctoStringFactory } from './string';
 
 describe('MetaString', () => {
-  describe('sanitize()', () => {
+  describe('constructor()', () => {
     it('should throw a SanitizationError if value is not a string', () => {
-      expect(() => OctoString.sanitize(42))
+      expect(() => new OctoString(42))
         .to.throw(SanitizationError, 'Value is not a string');
     });
 
     it('should return undefined', () => {
-      expect(OctoString.sanitize(undefined)).to.eql(undefined);
+      expect(new OctoString(undefined)).to.contain({value: undefined});
     });
 
     it('should return a string', () => {
-      expect(OctoString.sanitize('bar')).to.eql('bar');
+      expect(new OctoString('bar')).to.contain({value: 'bar'});
     });
 
     it('should return a default value', () => {
-      expect(OctoString.sanitize(undefined, {default: 'bar'}, {defaults: true}))
-        .to.eql('bar');
+      expect(new OctoString(undefined, {default: 'bar'}, {defaults: true}))
+        .to.contain({value: 'bar'});
     });
 
     it('should return a default value from a function', () => {
-      expect(OctoString.sanitize(undefined, {default: () => 'bar'}, {defaults: true}))
-        .to.eql('bar');
+      expect(new OctoString(undefined, {default: () => 'bar'}, {defaults: true}))
+        .to.contain({value: 'bar'});
     });
   });
 
@@ -60,8 +60,8 @@ describe('MetaString', () => {
 
     it('should run custom validator', async () => {
       const schema = OctoStringFactory.create({
-        validate: async metaValue => {
-          if (metaValue.value === 'foo') {
+        validate: async octoValue => {
+          if (octoValue.value === 'foo') {
             throw new ValidationError('foo is not allowed.');
           }
         },

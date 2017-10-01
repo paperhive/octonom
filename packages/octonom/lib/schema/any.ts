@@ -8,17 +8,7 @@ export interface IAnyOptions extends ISchemaOptions<OctoAny> {
 }
 
 export class OctoAny extends OctoValue<any> {
-  public static sanitize(value: any, schemaOptions: IAnyOptions = {}, sanitizeOptions: ISanitizeOptions = {}) {
-    if (sanitizeOptions.defaults && value === undefined) {
-      return typeof schemaOptions.default === 'function'
-        ? schemaOptions.default()
-        : schemaOptions.default;
-    }
-
-    return value;
-  }
-
-  constructor(value: any, public schemaOptions: IAnyOptions, sanitizeOptions: ISanitizeOptions) {
+ constructor(value: any, public schemaOptions: IAnyOptions = {}, sanitizeOptions: ISanitizeOptions = {}) {
     super(value, schemaOptions, sanitizeOptions);
   }
 
@@ -35,6 +25,16 @@ export class OctoAny extends OctoValue<any> {
     }
 
     await super.validate();
+  }
+
+  protected sanitize(value: any, sanitizeOptions: ISanitizeOptions) {
+    if (sanitizeOptions.defaults && value === undefined) {
+      return typeof this.schemaOptions.default === 'function'
+        ? this.schemaOptions.default()
+        : this.schemaOptions.default;
+    }
+
+    return value;
   }
 }
 

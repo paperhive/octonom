@@ -10,30 +10,8 @@ export interface IStringOptions extends ISchemaOptions<OctoString> {
 }
 
 export class OctoString extends OctoValue<string> {
-  public static sanitize(value: any, schemaOptions: IStringOptions = {}, sanitizeOptions: ISanitizeOptions = {}) {
-    if (sanitizeOptions.defaults && value === undefined) {
-      return typeof schemaOptions.default === 'function'
-        ? schemaOptions.default()
-        : schemaOptions.default;
-    }
-
-    if (value === undefined) {
-      return undefined;
-    }
-
-    if (typeof value !== 'string') {
-      throw new SanitizationError('Value is not a string.', 'no-string', sanitizeOptions.parent);
-    }
-
-    return value;
-  }
-
-  constructor(value: string, public schemaOptions: IStringOptions, sanitizeOptions: ISanitizeOptions) {
-    super(
-      value,
-      schemaOptions,
-      sanitizeOptions,
-    );
+  constructor(value: any, public schemaOptions: IStringOptions = {}, sanitizeOptions: ISanitizeOptions = {}) {
+    super(value, schemaOptions, sanitizeOptions);
   }
 
   public async validate() {
@@ -70,6 +48,24 @@ export class OctoString extends OctoValue<string> {
     }
 
     await super.validate();
+  }
+
+  protected sanitize(value: any, sanitizeOptions: ISanitizeOptions = {}) {
+    if (sanitizeOptions.defaults && value === undefined) {
+      return typeof this.schemaOptions.default === 'function'
+        ? this.schemaOptions.default()
+        : this.schemaOptions.default;
+    }
+
+    if (value === undefined) {
+      return undefined;
+    }
+
+    if (typeof value !== 'string') {
+      throw new SanitizationError('Value is not a string.', 'no-string', this.parent);
+    }
+
+    return value;
   }
 }
 
