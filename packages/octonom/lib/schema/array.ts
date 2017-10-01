@@ -2,12 +2,12 @@ import { SanitizationError, ValidationError } from '../errors';
 import { IHooks } from '../hooks';
 import { Model } from '../model';
 import { ModelSchema } from './model';
-import { ISanitizeOptions, ISchemaOptions, IToObjectOptions,
-         OctoFactory, OctoValue, OctoValueFactory, Path, PopulateReference,
+import { ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions,
+         OctoFactory, OctoValue, Path, PopulateReference,
        } from './value';
 
 export interface IArrayOptions<T = any> extends ISchemaOptions<OctoArray<T>> {
-  elementSchema: OctoValueFactory;
+  elementSchema: ISchema;
   minLength?: number;
   maxLength?: number;
   callParentHooks?: boolean;
@@ -80,8 +80,9 @@ export class OctoArray<T = any> extends OctoValue<T[]> {
     await super.validate();
   }
 
-  protected getOctoValuesProxy() {
-    return new Proxy(this.octoValues, {
+  protected getProxy() {
+    const array = this.octoValues.map(el => el.value);
+    return new Proxy(array, {
       get: (target, key, receiver) => {
         switch (key) {
           case 'copyWithin':
@@ -90,30 +91,32 @@ export class OctoArray<T = any> extends OctoValue<T[]> {
             throw new Error('not yet implemented');
           case 'pop':
             return () => {
-              const clone = target.map(el => el.value);
+              const clone = target.slice();
               clone.pop();
               this.beforeChange([], clone, this);
 
-              const removedOctoValue = target.pop();
+              const removedOctoValue = this.octoValues.pop();
               delete removedOctoValue.parent;
+              const result = target.pop();
 
               this.afterChange([], clone, this);
 
-              return removedOctoValue.value;
+              return result;
             };
           case 'push':
             return (...args: any[]) => {
-              const clone = target.map(el => el.value);
+              const clone = target.slice();
               clone.push(...args);
               this.beforeChange([], clone, this);
 
               const newOctoValues = args.map((arg, index) => {
-                return this.schemaOptions.elementSchema(
+                return this.schemaOptions.elementSchema.create(
                   arg,
                   {parent: {octoValue: this, path: target.length + index}},
                 );
               });
-              const result = target.push(...newOctoValues);
+              this.octoValues.push(...newOctoValues);
+              const result = target.push(...newOctoValues.map(el => el.value));
 
               this.afterChange([], clone, this);
 
@@ -121,12 +124,13 @@ export class OctoArray<T = any> extends OctoValue<T[]> {
             };
           case 'reverse':
             return () => {
-              const clone = target.map(el => el.value);
+              const clone = target.slice();
               clone.reverse();
               this.beforeChange([], clone, this);
 
+              this.octoValues.reverse();
+              this.octoValues.forEach((octoValue, index) => octoValue.parent.path = index);
               target.reverse();
-              target.forEach((octoValue, index) => octoValue.parent.path = index);
 
               this.afterChange([], clone, this);
 
@@ -134,7 +138,7 @@ export class OctoArray<T = any> extends OctoValue<T[]> {
             };
           case 'sort':
             return (compare: (a, b) => number) => {
-              const mapped = target.map((octoValue, index) => ({octoValue, index}));
+              const mapped = this.octoValues.map((octoValue, index) => ({octoValue, index}));
               mapped.sort((a, b) => {
                 if (compare) {
                   return compare(a.octoValue.value, b.octoValue.value);
@@ -154,10 +158,11 @@ export class OctoArray<T = any> extends OctoValue<T[]> {
 
               this.beforeChange([], clone, this);
 
-              target.splice(0, target.length, ...mapped.map((el, index) => {
+              this.octoValues.splice(0, this.octoValues.length, ...mapped.map((el, index) => {
                 el.octoValue.parent.path = index;
                 return el.octoValue;
               }));
+              target.splice(0, target.length, ...mapped.map(el => el.octoValue.value));
 
               this.afterChange([], clone, this);
 
@@ -168,45 +173,47 @@ export class OctoArray<T = any> extends OctoValue<T[]> {
               if (deleteCount === undefined || deleteCount > target.length - start) {
                 deleteCount = target.length - start;
               }
-              const clone = target.map(el => el.value);
+              const clone = this.octoValues.map(el => el.value);
               clone.splice(start, deleteCount, ...args);
               this.beforeChange([], clone, this);
 
               const newOctoValues = args.map((arg, index) => {
-                return this.schemaOptions.elementSchema(
+                return this.schemaOptions.elementSchema.create(
                   arg,
                   {parent: {octoValue: this, path: start + index}},
                 );
               });
-              const removedOctoValues = target.splice(start, deleteCount, ...newOctoValues);
+              const removedOctoValues = this.octoValues.splice(start, deleteCount, ...newOctoValues);
               removedOctoValues.forEach(octoValue => delete octoValue.parent);
-              target.slice(start + newOctoValues.length).forEach((octoValue, index) => {
+              this.octoValues.slice(start + newOctoValues.length).forEach((octoValue, index) => {
                 octoValue.parent.path = start + newOctoValues.length + index;
               });
+              const result = target.splice(start, deleteCount, ...newOctoValues.map(el => el.value));
 
               this.afterChange([], clone, this);
 
-              return removedOctoValues.map(el => el.value);
+              return result;
             };
           case 'toString':
             return () => target.map(el => el.value).toString();
           case 'unshift':
             return (...args: any[]) => {
-              const clone = target.map(el => el.value);
+              const clone = this.octoValues.map(el => el.value);
               clone.unshift(...args);
               this.beforeChange([], clone, this);
 
               const newOctoValues = args.map((arg, index) => {
-                return this.schemaOptions.elementSchema(
+                return this.schemaOptions.elementSchema.create(
                   arg,
                   {parent: {octoValue: this, path: index}},
                 );
               });
 
-              const result = target.unshift(...newOctoValues);
-              target.slice(newOctoValues.length).forEach((octoValue, index) => {
+              this.octoValues.unshift(...newOctoValues);
+              this.octoValues.slice(newOctoValues.length).forEach((octoValue, index) => {
                 octoValue.parent.path = newOctoValues.length + index;
               });
+              const result = target.unshift(...newOctoValues.map(el => el.value));
 
               this.afterChange([], clone, this);
 
@@ -229,7 +236,7 @@ export class OctoArray<T = any> extends OctoValue<T[]> {
 
           this.beforeChange([numKey], value, oldOctoValue);
 
-          const newOctoValue = this.schemaOptions.elementSchema(
+          const newOctoValue = this.schemaOptions.elementSchema.create(
             value,
             {parent: {octoValue: this, path: numKey}},
           );
@@ -286,15 +293,20 @@ export class OctoArray<T = any> extends OctoValue<T[]> {
 
     // create sanitized array
     this.octoValues = newValue.map((element, index) => {
-      return this.schemaOptions.elementSchema(
+      return this.schemaOptions.elementSchema.create(
         element,
         {...sanitizeOptions, parent: {octoValue: this, path: index}},
       );
     });
 
-    return this.getOctoValuesProxy();
+    return this.getProxy();
   }
 }
 
-/* tslint:disable-next-line:variable-name */
-export const OctoArrayFactory = new OctoFactory<OctoArray, IArrayOptions>(OctoArray);
+export class ArraySchema implements ISchema {
+  constructor(public options: IArrayOptions) {}
+
+  public create(value: any, sanitizeOptions: ISanitizeOptions = {}) {
+    return new OctoArray(value, this.options, sanitizeOptions);
+  }
+}

@@ -1,5 +1,5 @@
 import { ValidationError } from '../errors';
-import { OctoAny, OctoAnyFactory } from './any';
+import { AnySchema, OctoAny } from './any';
 
 describe('AnySchema', () => {
   describe('constructor()', () => {
@@ -21,9 +21,9 @@ describe('AnySchema', () => {
 
   describe('toObject()', () => {
     it('should return any value cloned', () => {
-      const schema = OctoAnyFactory.create();
+      const schema = new AnySchema();
       const obj = {foo: 'bar'};
-      const octoValue = schema(obj);
+      const octoValue = schema.create(obj);
       const result = octoValue.toObject();
       expect(result).to.not.equal(obj);
       expect(result).to.eql(obj);
@@ -32,30 +32,30 @@ describe('AnySchema', () => {
 
   describe('validate()', () => {
     it('should throw a ValidationError if required but undefined', async () => {
-      const schema = OctoAnyFactory.create({required: true});
-      await expect(schema(undefined).validate())
+      const schema = new AnySchema({required: true});
+      await expect(schema.create(undefined).validate())
         .to.be.rejectedWith(ValidationError, 'Required value is undefined.');
     });
 
     it('should run custom validator', async () => {
-      const schema = OctoAnyFactory.create({
+      const schema = new AnySchema({
         validate: async octoValue => {
           if (octoValue.value === true) {
             throw new ValidationError('true is not allowed.');
           }
         },
       });
-      await schema(false).validate();
-      await expect(schema(true).validate())
+      await schema.create(false).validate();
+      await expect(schema.create(true).validate())
         .to.be.rejectedWith(ValidationError, 'true is not allowed.');
     });
 
     it('should validate anything', async () => {
-      const schema = OctoAnyFactory.create();
-      await schema(undefined).validate();
-      await schema(true).validate();
-      await schema(['foo']).validate();
-      await schema({foo: 'bar'}).validate();
+      const schema = new AnySchema();
+      await schema.create(undefined).validate();
+      await schema.create(true).validate();
+      await schema.create(['foo']).validate();
+      await schema.create({foo: 'bar'}).validate();
     });
   });
 });
