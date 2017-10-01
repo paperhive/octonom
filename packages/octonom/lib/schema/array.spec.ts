@@ -1,3 +1,5 @@
+import { stub } from 'sinon';
+
 import { ArrayCollection } from '../array-collection';
 import { SanitizationError, ValidationError } from '../errors';
 // import { Model } from '../model';
@@ -5,6 +7,7 @@ import { OctoArray, OctoArrayFactory } from './array';
 // import { ModelSchema } from './model';
 // import { ReferenceSchema } from './reference';
 import { OctoStringFactory } from './string';
+import { OctoValue } from './value';
 
 describe('ArraySchema', () => {
   /*
@@ -53,6 +56,93 @@ describe('ArraySchema', () => {
     it('should return empty array if required and undefined', () => {
       const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create(), required: true});
       expect(schema(undefined)).to.have.property('value').that.eql([]);
+    });
+  });
+
+  describe('value array proxy', () => {
+    const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
+    let octoArray: OctoArray<any>;
+    let beforeChangeStub;
+    let beforeChangeArray;
+    let afterChangeStub;
+    let afterChangeArray;
+
+    beforeEach(() => {
+      octoArray = schema(['foo', 'bar', 'bla']);
+      beforeChangeStub = stub(octoArray, 'beforeChange')
+        .callsFake((path, value, oldOctoValue) => beforeChangeArray = oldOctoValue.toObject());
+      afterChangeStub = stub(octoArray, 'afterChange')
+        .callsFake((path, value, newOctoValue) => afterChangeArray = newOctoValue.toObject());
+    });
+
+    function testArrayProxy(arrayBefore, arrayAfter) {
+      expect(beforeChangeStub).to.be.calledOnce.and.calledWith([], arrayAfter, octoArray);
+      expect(beforeChangeArray).to.eql(arrayBefore);
+      expect(octoArray.value).to.eql(arrayAfter);
+      expect(octoArray.octoValues.map(el => el.value)).to.eql(arrayAfter);
+      octoArray.octoValues.forEach((el, index) => {
+        expect(el.parent).to.eql({octoValue: octoArray, path: index});
+      });
+      expect(afterChangeStub).to.be.calledOnce.and.calledWith([], arrayAfter, octoArray);
+      expect(afterChangeArray).to.eql(arrayAfter);
+    }
+
+    it('should be an array', () => {
+      expect(octoArray.value).to.be.an('array').and.an.instanceOf(Array);
+    });
+
+    it('should intercept pop()', () => {
+      const octoValue = octoArray.octoValues[octoArray.octoValues.length - 1];
+      expect(octoArray.value.pop()).to.equal('bla');
+      testArrayProxy(['foo', 'bar', 'bla'], ['foo', 'bar']);
+      expect(octoValue).to.not.have.property('parent');
+    });
+
+    it('should intercept push()', () => {
+      expect(octoArray.value.push('baz', 'boo')).to.equal(5);
+      testArrayProxy(['foo', 'bar', 'bla'], ['foo', 'bar', 'bla', 'baz', 'boo']);
+    });
+
+    it('should intercept reverse()', () => {
+      const array = octoArray.value;
+      expect(octoArray.value.reverse()).to.equal(array);
+      testArrayProxy(['foo', 'bar', 'bla'], ['bla', 'bar', 'foo']);
+    });
+
+    it('should intercept sort()', () => {
+      const array = octoArray.value;
+      expect(octoArray.value.sort()).to.equal(array);
+      testArrayProxy(['foo', 'bar', 'bla'], ['bar', 'bla', 'foo']);
+    });
+
+    it('should intercept sort() with custom compare function', () => {
+      const array = octoArray.value;
+      expect(octoArray.value.sort((a, b) => a < b ? 1 : -1)).to.equal(array);
+      testArrayProxy(['foo', 'bar', 'bla'], ['foo', 'bla', 'bar']);
+    });
+
+    it('should intercept splice(start)', () => {
+      const array = octoArray.value;
+      expect(octoArray.value.splice(2)).to.eql(['bla']);
+      testArrayProxy(['foo', 'bar', 'bla'], ['foo', 'bar']);
+    });
+
+    it('should intercept splice(start, deleteCount)', () => {
+      const array = octoArray.value;
+      expect(octoArray.value.splice(1, 1)).to.eql(['bar']);
+      testArrayProxy(['foo', 'bar', 'bla'], ['foo', 'bla']);
+    });
+
+    it('should intercept splice(start, deleteCount, ...elements)', () => {
+      const array = octoArray.value;
+      expect(octoArray.value.splice(1, 1, 'boo', 'baz')).to.eql(['bar']);
+      testArrayProxy(['foo', 'bar', 'bla'], ['foo', 'boo', 'baz', 'bla']);
+    });
+
+    it('should intercept unshift()', () => {
+      const array = octoArray.value;
+      expect(octoArray.value.unshift('boo', 'baz')).to.equal(5);
+      testArrayProxy(['foo', 'bar', 'bla'], ['boo', 'baz', 'foo', 'bar', 'bla']);
     });
   });
 
