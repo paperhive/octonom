@@ -81,7 +81,7 @@ describe('ArraySchema', () => {
       expect(octoArray.value).to.eql(arrayAfter);
       expect(octoArray.octoValues.map(el => el.value)).to.eql(arrayAfter);
       octoArray.octoValues.forEach((el, index) => {
-        expect(el.parent).to.eql({octoValue: octoArray, path: index});
+        expect(el.parent).to.eql({instance: octoArray, path: index});
       });
       expect(afterChangeStub).to.be.calledOnce.and.calledWith([], arrayAfter, octoArray);
       expect(afterChangeArray).to.eql(arrayAfter);

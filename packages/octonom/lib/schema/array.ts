@@ -2,7 +2,7 @@ import { SanitizationError, ValidationError } from '../errors';
 import { IHooks } from '../hooks';
 import { Model } from '../model';
 import { ModelSchema } from './model';
-import { ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions,
+import { IOctoInstance, ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions,
          OctoFactory, OctoValue, Path, PopulateReference,
        } from './value';
 
@@ -20,15 +20,15 @@ export class OctoArray<T = any> extends OctoValue<T[]> {
     super(value, schemaOptions, sanitizeOptions);
   }
 
-  public beforeChange(path: Path, value: any, oldOctoValue: OctoValue<any>) {
-    if (this.parent && this.parent.octoValue.beforeChange) {
-      this.parent.octoValue.beforeChange([this.parent.path].concat(path), value, oldOctoValue);
+  public beforeChange(path: Path, value: any, oldInstance: IOctoInstance) {
+    if (this.parent && this.parent.instance.beforeChange) {
+      this.parent.instance.beforeChange([this.parent.path].concat(path), value, oldInstance);
     }
   }
 
-  public afterChange(path: Path, value: any, newOctoValue: OctoValue<any>) {
-    if (this.parent && this.parent.octoValue.afterChange) {
-      this.parent.octoValue.afterChange([this.parent.path].concat(path), value, newOctoValue);
+  public afterChange(path: Path, value: any, newInstance: IOctoInstance) {
+    if (this.parent && this.parent.instance.afterChange) {
+      this.parent.instance.afterChange([this.parent.path].concat(path), value, newInstance);
     }
   }
 
@@ -117,7 +117,7 @@ export class OctoArray<T = any> extends OctoValue<T[]> {
               const newOctoValues = args.map((arg, index) => {
                 return this.schemaOptions.elementSchema.create(
                   arg,
-                  {parent: {octoValue: this, path: target.length + index}},
+                  {parent: {instance: this, path: target.length + index}},
                 );
               });
               this.octoValues.push(...newOctoValues);
@@ -185,7 +185,7 @@ export class OctoArray<T = any> extends OctoValue<T[]> {
               const newOctoValues = args.map((arg, index) => {
                 return this.schemaOptions.elementSchema.create(
                   arg,
-                  {parent: {octoValue: this, path: start + index}},
+                  {parent: {instance: this, path: start + index}},
                 );
               });
               const removedOctoValues = this.octoValues.splice(start, deleteCount, ...newOctoValues);
@@ -210,7 +210,7 @@ export class OctoArray<T = any> extends OctoValue<T[]> {
               const newOctoValues = args.map((arg, index) => {
                 return this.schemaOptions.elementSchema.create(
                   arg,
-                  {parent: {octoValue: this, path: index}},
+                  {parent: {instance: this, path: index}},
                 );
               });
 
@@ -243,7 +243,7 @@ export class OctoArray<T = any> extends OctoValue<T[]> {
 
           const newOctoValue = this.schemaOptions.elementSchema.create(
             value,
-            {parent: {octoValue: this, path: numKey}},
+            {parent: {instance: this, path: numKey}},
           );
 
           if (oldOctoValue) {
@@ -300,7 +300,7 @@ export class OctoArray<T = any> extends OctoValue<T[]> {
     this.octoValues = newValue.map((element, index) => {
       return this.schemaOptions.elementSchema.create(
         element,
-        {...sanitizeOptions, parent: {octoValue: this, path: index}},
+        {...sanitizeOptions, parent: {instance: this, path: index}},
       );
     });
 
@@ -308,10 +308,10 @@ export class OctoArray<T = any> extends OctoValue<T[]> {
   }
 }
 
-export class ArraySchema implements ISchema {
+export class ArraySchema<T = any> implements ISchema {
   constructor(public options: IArrayOptions) {}
 
   public create(value: any, sanitizeOptions: ISanitizeOptions = {}) {
-    return new OctoArray(value, this.options, sanitizeOptions);
+    return new OctoArray<T>(value, this.options, sanitizeOptions);
   }
 }
