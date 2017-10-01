@@ -1,24 +1,24 @@
 import { spy } from 'sinon';
 
 import { CatModel } from '../test/data/models/cat';
-import { Hooks, ISetHookOptions } from './hooks';
+import { Hooks, IChangeHookOptions } from './hooks';
 
 describe('Hooks', () => {
   const cat = new CatModel();
   it('should copy handlers in the constructor', () => {
     const hooks = new Hooks<CatModel>();
-    const handler = (options: ISetHookOptions<CatModel>) => undefined;
-    hooks.register('beforeSet', handler);
+    const handler = (options: IChangeHookOptions<CatModel>) => undefined;
+    hooks.register('beforeChange', handler);
     const newHooks = new Hooks<CatModel>(hooks);
-    expect((newHooks as any).handlers.beforeSet).to.eql([handler]);
+    expect((newHooks as any).handlers.beforeChange).to.eql([handler]);
   });
 
   it('should register and run a handler', () => {
     const hooks = new Hooks<CatModel>();
     const handler = spy();
-    hooks.register('beforeSet', handler);
-    const options = {instance: cat, path: [], data: {name: 'Yllim'}};
-    hooks.run('beforeSet', options);
+    hooks.register('beforeChange', handler);
+    const options = {modelPath: {instance: cat, path: ['name']}, data: 'Yllim'};
+    hooks.run('beforeChange', options);
     expect(handler).to.be.calledOnce.and.calledWith(options);
   });
 });
