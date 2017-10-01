@@ -1,23 +1,67 @@
 import { ArrayCollection } from '../array-collection';
 import { SanitizationError, ValidationError } from '../errors';
-import { Model } from '../model';
-import { ModelArray } from '../model-array';
-import { ArraySchema } from './array';
-import { ModelSchema } from './model';
-import { ReferenceSchema } from './reference';
-import { StringSchema } from './string';
+// import { Model } from '../model';
+import { OctoArray, OctoArrayFactory } from './array';
+// import { ModelSchema } from './model';
+// import { ReferenceSchema } from './reference';
+import { OctoStringFactory } from './string';
 
 describe('ArraySchema', () => {
+  /*
   class TestModel extends Model {
     public foo: string;
   }
-  TestModel.setSchema('foo', new StringSchema());
+  TestModel.setSchema('foo', OctoStringFactory.create());
+  */
 
+  describe('constructor()', () => {
+    it('should throw a SanitizationError if value is not an array', () => {
+      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
+      expect(() => schema(42)).to.throw(SanitizationError, 'Value is not an array.');
+    });
+
+    it('should throw a SanitizationError if elements cannot be sanitized', () => {
+      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
+      expect(() => schema([42])).to.throw(SanitizationError, 'Value is not a string.');
+    });
+
+    it('should return undefined', () => {
+      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
+      expect(schema(undefined)).to.have.property('value').that.equal(undefined);
+    });
+
+    it('should return an array of strings', () => {
+      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
+      expect(schema(['bar'])).to.have.property('value').that.eql(['bar']);
+    });
+
+    /* TODO
+    it('should return an array of models with object input', () => {
+      const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel})});
+      const array = schema.sanitize([{foo: 'bar'}], ['key'], {} as Model) as Array<Partial<TestModel>>;
+      expect(array).to.be.an('array').and.to.eql([{foo: 'bar'}]);
+      expect(array[0]).to.be.an.instanceOf(TestModel).and.to.eql({foo: 'bar'});
+    });
+
+    it('should return an array of models with model input', () => {
+      const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel})});
+      const array = [new TestModel({foo: 'bar'})];
+      expect(schema.sanitize(array, ['key'], {} as Model)).to.eql(array);
+    });
+    */
+
+    it('should return empty array if required and undefined', () => {
+      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create(), required: true});
+      expect(schema(undefined)).to.have.property('value').that.eql([]);
+    });
+  });
+
+  /* TODO
   describe('populate()', () => {
     class ReferenceModel extends Model {
       public id: string;
     }
-    ReferenceModel.setSchema('id', new StringSchema());
+    ReferenceModel.setSchema('id', OctoStringFactory.create());
 
     const collection = new ArrayCollection<ReferenceModel>(ReferenceModel, {modelIdField: 'id'});
     collection.insert(new ReferenceModel({id: '0xACAB'}));
@@ -37,7 +81,7 @@ describe('ArraySchema', () => {
       expect(instances).to.eql([{id: '0xACAB'}, {id: '4711'}]);
     });
 
-    it('should populate a ModelArray', async () => {
+    it('should populate an array of models', async () => {
       class ElementModel extends Model {
         public reference: string | ReferenceModel;
       }
@@ -46,73 +90,23 @@ describe('ArraySchema', () => {
       const schema = new ArraySchema({
         elementSchema: new ModelSchema({model: ElementModel}),
       });
-      const modelArray = new ModelArray<ElementModel>(ElementModel, [
-        {reference: '0xACAB'},
-        {reference: '4711'},
-      ]);
-      const instances = await schema.populate(modelArray, {reference: true});
-      expect(instances).to.be.an.instanceOf(ModelArray);
-      expect(instances).to.not.equal(modelArray);
+      const array = [
+        new ElementModel({reference: '0xACAB'}),
+        new ElementModel({reference: '4711'}),
+      ];
+      const instances = await schema.populate(array, {reference: true});
+      expect(instances).to.be.an('array').and.to.not.equal(array);
       expect(instances).to.eql([
         {reference: {id: '0xACAB'}},
         {reference: {id: '4711'}},
       ]);
     });
   });
-
-  describe('sanitize()', () => {
-    it('should throw a SanitizationError if value is not an array', () => {
-      const schema = new ArraySchema({elementSchema: new StringSchema()});
-      expect(() => schema.sanitize(42, ['key'], {} as Model))
-        .to.throw(SanitizationError, 'Value is not an array.');
-    });
-
-    it('should throw a SanitizationError if elements cannot be sanitized', () => {
-      const schema = new ArraySchema({elementSchema: new StringSchema()});
-      expect(() => schema.sanitize([42], ['key'], {} as Model))
-        .to.throw(SanitizationError, 'Value is not a string.');
-    });
-
-    it('should return undefined', () => {
-      const schema = new ArraySchema({elementSchema: new StringSchema()});
-      expect(schema.sanitize(undefined, ['key'], {} as Model)).to.eql(undefined);
-    });
-
-    it('should return an array', () => {
-      const schema = new ArraySchema({elementSchema: new StringSchema()});
-      expect(schema.sanitize(['bar'], ['key'], {} as Model)).to.eql(['bar']);
-    });
-
-    it('should return a ModelArray for Model element schema and objects elements', () => {
-      const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel})});
-      const array = schema.sanitize([{foo: 'bar'}], ['key'], {} as Model) as ModelArray<TestModel>;
-      expect(array).to.be.an.instanceOf(ModelArray).and.to.eql([{foo: 'bar'}]);
-      expect((array as ModelArray<TestModel>).model).to.equal(TestModel);
-      expect(array[0]).to.be.an.instanceOf(TestModel).and.to.eql({foo: 'bar'});
-    });
-
-    it('should return a ModelArray for Model element schema and ModelArray value', () => {
-      const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel})});
-      const modelArray = new ModelArray<TestModel>(TestModel, [{foo: 'bar'}]);
-      expect(schema.sanitize(modelArray, ['key'], {} as Model) as ModelArray<TestModel>)
-        .to.equal(modelArray);
-    });
-
-    it('should return empty array if required and undefined', () => {
-      const schema = new ArraySchema({elementSchema: new StringSchema(), required: true});
-      expect(schema.sanitize(undefined, ['key'], {} as Model))
-        .to.eql([]);
-    });
-
-    it('should return empty ModelArray if required and undefined', () => {
-      const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel}), required: true});
-      expect(schema.sanitize(undefined, ['key'], {} as Model))
-        .to.be.an.instanceOf(ModelArray).and.to.eql([]);
-    });
-  });
-
+  */
+/*
   describe('toObject()', () => {
     it('should return a new array', () => {
+      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
       const schema = new ArraySchema({elementSchema: new StringSchema()});
       const array = ['foo'];
       const result = schema.toObject(array);
@@ -120,9 +114,9 @@ describe('ArraySchema', () => {
       expect(result).to.eql(array);
     });
 
-    it('should return a new array from a ModelArray', () => {
+    it('should return a new array from a model array', () => {
       const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel})});
-      const array = new ModelArray<TestModel>(TestModel, [{foo: 'bar'}]);
+      const array = [new TestModel({foo: 'bar'})];
       const result = schema.toObject(array);
       expect(result).to.not.equal(array);
       expect(result).to.eql([{foo: 'bar'}]);
@@ -140,14 +134,6 @@ describe('ArraySchema', () => {
       const schema = new ArraySchema({elementSchema: new StringSchema()});
       await expect(schema.validate(42 as any, ['key'], {} as Model))
         .to.be.rejectedWith(ValidationError, 'Value is not an array.');
-    });
-
-    it('should throw if value is not a ModelArray (for Model element schema)', async () => {
-      const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel})});
-      await expect(schema.validate(42 as any, ['key'], {} as Model))
-        .to.be.rejectedWith(ValidationError, 'Value is not a ModelArray.');
-      await expect(schema.validate([], ['key'], {} as Model))
-      .to.be.rejectedWith(ValidationError, 'Value is not a ModelArray.');
     });
 
     it('should throw if value has less than min elements', async () => {
@@ -181,15 +167,16 @@ describe('ArraySchema', () => {
       await schema.validate(undefined, ['key'], {} as Model);
     });
 
-    it('should validate an array', async () => {
+    it('should validate an array of strings', async () => {
       const schema = new ArraySchema({elementSchema: new StringSchema()});
       await schema.validate(['foo'], ['key'], {} as Model);
     });
 
-    it('should validate a ModelArray', async () => {
+    it('should validate an array of models', async () => {
       const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel})});
-      const modelArray = new ModelArray<TestModel>(TestModel, [{foo: 'bar'}]);
-      await schema.validate(modelArray, ['key'], {} as Model);
+      const array = [new TestModel({foo: 'bar'})];
+      await schema.validate(array, ['key'], {} as Model);
     });
   });
+  */
 });
