@@ -1,7 +1,7 @@
 import { difference } from 'lodash';
 
 import { SanitizationError, ValidationError } from '../errors';
-import { IOctoValueMap, IParentValue, ISanitizeOptions, ISchema,
+import { IOctoInstance, IOctoParentInstance, IOctoValueMap, ISanitizeOptions, ISchema,
          ISchemaMap, ISchemaOptions, IToObjectOptions,
          OctoValue, Path, PopulateReference,
        } from './value';
@@ -45,13 +45,13 @@ export async function populateObject(
 export function proxifyObject(
   obj: object,
   octoValueMap: IOctoValueMap,
+  parentInstance: IOctoParentInstance,
   schemaMap: ISchemaMap,
-  parentOctoValue: OctoValue<any> & IParentValue,
 ) {
   return new Proxy(obj, {
     set(target, key, value, receiver) {
       if (typeof key !== 'symbol' && schemaMap[key]) {
-        parentOctoValue.beforeChange([key], value, parentOctoValue);
+        parentInstance.beforeChange([key], value, parentInstance);
 
         const oldOctoValue = octoValueMap[key];
         if (oldOctoValue) {
@@ -60,11 +60,11 @@ export function proxifyObject(
 
         octoValueMap[key] = schemaMap[key].create(
           value,
-          {parent: {octoValue: parentOctoValue, path: key}},
+          {parent: {instance: parentInstance, path: key}},
         );
         target[key] = octoValueMap[key].value;
 
-        parentOctoValue.afterChange([key], value, parentOctoValue);
+        parentInstance.afterChange([key], value, parentInstance);
       } else {
         target[key] = value;
       }
@@ -72,7 +72,7 @@ export function proxifyObject(
     },
     deleteProperty(target, key) {
       if (typeof key !== 'symbol' && schemaMap[key]) {
-        parentOctoValue.beforeChange([key], undefined, parentOctoValue);
+        parentInstance.beforeChange([key], undefined, parentInstance);
 
         const oldOctoValue = octoValueMap[key];
         if (oldOctoValue) {
@@ -82,7 +82,7 @@ export function proxifyObject(
         delete octoValueMap[key];
         delete target[key];
 
-        parentOctoValue.afterChange([key], undefined, parentOctoValue);
+        parentInstance.afterChange([key], undefined, parentInstance);
       } else {
         delete target[key];
       }
@@ -96,7 +96,7 @@ export function setObject(
   data: object,
   obj: object,
   octoValueMap: IOctoValueMap,
-  parentOctoValue: OctoValue<any> & IParentValue,
+  parentInstance: IOctoParentInstance,
   schemaMap: ISchemaMap,
   sanitizeOptions: ISanitizeOptions,
 ) {
@@ -119,7 +119,7 @@ export function setObject(
 
     newOctoValueMap[key] = schemaMap[key].create(
       data[key],
-      {...sanitizeOptions, parent: {octoValue: parentOctoValue, path: key}},
+      {...sanitizeOptions, parent: {instance: parentInstance, path: key}},
     );
   });
 
@@ -163,15 +163,15 @@ export class OctoObject<T extends object = object> extends OctoValue<T> {
     super(value, schemaOptions, sanitizeOptions);
   }
 
-  public beforeChange(path: Path, value: any, oldOctoValue: OctoValue<any>) {
-    if (this.parent && this.parent.octoValue.beforeChange) {
-      this.parent.octoValue.beforeChange([this.parent.path].concat(path), value, oldOctoValue);
+  public beforeChange(path: Path, value: any, oldInstance: IOctoInstance) {
+    if (this.parent && this.parent.instance.beforeChange) {
+      this.parent.instance.beforeChange([this.parent.path].concat(path), value, oldInstance);
     }
   }
 
-  public afterChange(path: Path, value: any, newOctoValue: OctoValue<any>) {
-    if (this.parent && this.parent.octoValue.afterChange) {
-      this.parent.octoValue.afterChange([this.parent.path].concat(path), value, newOctoValue);
+  public afterChange(path: Path, value: any, newInstance: IOctoInstance) {
+    if (this.parent && this.parent.instance.afterChange) {
+      this.parent.instance.afterChange([this.parent.path].concat(path), value, newInstance);
     }
   }
 
@@ -213,7 +213,7 @@ export class OctoObject<T extends object = object> extends OctoValue<T> {
       setObject(value, obj, this.octoValueMap, this, this.schemaOptions.schemaMap, sanitizeOptions);
     }
 
-    return proxifyObject(obj, this.octoValueMap, this.schemaOptions.schemaMap, this);
+    return proxifyObject(obj, this.octoValueMap, this, this.schemaOptions.schemaMap) as T;
   }
 }
 

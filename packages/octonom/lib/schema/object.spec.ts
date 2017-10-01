@@ -1,7 +1,7 @@
 import { ArrayCollection } from '../array-collection';
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { ObjectSchema, populateObject, setObjectSanitized, toObject, validateObject } from './object';
+import { ObjectSchema, populateObject, setObject, toObject, validateObject } from './object';
 import { ReferenceSchema } from './reference';
 import { StringSchema } from './string';
 
