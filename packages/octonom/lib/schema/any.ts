@@ -1,7 +1,7 @@
 import { cloneDeep } from 'lodash';
 
 import { ValidationError } from '../errors';
-import { ISanitizeOptions, ISchemaOptions, OctoFactory, OctoValue } from './value';
+import { ISanitizeOptions, ISchema, ISchemaOptions, OctoFactory, OctoValue } from './value';
 
 export interface IAnyOptions extends ISchemaOptions<OctoAny> {
   default?: any | (() => any);
@@ -38,5 +38,10 @@ export class OctoAny extends OctoValue<any> {
   }
 }
 
-/* tslint:disable-next-line:variable-name */
-export const OctoAnyFactory = new OctoFactory<OctoAny, IAnyOptions>(OctoAny, {});
+export class AnySchema implements ISchema {
+  constructor(public options: IAnyOptions = {}) {}
+
+  public create(value: any, sanitizeOptions: ISanitizeOptions = {}) {
+    return new OctoAny(value, this.options, sanitizeOptions);
+  }
+}

@@ -107,14 +107,15 @@ export class OctoFactory<
 
   public create(schemaOptions: TOptions = this.defaultOptions) {
     return (value: any, sanitizeOptions: ISanitizeOptions = {}) => {
-      return new this.octoValueClass(value, schemaOptions, sanitizeOptions);
+      return new this.octoValueClass(value, schemaOptions, sanitizeOptions) as TOctoValue;
     };
   }
 }
 
-export type OctoValueFactory<TOctoValue extends OctoValue<any> = OctoValue<any>> =
-  (value: any, sanitizeOptions: ISanitizeOptions) => TOctoValue;
+export interface ISchema {
+  create(value: any, sanitizeOptions: ISanitizeOptions): OctoValue<any>;
+}
 
 export interface ISchemaMap {
-  [field: string]: OctoValueFactory;
+  [key: string]: ISchema;
 }

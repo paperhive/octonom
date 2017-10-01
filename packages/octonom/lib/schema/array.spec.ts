@@ -3,10 +3,10 @@ import { stub } from 'sinon';
 import { ArrayCollection } from '../array-collection';
 import { SanitizationError, ValidationError } from '../errors';
 // import { Model } from '../model';
-import { OctoArray, OctoArrayFactory } from './array';
+import { ArraySchema, OctoArray } from './array';
 // import { ModelSchema } from './model';
 // import { ReferenceSchema } from './reference';
-import { OctoStringFactory } from './string';
+import { StringSchema } from './string';
 import { OctoValue } from './value';
 
 describe('ArraySchema', () => {
@@ -14,28 +14,28 @@ describe('ArraySchema', () => {
   class TestModel extends Model {
     public foo: string;
   }
-  TestModel.setSchema('foo', OctoStringFactory.create());
+  TestModel.setSchema('foo', new StringSchema());
   */
 
   describe('constructor()', () => {
     it('should throw a SanitizationError if value is not an array', () => {
-      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
-      expect(() => schema(42)).to.throw(SanitizationError, 'Value is not an array.');
+      const schema = new ArraySchema({elementSchema: new StringSchema()});
+      expect(() => schema.create(42)).to.throw(SanitizationError, 'Value is not an array.');
     });
 
     it('should throw a SanitizationError if elements cannot be sanitized', () => {
-      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
-      expect(() => schema([42])).to.throw(SanitizationError, 'Value is not a string.');
+      const schema = new ArraySchema({elementSchema: new StringSchema()});
+      expect(() => schema.create([42])).to.throw(SanitizationError, 'Value is not a string.');
     });
 
     it('should return undefined', () => {
-      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
-      expect(schema(undefined)).to.have.property('value').that.equal(undefined);
+      const schema = new ArraySchema({elementSchema: new StringSchema()});
+      expect(schema.create(undefined)).to.have.property('value').that.equal(undefined);
     });
 
     it('should return an array of strings', () => {
-      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
-      expect(schema(['bar'])).to.have.property('value').that.eql(['bar']);
+      const schema = new ArraySchema({elementSchema: new StringSchema()});
+      expect(schema.create(['bar'])).to.have.property('value').that.eql(['bar']);
     });
 
     /* TODO
@@ -54,13 +54,13 @@ describe('ArraySchema', () => {
     */
 
     it('should return empty array if required and undefined', () => {
-      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create(), required: true});
-      expect(schema(undefined)).to.have.property('value').that.eql([]);
+      const schema = new ArraySchema({elementSchema: new StringSchema(), required: true});
+      expect(schema.create(undefined)).to.have.property('value').that.eql([]);
     });
   });
 
   describe('value array proxy', () => {
-    const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
+    const schema = new ArraySchema({elementSchema: new StringSchema()});
     let octoArray: OctoArray<any>;
     let beforeChangeStub;
     let beforeChangeArray;
@@ -68,7 +68,7 @@ describe('ArraySchema', () => {
     let afterChangeArray;
 
     beforeEach(() => {
-      octoArray = schema(['foo', 'bar', 'bla']);
+      octoArray = schema.create(['foo', 'bar', 'bla']);
       beforeChangeStub = stub(octoArray, 'beforeChange')
         .callsFake((path, value, oldOctoValue) => beforeChangeArray = oldOctoValue.toObject());
       afterChangeStub = stub(octoArray, 'afterChange')
@@ -151,7 +151,7 @@ describe('ArraySchema', () => {
     class ReferenceModel extends Model {
       public id: string;
     }
-    ReferenceModel.setSchema('id', OctoStringFactory.create());
+    ReferenceModel.setSchema('id', new StringSchema());
 
     const collection = new ArrayCollection<ReferenceModel>(ReferenceModel, {modelIdField: 'id'});
     collection.insert(new ReferenceModel({id: '0xACAB'}));
@@ -196,9 +196,9 @@ describe('ArraySchema', () => {
 
   describe('toObject()', () => {
     it('should return a new array', () => {
-      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
+      const schema = new ArraySchema({elementSchema: new StringSchema()});
       const array = ['foo'];
-      const result = schema(array).toObject();
+      const result = schema.create(array).toObject();
       expect(result).to.not.equal(array);
       expect(result).to.eql(array);
     });
@@ -207,8 +207,8 @@ describe('ArraySchema', () => {
   describe('validate()', () => {
     // TODO: remove this test? undefined is not possible if required: true
     it('should throw a ValidationError if required but undefined', async () => {
-      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create(), required: true});
-      const array = schema(undefined);
+      const schema = new ArraySchema({elementSchema: new StringSchema(), required: true});
+      const array = schema.create(undefined);
       delete array.value;
       delete array.octoValues;
       await expect(array.validate())
@@ -216,39 +216,39 @@ describe('ArraySchema', () => {
     });
 
     it('should throw if value has less than min elements', async () => {
-      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create(), minLength: 2});
-      await expect(schema(['foo']).validate())
+      const schema = new ArraySchema({elementSchema: new StringSchema(), minLength: 2});
+      await expect(schema.create(['foo']).validate())
         .to.be.rejectedWith(ValidationError, 'Array must have at least 2 elements.');
     });
 
     it('should throw if value has more than max elements', async () => {
-      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create(), maxLength: 2});
-      await expect(schema(['foo', 'bar', 'baz']).validate())
+      const schema = new ArraySchema({elementSchema: new StringSchema(), maxLength: 2});
+      await expect(schema.create(['foo', 'bar', 'baz']).validate())
         .to.be.rejectedWith(ValidationError, 'Array must have at most 2 elements.');
     });
 
     it('should run custom validator', async () => {
-      const schema = OctoArrayFactory.create({
-        elementSchema: OctoStringFactory.create(),
+      const schema = new ArraySchema({
+        elementSchema: new StringSchema(),
         validate: async (octoArray: OctoArray) => {
           if (octoArray.value.indexOf('baz') !== -1) {
             throw new ValidationError('baz is not allowed.');
           }
         },
       });
-      await schema(['foo']).validate();
-      await expect(schema(['foo', 'bar', 'baz']).validate())
+      await schema.create(['foo']).validate();
+      await expect(schema.create(['foo', 'bar', 'baz']).validate())
         .to.be.rejectedWith(ValidationError, 'baz is not allowed.');
     });
 
     it('should validate undefined', async () => {
-      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
-      await schema(undefined).validate();
+      const schema = new ArraySchema({elementSchema: new StringSchema()});
+      await schema.create(undefined).validate();
     });
 
     it('should validate an array of strings', async () => {
-      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
-      await schema(['foo']).validate();
+      const schema = new ArraySchema({elementSchema: new StringSchema()});
+      await schema.create(['foo']).validate();
     });
 
     /* TODO
