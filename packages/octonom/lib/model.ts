@@ -50,7 +50,7 @@ export class Model {
   }
 
   // TODO: ideally we'd also use Partial<this> as the type for data
-  constructor(data?, sanitizeOptions?: ISanitizeOptions) {
+  constructor(data?, sanitizeOptions: ISanitizeOptions = {}) {
     const constructor = this.constructor as typeof Model;
 
     // The shadow property holds data that is required to allow methods to operate on both
@@ -94,7 +94,7 @@ export class Model {
   //       the hooks will be called with the unproxied instance as well.
   //       This prevents recursion when handlers set properties.
   //       The set hooks are called by the proxy.
-  public set(data: Partial<this>, options?: ISanitizeOptions) {
+  public set(data: Partial<this>, options: ISanitizeOptions = {}) {
     const constructor = this.constructor as typeof Model;
     const shadow = this[shadowGet]() as IShadow;
     setObject(data, shadow.value, shadow.octoValueMap, shadow, constructor.schemaMap, options);
