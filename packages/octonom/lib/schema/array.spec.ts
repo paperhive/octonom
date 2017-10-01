@@ -193,80 +193,70 @@ describe('ArraySchema', () => {
     });
   });
   */
-/*
+
   describe('toObject()', () => {
     it('should return a new array', () => {
       const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
-      const schema = new ArraySchema({elementSchema: new StringSchema()});
       const array = ['foo'];
-      const result = schema.toObject(array);
+      const result = schema(array).toObject();
       expect(result).to.not.equal(array);
       expect(result).to.eql(array);
-    });
-
-    it('should return a new array from a model array', () => {
-      const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel})});
-      const array = [new TestModel({foo: 'bar'})];
-      const result = schema.toObject(array);
-      expect(result).to.not.equal(array);
-      expect(result).to.eql([{foo: 'bar'}]);
     });
   });
 
   describe('validate()', () => {
+    // TODO: remove this test? undefined is not possible if required: true
     it('should throw a ValidationError if required but undefined', async () => {
-      const schema = new ArraySchema({elementSchema: new StringSchema(), required: true});
-      await expect(schema.validate(undefined, ['key'], {} as Model))
+      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create(), required: true});
+      const array = schema(undefined);
+      delete array.value;
+      delete array.octoValues;
+      await expect(array.validate())
         .to.be.rejectedWith(ValidationError, 'Required value is undefined.');
     });
 
-    it('should throw if value is not an array', async () => {
-      const schema = new ArraySchema({elementSchema: new StringSchema()});
-      await expect(schema.validate(42 as any, ['key'], {} as Model))
-        .to.be.rejectedWith(ValidationError, 'Value is not an array.');
-    });
-
     it('should throw if value has less than min elements', async () => {
-      const schema = new ArraySchema({elementSchema: new StringSchema(), minLength: 2});
-      await expect(schema.validate(['foo'], ['key'], {} as Model))
+      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create(), minLength: 2});
+      await expect(schema(['foo']).validate())
         .to.be.rejectedWith(ValidationError, 'Array must have at least 2 elements.');
     });
 
     it('should throw if value has more than max elements', async () => {
-      const schema = new ArraySchema({elementSchema: new StringSchema(), maxLength: 2});
-      await expect(schema.validate(['foo', 'bar', 'baz'], ['key'], {} as Model))
+      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create(), maxLength: 2});
+      await expect(schema(['foo', 'bar', 'baz']).validate())
         .to.be.rejectedWith(ValidationError, 'Array must have at most 2 elements.');
     });
 
     it('should run custom validator', async () => {
-      const schema = new ArraySchema({
-        elementSchema: new StringSchema(),
-        validate: async (value: string[]) => {
-          if (value.indexOf('baz') !== -1) {
+      const schema = OctoArrayFactory.create({
+        elementSchema: OctoStringFactory.create(),
+        validate: async (octoArray: OctoArray) => {
+          if (octoArray.value.indexOf('baz') !== -1) {
             throw new ValidationError('baz is not allowed.');
           }
         },
       });
-      await schema.validate(['foo'], ['key'], {} as Model);
-      await expect(schema.validate(['foo', 'bar', 'baz'], ['key'], {} as Model))
+      await schema(['foo']).validate();
+      await expect(schema(['foo', 'bar', 'baz']).validate())
         .to.be.rejectedWith(ValidationError, 'baz is not allowed.');
     });
 
     it('should validate undefined', async () => {
-      const schema = new ArraySchema({elementSchema: new StringSchema()});
-      await schema.validate(undefined, ['key'], {} as Model);
+      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
+      await schema(undefined).validate();
     });
 
     it('should validate an array of strings', async () => {
-      const schema = new ArraySchema({elementSchema: new StringSchema()});
-      await schema.validate(['foo'], ['key'], {} as Model);
+      const schema = OctoArrayFactory.create({elementSchema: OctoStringFactory.create()});
+      await schema(['foo']).validate();
     });
 
+    /* TODO
     it('should validate an array of models', async () => {
       const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel})});
       const array = [new TestModel({foo: 'bar'})];
       await schema.validate(array, ['key'], {} as Model);
     });
+    */
   });
-  */
 });
