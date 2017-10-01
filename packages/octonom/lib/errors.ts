@@ -17,6 +17,7 @@ export class PopulationError extends ExtendableError {
 }
 
 export class SanitizationError extends ExtendableError {
+  // TODO: add value parameter!
   constructor(message: string, public reason?: string, public parent?: IParent) {
     super(message, SanitizationError.prototype);
   }
