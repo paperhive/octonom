@@ -1,13 +1,13 @@
 import { HookHandlersMap, Hooks } from './hooks';
-import { populateObject, proxifyObject, setObjectSanitized, toObject, validateObject } from './schema/object';
-import { IPopulateMap, ISanitizeOptions, ISchema, ISchemaMap,
-         IToObjectOptions,
-       } from './schema/schema';
+import { populateObject, proxifyObject, setObject, toObject, validateObject } from './schema/object';
+import { IOctoInstance, IOctoParentInstance, IOctoValueMap, IPopulateMap, ISanitizeOptions, ISchema, ISchemaMap,
+         IToObjectOptions, OctoValue, Path,
+       } from './schema/value';
 
 export type Constructor<T = {}> = new (...args: any[]) => T;
 
 export interface IModelConstructor<T extends Model> {
-  schema: ISchemaMap;
+  schemaMap: ISchemaMap;
   hooks: Hooks<T>;
   new (data: Partial<T>, sanitizeOptions?: ISanitizeOptions): T;
 }
@@ -25,49 +25,58 @@ export function Hook<TModel extends Model, K extends keyof HookHandlersMap<TMode
   };
 }
 
+export interface IShadow extends IOctoParentInstance {
+  value: Model;
+  octoValueMap: IOctoValueMap;
+}
+
+const shadowProperty = Symbol();
+const shadowGet = Symbol();
+const shadowSet = Symbol();
+
 // TODO: Model can be made an abstract class but the type Constructor<Model>
 //       doesn't work anymore (e.g., used in mixins)
 export class Model {
-  public static schema: ISchemaMap = {};
+  public static schemaMap: ISchemaMap = {};
 
   public static hooks = new Hooks<Model>();
 
-  public static setSchema(key: string, schema: ISchema<any, Model>) {
-    if (this.schema[key]) {
+  public static setSchema(key: string, schema: ISchema) {
+    if (this.schemaMap[key]) {
       throw new Error(`Key ${key} is already set.`);
     }
-    this.schema = Object.assign({}, this.schema);
-    this.schema[key] = schema;
+    this.schemaMap = Object.assign({}, this.schemaMap);
+    this.schemaMap[key] = schema;
   }
 
   // TODO: ideally we'd also use Partial<this> as the type for data
-  constructor(data?, sanitizeOptions: ISanitizeOptions = {}) {
+  constructor(data?, sanitizeOptions?: ISanitizeOptions) {
     const constructor = this.constructor as typeof Model;
 
-    const newSanitizeOptions = {
-      ...sanitizeOptions,
-      beforeSet: options => {
-        constructor.hooks.run('beforeSet', options);
-        if (sanitizeOptions.beforeSet) {
-          sanitizeOptions.beforeSet(options);
+    // The shadow property holds data that is required to allow methods to operate on both
+    // the instance and the OctoValue hierarchy that is hidden from the user.
+    const shadow: IShadow = {
+      value: this,
+      octoValueMap: {},
+      parent: sanitizeOptions.parent,
+      beforeChange: (path: Path, value: any, instance: IOctoInstance) => {
+        constructor.hooks.run('beforeChange', {path, value, instance});
+        if (shadow.parent) {
+          shadow.parent.instance.beforeChange([shadow.parent.path].concat(path), value, instance);
         }
       },
-      afterSet: options => {
-        constructor.hooks.run('afterSet', options);
-        if (sanitizeOptions.afterSet) {
-          sanitizeOptions.afterSet(options);
+      afterChange: (path: Path, value: any, instance: IOctoInstance) => {
+        constructor.hooks.run('afterChange', {path, value, instance});
+        if (shadow.parent) {
+          shadow.parent.instance.afterChange([shadow.parent.path].concat(path), value, instance);
         }
       },
     };
+    this[shadowSet](shadow);
 
-    // create proxied object
-    const proxy = proxifyObject(constructor.schema, this, [], this, newSanitizeOptions);
+    setObject(data || {}, this, shadow.octoValueMap, shadow, constructor.schemaMap, sanitizeOptions);
 
-    // set initial data
-    proxy.set(data || {}, {...newSanitizeOptions, defaults: true, replace: true});
-
-    // return proxy
-    return proxy;
+    return proxifyObject(this, shadow.octoValueMap, shadow, constructor.schemaMap) as Model;
   }
 
   public inspect() {
@@ -76,30 +85,25 @@ export class Model {
 
   public async populate(populateMap: IPopulateMap) {
     const constructor = this.constructor as typeof Model;
-    const populatedObj = await populateObject(constructor.schema, this, populateMap);
-
-    const newObj = {};
-    Object.keys(populateMap).forEach(key => {
-      if (populatedObj[key] !== this[key]) {
-        newObj[key] = populatedObj[key];
-      }
-    });
-    Object.assign(this, newObj);
-
+    const shadow = this[shadowGet]() as IShadow;
+    await populateObject(shadow.value, shadow.octoValueMap, constructor.schemaMap, populateMap);
     return this;
   }
 
   // note: set runs with `this` bound to the unproxied instance, therefore
   //       the hooks will be called with the unproxied instance as well.
   //       This prevents recursion when handlers set properties.
-  public set(data: Partial<this>, options: ISanitizeOptions = {}) {
+  //       The set hooks are called by the proxy.
+  public set(data: Partial<this>, options?: ISanitizeOptions) {
     const constructor = this.constructor as typeof Model;
-    setObjectSanitized(constructor.schema, this, data, [], this, options);
+    const shadow = this[shadowGet]() as IShadow;
+    setObject(data, shadow.value, shadow.octoValueMap, shadow, constructor.schemaMap, options);
   }
 
   public toObject(options?: IToObjectOptions): Partial<this> {
     const constructor = this.constructor as typeof Model;
-    return toObject(constructor.schema, this, options) as Partial<this>;
+    const shadow = this[shadowGet]() as IShadow;
+    return toObject(shadow.octoValueMap, options);
   }
 
   public toJSON() {
@@ -108,6 +112,15 @@ export class Model {
 
   public async validate() {
     const constructor = this.constructor as typeof Model;
-    await validateObject(constructor.schema, this, [], this);
+    const shadow = this[shadowGet]() as IShadow;
+    await validateObject(shadow.octoValueMap);
+  }
+
+  protected [shadowSet](shadow: IShadow) {
+    this[shadowProperty] = shadow;
+  }
+
+  protected [shadowGet](shadow: IShadow) {
+    return this[shadowProperty] as IShadow;
   }
 }
