@@ -1,10 +1,14 @@
+import { spy } from 'sinon';
+
 import { ArrayCollection } from '../array-collection';
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
 import { ObjectSchema, populateObject, setObject, toObject, validateObject } from './object';
 import { ReferenceSchema } from './reference';
-import { StringSchema } from './string';
+import { OctoString, StringSchema } from './string';
+import { IOctoParentInstance, IOctoValueMap } from './value';
 
+/*
 class TestModel extends Model {
   public id: string;
 }
@@ -44,6 +48,7 @@ describe('populateObject()', () => {
     expect(result).to.eql({foo: {id: '0xACAB'}, bar: 'test'});
   });
 });
+*/
 
 describe('proxifyObject()', () => {
   it('should call beforeSet and afterSet when assigning a key');
@@ -52,93 +57,105 @@ describe('proxifyObject()', () => {
   it('should call beforeSet and afterSet when deleting a nested key');
 });
 
-describe('setObjectSanitized', () => {
+describe('setObject', () => {
   const schemaMap = {
     foo: new StringSchema({required: true, default: 'default'}),
     bar: new StringSchema(),
   };
 
-  it('should throw if data is not an object', () => {
-    expect(() => setObjectSanitized(schemaMap, {}, 42 as any, [], {} as Model))
-      .to.throw(SanitizationError, 'Data is not an object.');
+  let parentInstance: IOctoParentInstance;
+
+  beforeEach(() => {
+    parentInstance = {
+      value: {},
+      beforeChange: spy(),
+      afterChange: spy(),
+    };
   });
 
   it('should throw if key not in schema', () => {
-    expect(() => setObjectSanitized(schemaMap, {}, {baz: 'foo'}, [], {} as Model))
+    expect(() => setObject({baz: 'foo'}, {}, {}, parentInstance, schemaMap, {}))
       .to.throw(SanitizationError, 'Key baz not found in schema.');
   });
 
   it('should throw if a nested schema sanitization throws', () => {
-    expect(() => setObjectSanitized(schemaMap, {}, {bar: 42}, [], {} as Model))
+    expect(() => setObject({bar: 42}, {}, {}, parentInstance, schemaMap, {}))
       .to.throw(SanitizationError, 'Value is not a string.');
   });
 
   it('should do nothing with an empty data object', () => {
-    const target = {};
-    const result = setObjectSanitized(schemaMap, target, {}, [], {} as Model);
-    expect(result).to.equal(target).and.to.eql({});
+    const obj = {};
+    const octoValueMap: IOctoValueMap = {};
+    setObject({}, obj, octoValueMap, parentInstance, schemaMap, {});
+    expect(obj).to.eql({});
+    expect(octoValueMap).to.eql({});
   });
 
   it('should set a valid property', () => {
-    const target = {};
-    const result = setObjectSanitized(schemaMap, target, {foo: 'bar'}, [], {} as Model);
-    expect(result).to.equal(target).and.to.eql({foo: 'bar'});
+    const obj = {};
+    const octoValueMap: IOctoValueMap = {};
+    setObject({foo: 'bar'}, obj, octoValueMap, parentInstance, schemaMap, {});
+    expect(obj).to.eql({foo: 'bar'});
+    expect(octoValueMap.foo).to.be.an.instanceOf(OctoString).and
+      .to.have.property('value', 'bar');
   });
 
   it('should not modify an existing property', () => {
-    const target = {bar: 'baz'};
-    const result = setObjectSanitized(schemaMap, target, {foo: 'bar'}, [], {} as Model);
-    expect(result).to.equal(target).and.to.eql({foo: 'bar', bar: 'baz'});
+    const obj = {bar: 'baz'};
+    const octoString = new OctoString('baz');
+    const octoValueMap: IOctoValueMap = {bar: octoString};
+    setObject({foo: 'bar'}, obj, octoValueMap, parentInstance, schemaMap, {});
+    expect(obj).to.eql({foo: 'bar', bar: 'baz'});
+    expect(octoValueMap.bar).to.equal(octoString);
+    expect(octoValueMap.foo).to.be.an.instanceOf(OctoString).and
+      .to.have.property('value', 'bar');
   });
 
   it('should set a default value', () => {
-    const target = {};
-    const result = setObjectSanitized(schemaMap, target, {bar: 'bar'}, [], {} as Model, {defaults: true});
-    expect(result).to.equal(target).and.to.eql({foo: 'default', bar: 'bar'});
+    const obj = {};
+    const octoValueMap: IOctoValueMap = {};
+    setObject({bar: 'bar'}, obj, octoValueMap, parentInstance, schemaMap, {defaults: true});
+    expect(obj).to.eql({foo: 'default', bar: 'bar'});
+    expect(octoValueMap.foo).to.be.an.instanceOf(OctoString).and
+      .to.have.property('value', 'default');
+    expect(octoValueMap.bar).to.be.an.instanceOf(OctoString).and
+      .to.have.property('value', 'bar');
   });
 
   it('should replace an object', () => {
-    const target = {foo: 'bar'};
-    const result = setObjectSanitized(schemaMap, target, {bar: 'bar'}, [], {} as Model, {replace: true});
-    expect(result).to.equal(target).and.to.eql({bar: 'bar'});
+    const obj = {bar: 'baz'};
+    const octoValueMap: IOctoValueMap = {bar: new OctoString('baz')};
+    setObject({bar: 'bar'}, obj, octoValueMap, parentInstance, schemaMap, {replace: true});
+    expect(obj).to.eql({bar: 'bar'});
+    expect(octoValueMap.bar).to.be.an.instanceOf(OctoString).and
+      .to.have.property('value', 'bar');
+    expect(octoValueMap).to.not.have.property('foo');
   });
 });
 
 describe('toObject()', () => {
-  const schemaMap = {foo: new StringSchema()};
-
   it('should return an object', () => {
-    expect(toObject(schemaMap, {foo: 'bar'})).to.eql({foo: 'bar'});
-  });
-
-  it('should ignore additional keys', () => {
-    expect(toObject(schemaMap, {baz: 'bar'})).to.eql({});
+    const octoValueMap: IOctoValueMap = {foo: new OctoString('bar')};
+    expect(toObject(octoValueMap)).to.eql({foo: 'bar'});
   });
 });
 
 describe('validateObject()', () => {
   const schemaMap = {foo: new StringSchema({required: true, default: 'default'})};
 
-  it('should throw if data is not an object', async () => {
-    await expect(validateObject(schemaMap, 42 as any, [], {} as Model))
-      .to.be.rejectedWith(ValidationError, 'Data is not an object.');
-  });
-
-  it('should throw if key is not in schema', async () => {
-    await expect(validateObject(schemaMap, {bar: 'foo'}, [], {} as Model))
-      .to.be.rejectedWith(ValidationError, 'Key bar not found in schema.');
-  });
-
   it('should throw if nested validation fails', async () => {
-    await expect(validateObject(schemaMap, {foo: 42}, [], {} as Model))
-      .to.be.rejectedWith(ValidationError, 'Value is not a string.');
+    const octoValueMap: IOctoValueMap = {foo: new OctoString(undefined, {required: true})};
+    await expect(validateObject(octoValueMap))
+      .to.be.rejectedWith(ValidationError, 'Required value is undefined.');
   });
 
   it('should pass for a valid object', async () => {
-    await validateObject(schemaMap, {foo: 'bar'}, [], {} as Model);
+    const octoValueMap: IOctoValueMap = {foo: new OctoString('bar', {required: true})};
+    await validateObject(octoValueMap);
   });
 });
 
+/*
 describe('ObjectSchema', () => {
   describe('populate()', () => {
     // note: details are tested in populateObject() above
@@ -227,3 +244,4 @@ describe('ObjectSchema', () => {
     });
   });
 });
+*/
