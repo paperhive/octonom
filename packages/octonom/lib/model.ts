@@ -59,16 +59,16 @@ export class Model {
       value: this,
       octoValueMap: {},
       parent: sanitizeOptions.parent,
-      beforeChange: (path: Path, value: any, instance: IOctoInstance) => {
-        constructor.hooks.run('beforeChange', {path, value, instance});
+      beforeChange: (path: Path, value: any, octoInstance: IOctoInstance) => {
+        constructor.hooks.run('beforeChange', {path, value, instance: this, octoInstance});
         if (shadow.parent) {
-          shadow.parent.instance.beforeChange([shadow.parent.path].concat(path), value, instance);
+          shadow.parent.instance.beforeChange([shadow.parent.path].concat(path), value, octoInstance);
         }
       },
-      afterChange: (path: Path, value: any, instance: IOctoInstance) => {
-        constructor.hooks.run('afterChange', {path, value, instance});
+      afterChange: (path: Path, value: any, octoInstance: IOctoInstance) => {
+        constructor.hooks.run('afterChange', {path, value, instance: this, octoInstance});
         if (shadow.parent) {
-          shadow.parent.instance.afterChange([shadow.parent.path].concat(path), value, instance);
+          shadow.parent.instance.afterChange([shadow.parent.path].concat(path), value, octoInstance);
         }
       },
     };
@@ -97,7 +97,9 @@ export class Model {
   public set(data: Partial<this>, options: ISanitizeOptions = {}) {
     const constructor = this.constructor as typeof Model;
     const shadow = this[shadowGet]() as IShadow;
+    shadow.beforeChange([], data, shadow);
     setObject(data, shadow.value, shadow.octoValueMap, shadow, constructor.schemaMap, options);
+    shadow.afterChange([], data, shadow);
   }
 
   public toObject(options?: IToObjectOptions): Partial<this> {

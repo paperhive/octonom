@@ -8,7 +8,8 @@ import { IOctoInstance, Path } from './schema/value';
 export interface IChangeHookOptions<TModel extends Model> {
   path: Path;
   value: any;
-  instance: IOctoInstance;
+  instance: Model;
+  octoInstance: IOctoInstance;
 }
 
 export interface IChangeHooks<TModel extends Model = Model> {
