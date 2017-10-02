@@ -1,9 +1,9 @@
-import { IModel } from '../model';
+import { IModel, Model } from '../model';
 import { AnySchema, IAnyOptions } from './any';
 import { ArraySchema, IArrayOptions } from './array';
 // import { BooleanSchema, IBooleanOptions } from './boolean';
 // import { DateSchema, IDateOptions } from './date';
-// import { IModelOptions, ModelSchema } from './model';
+import { IModelOptions, ModelSchema } from './model';
 // import { INumberOptions, NumberSchema } from './number';
 import { IObjectOptions, ObjectSchema } from './object';
 // import { IReferenceOptions, ReferenceSchema } from './reference';
@@ -20,7 +20,7 @@ export const Property = {
   Array: (options: IArrayOptions) => getSchemaDecorator(() => new ArraySchema(options)),
   // Boolean: (options: IBooleanOptions = {}) => getSchemaDecorator(() => new BooleanSchema(options)),
   // Date: (options: IDateOptions = {}) => getSchemaDecorator(() => new DateSchema(options)),
-  // Model: (options: IModelOptions) => getSchemaDecorator(() => new ModelSchema(options)),
+  Model: (options: IModelOptions) => getSchemaDecorator(() => new ModelSchema(options)),
   // Number: (options: INumberOptions = {}) => getSchemaDecorator(() => new NumberSchema(options)),
   Object: (options: IObjectOptions) => getSchemaDecorator(() => new ObjectSchema(options)),
   // Reference: (options: IReferenceOptions) => getSchemaDecorator(() => new ReferenceSchema(options)),
@@ -32,7 +32,7 @@ export const Schema = {
   Array: ArraySchema,
   // Boolean: BooleanSchema,
   // Date: DateSchema,
-  // Model: ModelSchema,
+  Model: ModelSchema,
   // Number: NumberSchema,
   Object: ObjectSchema,
   // Reference: ReferenceSchema,
