@@ -113,6 +113,7 @@ export function setObject(
 
   // sanitize all values before setting
   schemaKeys.forEach(key => {
+    /* TODO: find solution for undefined + required validation */
     if (data[key] === undefined && !sanitizeOptions.defaults) {
       return;
     }
@@ -219,7 +220,7 @@ export class OctoObject<T extends object = object> extends OctoValue<T> {
 }
 
 export class ObjectSchema<T extends object = object> implements ISchema {
-  constructor(public options: IObjectOptions) {}
+  constructor(public options: IObjectOptions<T>) {}
 
   public create(value: any, sanitizeOptions: ISanitizeOptions = {}) {
     return new OctoObject<T>(value, this.options, sanitizeOptions);
