@@ -1,7 +1,4 @@
 import { SanitizationError, ValidationError } from '../errors';
-import { IHooks } from '../hooks';
-import { Model } from '../model';
-import { ModelSchema } from './model';
 import { IOctoInstance, ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions,
          OctoFactory, OctoValue, Path, PopulateReference,
        } from './value';
