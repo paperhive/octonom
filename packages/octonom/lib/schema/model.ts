@@ -6,7 +6,6 @@ import { ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions,
 
 export interface IModelOptions<T extends Model = Model> extends ISchemaOptions<OctoModel<T>> {
   model: IModelConstructor<T>;
-  callParentHooks?: boolean;
 }
 
 export class OctoModel<T extends Model = Model> extends OctoValue<T> {
