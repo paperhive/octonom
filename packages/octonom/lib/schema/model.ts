@@ -1,74 +1,58 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { IModelConstructor, Model } from '../model';
 import { ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions,
-         Path, PopulateReference, runValidator,
-       } from './schema';
+         OctoValue, Path, PopulateReference,
+       } from './value';
 
-export interface IModelOptions<TModel extends Model = Model> extends ISchemaOptions<TModel> {
-  model: IModelConstructor<TModel>;
+export interface IModelOptions<T extends Model = Model> extends ISchemaOptions<OctoModel<T>> {
+  model: IModelConstructor<T>;
+  callParentHooks?: boolean;
 }
 
-export class ModelSchema<TModel extends Model = Model> implements ISchema<Model, TModel> {
-  constructor(public options: IModelOptions) {}
+export class OctoModel<T extends Model = Model> extends OctoValue<T> {
+  constructor(value: any, public schemaOptions: IModelOptions<T>, sanitizeOptions: ISanitizeOptions) {
+    super(value, schemaOptions, sanitizeOptions);
+  }
 
-  public async populate(value: Model, populateReference: PopulateReference) {
+  public async populate(populateReference: PopulateReference) {
     if (typeof populateReference !== 'object') {
       throw new Error('populateReference must be an object.');
     }
 
-    return value.populate(populateReference);
+    return this.value.populate(populateReference);
   }
 
-  public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
-    if (value === undefined && !this.options.required) {
+  public sanitize(value: any, sanitizeOptions: ISanitizeOptions = {}) {
+    if (value === undefined && !this.schemaOptions.required) {
       return undefined;
     }
 
-    const newValue = value || {};
-
-    if (typeof newValue !== 'object') {
-      throw new SanitizationError(
-        'Value is not an object or a model instance.', 'no-object-or-instance',
-        newValue, path, instance,
-      );
-    }
-
     // create new instance
-    return new this.options.model(newValue, options);
+    return new this.schemaOptions.model(value || {}, sanitizeOptions);
   }
 
-  public toObject(value: Model, options?: IToObjectOptions) {
-    return value.toObject(options);
+  public toObject(options?: IToObjectOptions) {
+    return this.value.toObject(options) as T;
   }
 
-  public async validate(value: Model, path: Path, instance: TModel) {
-    if (value === undefined) {
-      if (this.options.required) {
-        throw new ValidationError('Required value is undefined.', 'required', value, path, instance);
+  public async validate() {
+    if (this.value === undefined) {
+      if (this.schemaOptions.required) {
+        throw new ValidationError('Required value is undefined.', 'required', this);
       }
       return;
     }
 
-    if (!(value instanceof this.options.model)) {
-      throw new ValidationError(
-        `Value is not an instance of ${this.options.model.name}.`,
-        'no-instance', value, path, instance,
-      );
-    }
+    await this.value.validate();
 
-    try {
-      await value.validate();
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        const newPath = path.concat(error.path);
-        throw new ValidationError(error.message, error.reason, error.value, newPath, instance);
-      }
+    await super.validate();
+  }
+}
 
-      throw error;
-    }
+export class ModelSchema<T extends Model = Model> implements ISchema {
+  constructor(public options: IModelOptions<T>) {}
 
-    if (this.options.validate) {
-      await runValidator(this.options.validate, value, path, instance);
-    }
+  public create(value: any, sanitizeOptions: ISanitizeOptions = {}) {
+    return new OctoModel<T>(value, this.options, sanitizeOptions);
   }
 }
