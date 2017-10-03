@@ -3,10 +3,10 @@ import { spy } from 'sinon';
 import { ArrayCollection } from '../array-collection';
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { ObjectSchema, populateObject, setObject, toObject, validateObject } from './object';
+import { ObjectSchema, OctoObject, populateObject, setObject, toObject, validateObject } from './object';
 import { ReferenceSchema } from './reference';
 import { OctoString, StringSchema } from './string';
-import { IOctoParentInstance, IOctoValueMap } from './value';
+import { IOctoParentInstance, IOctoValueMap, ISchemaMap } from './value';
 
 /*
 class TestModel extends Model {
@@ -58,7 +58,7 @@ describe('proxifyObject()', () => {
 });
 
 describe('setObject', () => {
-  const schemaMap = {
+  const schemaMap: ISchemaMap = {
     foo: new StringSchema({required: true, default: 'default'}),
     bar: new StringSchema(),
   };
@@ -66,7 +66,7 @@ describe('setObject', () => {
   let parentInstance: IOctoParentInstance;
 
   beforeEach(() => {
-    parentInstance = {
+    parentInstance  = {
       value: {},
       beforeChange: spy(),
       afterChange: spy(),
@@ -142,21 +142,26 @@ describe('toObject()', () => {
 
 describe('validateObject()', () => {
   const schemaMap = {foo: new StringSchema({required: true, default: 'default'})};
+  const instance: IOctoParentInstance = {
+    value: {},
+    beforeChange: spy(),
+    afterChange: spy(),
+  };
 
-  it('should throw if nested validation fails', async () => {
-    const octoValueMap: IOctoValueMap = {foo: new OctoString(undefined, {required: true})};
-    await expect(validateObject(octoValueMap))
-      .to.be.rejectedWith(ValidationError, 'Required value is undefined.');
+  it('should throw if required key is undefined in the OctoValueMap', async () => {
+    const octoValueMap: IOctoValueMap = {foo: undefined};
+    await expect(validateObject(octoValueMap, instance, schemaMap))
+      .to.be.rejectedWith(ValidationError, 'Key foo is required.');
   });
 
   it('should pass for a valid object', async () => {
-    const octoValueMap: IOctoValueMap = {foo: new OctoString('bar', {required: true})};
-    await validateObject(octoValueMap);
+    const octoValueMap: IOctoValueMap = {foo: schemaMap.foo.create('bar')};
+    await validateObject(octoValueMap, instance, schemaMap);
   });
 });
 
-/*
-describe('ObjectSchema', () => {
+describe('OctoObject', () => {
+  /*
   describe('populate()', () => {
     // note: details are tested in populateObject() above
     it('should populate a key', async () => {
@@ -167,81 +172,65 @@ describe('ObjectSchema', () => {
       expect(result).to.eql({foo: {id: '0xACAB'}, bar: 'test'});
     });
   });
+  */
 
-  describe('sanitize()', () => {
+  describe('constructor()', () => {
+    // note: the constructor wraps setObject() (see above)
     it('should throw a SanitizationError if value is not an object', () => {
-      const schema = new ObjectSchema({schema: {}});
-      expect(() => schema.sanitize(42 as any, [], {} as Model))
+      const schema = new ObjectSchema({schemaMap: {}});
+      expect(() => schema.create(42))
         .to.throw(SanitizationError, 'Data is not an object.');
     });
 
-    it('should return undefined', () => {
-      const schema = new ObjectSchema({schema: {}});
-      expect(schema.sanitize(undefined, [], {} as Model)).to.eql(undefined);
-    });
-
     it('should return an empty object if required', () => {
-      const schema = new ObjectSchema({required: true, schema: {}});
-      expect(schema.sanitize(undefined, [], {} as Model)).to.eql({});
+      const schema = new ObjectSchema({required: true, schemaMap: {}});
+      const octoObject = schema.create(undefined, {defaults: true});
+      expect(octoObject).to.be.an.instanceOf(OctoObject).and
+        .have.property('value').that.eql({});
     });
 
     it('should return an object', () => {
-      const schema = new ObjectSchema({required: true, schema: {foo: new StringSchema()}});
-      expect(schema.sanitize({foo: 'bar'}, [], {} as Model)).to.eql({foo: 'bar'});
+      const schema = new ObjectSchema({schemaMap: {foo: new StringSchema()}});
+      const octoObject = schema.create({foo: 'bar'});
+      expect(octoObject).to.be.an.instanceOf(OctoObject).and
+        .have.property('value').that.eql({foo: 'bar'});
     });
   });
 
   describe('toObject()', () => {
-    // note: details are tested in toObject() above
+    // note: OctoObject.toObject() wraps toObject() (see above)
     it('should return an object', () => {
-      const schema = new ObjectSchema({schema: {foo: new StringSchema()}});
-      const result = schema.toObject({foo: 'bar', bar: 'baz'});
-      expect(result).to.eql({foo: 'bar'});
+      const schema = new ObjectSchema({schemaMap: {foo: new StringSchema()}});
+      const octoObject = schema.create({foo: 'bar'});
+      expect(octoObject.value).to.eql({foo: 'bar'});
     });
   });
 
   describe('validate()', () => {
-    it('should throw a ValidationError if required but undefined', async () => {
-      const schema = new ObjectSchema({required: true, schema: {}});
-      await expect(schema.validate(undefined, [], {} as Model))
-        .to.be.rejectedWith(ValidationError, 'Required value is undefined.');
-    });
-
-    it('should throw a ValidationError if value is not an object', async () => {
-      const schema = new ObjectSchema({schema: {}});
-      await expect(schema.validate('foo' as any, [], {} as Model))
-        .to.be.rejectedWith(ValidationError, 'Value is not an object.');
-    });
-
     it('should throw a ValidationError if nested validation fails', async () => {
-      const schema = new ObjectSchema({schema: {foo: new StringSchema()}});
-      await expect(schema.validate({foo: 42}, [], {} as Model))
-        .to.be.rejectedWith(ValidationError, 'Value is not a string.');
+      const schema = new ObjectSchema({schemaMap: {foo: new StringSchema({enum: ['bar']})}});
+      const octoValue = schema.create({foo: 'baz'});
+      await expect(octoValue.validate())
+        .to.be.rejectedWith(ValidationError, 'String not in enum: bar.');
     });
 
     it('should run custom validator', async () => {
-      const schema = new ObjectSchema({
-        schema: {foo: new StringSchema()},
-        validate: async value => {
-          if ((value as any).foo === 'bar') {
-            throw new ValidationError('foobar is not allowed.');
+      const schema = new ObjectSchema<{foo: string}>({
+        schemaMap: {foo: new StringSchema()},
+        validate: async octoValue => {
+          if (octoValue.value.foo === 'bar') {
+            throw new ValidationError('bar is not allowed.');
           }
         },
       });
-      await schema.validate({foo: 'foo'}, ['key'], {} as Model);
-      await expect(schema.validate({foo: 'bar'}, ['key'], {} as Model))
-        .to.be.rejectedWith(ValidationError, 'foobar is not allowed.');
-    });
-
-    it('should validate undefined', async () => {
-      const schema = new ObjectSchema({schema: {}});
-      await schema.validate(undefined, [], {} as Model);
+      await schema.create({foo: 'baz'}).validate();
+      await expect(schema.create({foo: 'bar'}).validate())
+        .to.be.rejectedWith(ValidationError, 'bar is not allowed.');
     });
 
     it('should validate an object', async () => {
-      const schema = new ObjectSchema({schema: {foo: new StringSchema()}});
-      await schema.validate({foo: 'bar'}, ['key'], {} as Model);
+      const schema = new ObjectSchema({schemaMap: {foo: new StringSchema()}});
+      await schema.create({foo: 'bar'}).validate();
     });
   });
 });
-*/
