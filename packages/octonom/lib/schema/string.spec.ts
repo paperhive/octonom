@@ -1,9 +1,9 @@
 import { SanitizationError, ValidationError } from '../errors';
+import { ISchemaParent } from './schema';
 import { StringSchema } from './string';
-import { IParent } from './value';
 
 describe('StringSchema', () => {
-  const parent: IParent = {
+  const parent: ISchemaParent = {
     instance: {} as any,
     path: 'string',
   };
@@ -51,7 +51,7 @@ describe('StringSchema', () => {
   });
 
   describe('validate()', () => {
-    function testValidation(validationPromise: Promise<any>, expectedMsg: string, expectedParent: IParent) {
+    function testValidation(validationPromise: Promise<any>, expectedMsg: string, expectedParent: ISchemaParent) {
       return expect(validationPromise).to.be.rejectedWith(ValidationError, expectedMsg)
         .and.eventually.have.property('parent', expectedParent);
     }

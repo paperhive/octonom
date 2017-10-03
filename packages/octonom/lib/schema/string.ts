@@ -1,7 +1,9 @@
 import { SanitizationError, ValidationError } from '../errors';
-import { IOctoInstance, ISanitizeOptions, ISchema, ISchemaOptions, validate } from './value';
+import { ISanitizeOptions, ISchema, ISchemaInstance, ISchemaOptions, validate } from './schema';
 
-export interface IStringOptions extends ISchemaOptions<OctoString> {
+export type StringInstance = ISchemaInstance<string>;
+
+export interface IStringOptions extends ISchemaOptions<StringInstance> {
   default?: string | (() => string);
   enum?: string[];
   min?: number;
@@ -9,12 +11,10 @@ export interface IStringOptions extends ISchemaOptions<OctoString> {
   regex?: RegExp;
 }
 
-export type OctoString = IOctoInstance<string>;
-
-export class StringSchema implements ISchema<string, OctoString> {
+export class StringSchema implements ISchema<string, StringInstance> {
   constructor(public readonly options: IStringOptions = {}) {}
 
-  public create(value: any, sanitizeOptions: ISanitizeOptions = {}): OctoString {
+  public create(value: any, sanitizeOptions: ISanitizeOptions = {}): StringInstance {
     const sanitizedValue = this.sanitize(value, sanitizeOptions);
 
     if (sanitizedValue === undefined) {
@@ -27,48 +27,48 @@ export class StringSchema implements ISchema<string, OctoString> {
     };
   }
 
-  public toObject(octoString: OctoString) {
-    return octoString.value;
+  public toObject(instance: StringInstance) {
+    return instance.value;
   }
 
-  public async validate(octoString: OctoString) {
-    if (octoString.value === undefined) {
+  public async validate(instance: StringInstance) {
+    if (instance.value === undefined) {
       if (this.options.required) {
-        throw new ValidationError('Required value is undefined.', 'no-string', octoString.parent);
+        throw new ValidationError('Required value is undefined.', 'no-string', instance.parent);
       }
       return;
     }
 
-    if (typeof octoString.value !== 'string') {
-      throw new ValidationError('Value is not a string.', 'no-string', octoString.parent);
+    if (typeof instance.value !== 'string') {
+      throw new ValidationError('Value is not a string.', 'no-string', instance.parent);
     }
 
-    if (this.options.enum && this.options.enum.indexOf(octoString.value) === -1) {
+    if (this.options.enum && this.options.enum.indexOf(instance.value) === -1) {
       throw new ValidationError(
         `String not in enum: ${this.options.enum.join(', ')}.`,
-        'string-enum', octoString.parent,
+        'string-enum', instance.parent,
       );
     }
 
-    if (this.options.min && octoString.value.length < this.options.min) {
+    if (this.options.min && instance.value.length < this.options.min) {
       throw new ValidationError(
         `String must not have less than ${this.options.min} characters.`,
-        'string-min', octoString.parent,
+        'string-min', instance.parent,
       );
     }
 
-    if (this.options.max && octoString.value.length > this.options.max) {
+    if (this.options.max && instance.value.length > this.options.max) {
       throw new ValidationError(
         `String must not have more than ${this.options.max} characters.`,
-        'string-max', octoString.parent,
+        'string-max', instance.parent,
       );
     }
 
-    if (this.options.regex && !this.options.regex.test(octoString.value)) {
-      throw new ValidationError(`String does not match regex.`, 'string-regex', octoString.parent);
+    if (this.options.regex && !this.options.regex.test(instance.value)) {
+      throw new ValidationError(`String does not match regex.`, 'string-regex', instance.parent);
     }
 
-    await validate(this.options, octoString);
+    await validate(this.options, instance);
   }
 
   protected sanitize(value: any, sanitizeOptions: ISanitizeOptions) {

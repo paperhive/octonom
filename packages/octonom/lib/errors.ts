@@ -1,5 +1,5 @@
 import { Model } from './model';
-import { IParent, OctoValue } from './schema/value';
+import { ISchemaParent } from './schema/schema';
 
 export class ExtendableError extends Error {
   constructor(message: string, prototype: object) {
@@ -18,13 +18,13 @@ export class PopulationError extends ExtendableError {
 
 export class SanitizationError extends ExtendableError {
   // TODO: add value parameter!
-  constructor(message: string, public reason?: string, public parent?: IParent) {
+  constructor(message: string, public reason?: string, public parent?: ISchemaParent) {
     super(message, SanitizationError.prototype);
   }
 }
 
 export class ValidationError extends ExtendableError {
-  constructor(message: string, public reason?: string, public value?: OctoValue<any>) {
+  constructor(message: string, public reason?: string, public parent?: ISchemaParent) {
     super(message, ValidationError.prototype);
   }
 }
