@@ -8,33 +8,22 @@ export interface IAnyOptions extends ISchemaOptions<OctoAny> {
 }
 
 export class OctoAny extends OctoValue<any> {
- constructor(value: any, public schemaOptions: IAnyOptions = {}, sanitizeOptions: ISanitizeOptions = {}) {
-    super(value, schemaOptions, sanitizeOptions);
-  }
+  public value: any;
 
-  public toObject() {
-    return cloneDeep(this.value);
-  }
+  constructor(value: any, public schemaOptions: IAnyOptions = {}, sanitizeOptions: ISanitizeOptions = {}) {
+    super(schemaOptions, sanitizeOptions.parent);
 
-  public async validate() {
-    if (this.value === undefined) {
-      if (this.schemaOptions.required) {
-        throw new ValidationError('Required value is undefined.', 'required', this);
-      }
-      return;
-    }
-
-    await super.validate();
-  }
-
-  protected sanitize(value: any, sanitizeOptions: ISanitizeOptions) {
-    if (sanitizeOptions.defaults && value === undefined) {
-      return typeof this.schemaOptions.default === 'function'
+    if (value === undefined && sanitizeOptions.defaults) {
+      value = typeof this.schemaOptions.default === 'function'
         ? this.schemaOptions.default()
         : this.schemaOptions.default;
     }
 
-    return value;
+    this.value = value;
+  }
+
+  public toObject() {
+    return cloneDeep(this.value);
   }
 }
 

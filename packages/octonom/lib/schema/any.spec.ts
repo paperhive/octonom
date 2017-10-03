@@ -31,12 +31,6 @@ describe('AnySchema', () => {
   });
 
   describe('validate()', () => {
-    it('should throw a ValidationError if required but undefined', async () => {
-      const schema = new AnySchema({required: true});
-      await expect(schema.create(undefined).validate())
-        .to.be.rejectedWith(ValidationError, 'Required value is undefined.');
-    });
-
     it('should run custom validator', async () => {
       const schema = new AnySchema({
         validate: async octoValue => {
