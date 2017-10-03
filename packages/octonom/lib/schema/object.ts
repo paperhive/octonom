@@ -55,7 +55,7 @@ export function proxifyObject(
 
         const oldOctoValue = octoValueMap[key];
         if (oldOctoValue) {
-          delete oldOctoValue.parent;
+          oldOctoValue.detach();
         }
 
         octoValueMap[key] = schemaMap[key].create(
@@ -76,7 +76,7 @@ export function proxifyObject(
 
         const oldOctoValue = octoValueMap[key];
         if (oldOctoValue) {
-          delete oldOctoValue.parent;
+          oldOctoValue.detach();
         }
 
         delete octoValueMap[key];
@@ -113,7 +113,6 @@ export function setObject(
 
   // sanitize all values before setting
   schemaKeys.forEach(key => {
-    /* TODO: find solution for undefined + required validation */
     if (data[key] === undefined && !sanitizeOptions.defaults) {
       return;
     }
@@ -127,7 +126,7 @@ export function setObject(
   schemaKeys.forEach(key => {
     if (sanitizeOptions.replace || key in data) {
       if (octoValueMap[key]) {
-        delete octoValueMap[key].parent;
+        octoValueMap[key].detach();
       }
       delete octoValueMap[key];
       delete obj[key];
@@ -154,15 +153,42 @@ export function toObject(octoValueMap: IOctoValueMap, options?: IToObjectOptions
   return newObj;
 }
 
-export async function validateObject(octoValueMap: IOctoValueMap) {
-  await Promise.all(Object.keys(octoValueMap).map(key => octoValueMap[key].validate()));
+export async function validateObject(
+  octoValueMap: IOctoValueMap,
+  parentInstance: IOctoParentInstance,
+  schemaMap: ISchemaMap,
+) {
+  await Promise.all(Object.keys(schemaMap).map(async key => {
+    const schema = schemaMap[key];
+    const octoValue = octoValueMap[key];
+    if (schema.options.required && (octoValue === undefined || octoValue.value === undefined)) {
+      throw new ValidationError(`Key ${key} is required.`, 'required', {instance: parentInstance, path: key});
+    }
+    await octoValueMap[key].validate();
+  }));
 }
 
 export class OctoObject<T extends object = object> extends OctoValue<T> {
+  public value: T;
   public octoValueMap: IOctoValueMap;
 
   constructor(value: any, public schemaOptions: IObjectOptions<T>, sanitizeOptions: ISanitizeOptions) {
-    super(value, schemaOptions, sanitizeOptions);
+    super(schemaOptions, sanitizeOptions.parent);
+
+    // return undefined if no data and value is not required
+    const newValue = value === undefined && sanitizeOptions.defaults ? {} : value;
+
+    if (typeof newValue !== 'object') {
+      throw new SanitizationError('Data is not an object.', 'no-object', sanitizeOptions.parent);
+    }
+
+    const octoValueMap = {};
+    const obj = {};
+
+    setObject(newValue, obj, octoValueMap, this, schemaOptions.schemaMap, sanitizeOptions);
+
+    this.octoValueMap = octoValueMap;
+    this.value = proxifyObject(obj, this.octoValueMap, this, this.schemaOptions.schemaMap) as T;
   }
 
   public beforeChange(path: Path, value: any, oldInstance: IOctoInstance) {
@@ -186,36 +212,8 @@ export class OctoObject<T extends object = object> extends OctoValue<T> {
   }
 
   public async validate() {
-    if (this.value === undefined) {
-      if (this.schemaOptions.required) {
-        throw new ValidationError('Required value is undefined.', 'required', this);
-      }
-      return;
-    }
-
-    await validateObject(this.octoValueMap);
-
+    await validateObject(this.octoValueMap, this, this.schemaOptions.schemaMap);
     await super.validate();
-  }
-
-  protected sanitize(value: any, sanitizeOptions: ISanitizeOptions = {}) {
-    // return undefined if no data and value is not required
-    if (value === undefined && !this.schemaOptions.required) {
-      return undefined;
-    }
-
-    if (typeof value !== 'object') {
-      throw new SanitizationError('Data is not an object.', 'no-object', sanitizeOptions.parent);
-    }
-
-    this.octoValueMap = {};
-    const obj = {};
-
-    if (value !== undefined) {
-      setObject(value, obj, this.octoValueMap, this, this.schemaOptions.schemaMap, sanitizeOptions);
-    }
-
-    return proxifyObject(obj, this.octoValueMap, this, this.schemaOptions.schemaMap) as T;
   }
 }
 
