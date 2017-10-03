@@ -1,8 +1,8 @@
 import { ValidationError } from '../errors';
 
-export interface ISchemaOptions<TOctoValue extends OctoValue<any>> {
+export interface ISchemaOptions<TOctoInstance extends IOctoInstance<any>> {
   required?: boolean;
-  validate?(octoValue: TOctoValue): Promise<void>;
+  validate?(octoInstance: TOctoInstance): Promise<void>;
 }
 
 export type PopulateReference = IPopulateMap | true;
@@ -42,76 +42,39 @@ export interface IParent<T = any> {
   path: string | number;
 }
 
-export interface IOctoValueConstructor<T = any, TOctoValue extends OctoValue<any> = OctoValue<any>> {
-  new (value: any, schemaOptions: ISchemaOptions<TOctoValue>, sanitizeOptions: ISanitizeOptions): TOctoValue;
+export interface IOctoInstanceMap {
+  [key: string]: IOctoInstance<any>;
 }
 
-/** An OctoValue wraps a value of a specific type.
- *  OctoValue is abstract, see OctoArray, OctoObject, OctoString, ... for
- *  non-abstract classes that are derived from OctoValue. The benefit
- *  of wrapping the value (property 'value') is that the value has
- *  additional metadata. For example, an OctoValue knows if it has a parent
- *  (property 'parent') which is useful for hooks and error messages.
- */
-export abstract class OctoValue<T> implements IOctoInstance<T> {
-  public value: T;
-  public parent: IParent;
-
-  constructor(
-    value: any,
-    public schemaOptions: ISchemaOptions<OctoValue<T>>,
-    sanitizeOptions: ISanitizeOptions,
-  ) {
-    this.parent = sanitizeOptions.parent;
-    this.value = this.sanitize(value, sanitizeOptions);
-  }
-
-  /** Populate a value (possibly nested).
-   *  Note: do *not* the value property of the current instance inside populate().
-   *        This is the responsibility of the parent OctoValue.
-   */
-  public async populate(populateReference: PopulateReference): Promise<T> {
-    throw new Error(`${this.constructor.name} is not populateable.`);
-  }
-
-  /** Create a plain object representation of the value. */
-  public toObject(options: IToObjectOptions = {}): T {
-    return this.value;
-  }
-
-  /** Validate a value (e.g., used before saving an instance in a collection).
-   *  The default implementation calls a custom validator if there is one provided in the
-   *  schema options. Make sure to call this method in derived OctoValue classes.
-   */
-  public async validate(): Promise<void> {
-    if (!this.schemaOptions.validate) {
-      return;
-    }
-
-    try {
-      await this.schemaOptions.validate(this);
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        error.reason = error.reason || 'custom';
-        error.value = this;
-        throw error;
-      }
-      throw error;
-    }
-  }
-
-  // TODO: rename to setValue? (and then also actually set the value instead of in constructor)
-  protected abstract sanitize(value: any, sanitizeOptions: ISanitizeOptions): T;
-}
-
-export interface IOctoValueMap {
-  [key: string]: OctoValue<any>;
-}
-
-export interface ISchema {
-  create(value: any, sanitizeOptions: ISanitizeOptions): OctoValue<any>;
+export interface ISchema<T, TOctoInstance extends IOctoInstance<T>> {
+  options: ISchemaOptions<TOctoInstance>;
+  create(value: any, sanitizeOptions: ISanitizeOptions): TOctoInstance;
+  populate?(octoInstance: TOctoInstance, populateReference: PopulateReference): Promise<TOctoInstance>;
+  toObject(octoInstance: TOctoInstance): T;
+  validate(octoInstance: TOctoInstance): Promise<void>;
 }
 
 export interface ISchemaMap {
-  [key: string]: ISchema;
+  [key: string]: ISchema<any, any>;
 }
+
+export async function validate<TOctoInstance extends IOctoInstance>(
+  schemaOptions: ISchemaOptions<TOctoInstance>,
+  octoInstance: TOctoInstance,
+): Promise<void> {
+  if (!schemaOptions.validate) {
+    return;
+  }
+
+  try {
+    await schemaOptions.validate(octoInstance);
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      error.reason = error.reason || 'custom';
+      error.parent = octoInstance.parent;
+      throw error;
+    }
+    throw error;
+  }
+}
+
