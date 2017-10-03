@@ -1,5 +1,5 @@
 import { SanitizationError, ValidationError } from '../errors';
-import { ISanitizeOptions, ISchema, ISchemaOptions, OctoValue } from './value';
+import { IOctoInstance, ISanitizeOptions, ISchema, ISchemaOptions, validate } from './value';
 
 export interface IStringOptions extends ISchemaOptions<OctoString> {
   default?: string | (() => string);
@@ -9,52 +9,73 @@ export interface IStringOptions extends ISchemaOptions<OctoString> {
   regex?: RegExp;
 }
 
-export class OctoString extends OctoValue<string> {
-  constructor(value: any, public schemaOptions: IStringOptions = {}, sanitizeOptions: ISanitizeOptions = {}) {
-    super(value, schemaOptions, sanitizeOptions);
+export type OctoString = IOctoInstance<string>;
+
+export class StringSchema implements ISchema<string, OctoString> {
+  constructor(public readonly options: IStringOptions = {}) {}
+
+  public create(value: any, sanitizeOptions: ISanitizeOptions = {}): OctoString {
+    const sanitizedValue = this.sanitize(value, sanitizeOptions);
+
+    if (sanitizedValue === undefined) {
+      return undefined;
+    }
+
+    return {
+      value: sanitizedValue,
+      parent: sanitizeOptions.parent,
+    };
   }
 
-  public async validate() {
-    if (this.value === undefined) {
-      if (this.schemaOptions.required) {
-        throw new ValidationError('Required value is undefined.', 'required', this);
+  public toObject(octoString: OctoString) {
+    return octoString.value;
+  }
+
+  public async validate(octoString: OctoString) {
+    if (octoString.value === undefined) {
+      if (this.options.required) {
+        throw new ValidationError('Required value is undefined.', 'no-string', octoString.parent);
       }
       return;
     }
 
-    if (this.schemaOptions.enum && this.schemaOptions.enum.indexOf(this.value) === -1) {
+    if (typeof octoString.value !== 'string') {
+      throw new ValidationError('Value is not a string.', 'no-string', octoString.parent);
+    }
+
+    if (this.options.enum && this.options.enum.indexOf(octoString.value) === -1) {
       throw new ValidationError(
-        `String not in enum: ${this.schemaOptions.enum.join(', ')}.`,
-        'string-enum', this,
+        `String not in enum: ${this.options.enum.join(', ')}.`,
+        'string-enum', octoString.parent,
       );
     }
 
-    if (this.schemaOptions.min && this.value.length < this.schemaOptions.min) {
+    if (this.options.min && octoString.value.length < this.options.min) {
       throw new ValidationError(
-        `String must not have less than ${this.schemaOptions.min} characters.`,
-        'string-min', this,
+        `String must not have less than ${this.options.min} characters.`,
+        'string-min', octoString.parent,
       );
     }
 
-    if (this.schemaOptions.max && this.value.length > this.schemaOptions.max) {
+    if (this.options.max && octoString.value.length > this.options.max) {
       throw new ValidationError(
-        `String must not have more than ${this.schemaOptions.max} characters.`,
-        'string-max', this,
+        `String must not have more than ${this.options.max} characters.`,
+        'string-max', octoString.parent,
       );
     }
 
-    if (this.schemaOptions.regex && !this.schemaOptions.regex.test(this.value)) {
-      throw new ValidationError(`String does not match regex.`, 'string-regex', this);
+    if (this.options.regex && !this.options.regex.test(octoString.value)) {
+      throw new ValidationError(`String does not match regex.`, 'string-regex', octoString.parent);
     }
 
-    await super.validate();
+    await validate(this.options, octoString);
   }
 
-  protected sanitize(value: any, sanitizeOptions: ISanitizeOptions = {}) {
-    if (sanitizeOptions.defaults && value === undefined) {
-      return typeof this.schemaOptions.default === 'function'
-        ? this.schemaOptions.default()
-        : this.schemaOptions.default;
+  protected sanitize(value: any, sanitizeOptions: ISanitizeOptions) {
+    if (value === undefined && sanitizeOptions.defaults) {
+      return typeof this.options.default === 'function'
+        ? this.options.default()
+        : this.options.default;
     }
 
     if (value === undefined) {
@@ -62,17 +83,9 @@ export class OctoString extends OctoValue<string> {
     }
 
     if (typeof value !== 'string') {
-      throw new SanitizationError('Value is not a string.', 'no-string', this.parent);
+      throw new SanitizationError('Value is not a string.', 'no-string', sanitizeOptions.parent);
     }
 
     return value;
-  }
-}
-
-export class StringSchema implements ISchema {
-  constructor(public options: IStringOptions = {}) {}
-
-  public create(value: any, sanitizeOptions: ISanitizeOptions = {}) {
-    return new OctoString(value, this.options, sanitizeOptions);
   }
 }
