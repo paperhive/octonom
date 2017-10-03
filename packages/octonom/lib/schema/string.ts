@@ -1,5 +1,5 @@
 import { SanitizationError, ValidationError } from '../errors';
-import { ISanitizeOptions, ISchema, ISchemaOptions, OctoFactory, OctoValue } from './value';
+import { ISanitizeOptions, ISchema, ISchemaOptions, OctoValue } from './value';
 
 export interface IStringOptions extends ISchemaOptions<OctoString> {
   default?: string | (() => string);

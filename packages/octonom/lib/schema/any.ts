@@ -1,7 +1,7 @@
 import { cloneDeep } from 'lodash';
 
 import { ValidationError } from '../errors';
-import { ISanitizeOptions, ISchema, ISchemaOptions, OctoFactory, OctoValue } from './value';
+import { ISanitizeOptions, ISchema, ISchemaOptions, OctoValue } from './value';
 
 export interface IAnyOptions extends ISchemaOptions<OctoAny> {
   default?: any | (() => any);
