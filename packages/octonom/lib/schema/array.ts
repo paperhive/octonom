@@ -1,6 +1,6 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { IOctoInstance, ISanitizeOptions, ISchema, ISchemaOptions, IToObjectOptions,
-         OctoFactory, OctoValue, Path, PopulateReference,
+         OctoValue, Path, PopulateReference,
        } from './value';
 
 export interface IArrayOptions<T = any> extends ISchemaOptions<OctoArray<T>> {

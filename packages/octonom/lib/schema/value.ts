@@ -104,22 +104,6 @@ export abstract class OctoValue<T> implements IOctoInstance<T> {
   protected abstract sanitize(value: any, sanitizeOptions: ISanitizeOptions): T;
 }
 
-export class OctoFactory<
-  TOctoValue extends OctoValue<any>,
-  TOptions extends ISchemaOptions<TOctoValue>
-> {
-  constructor(
-    private octoValueClass: IOctoValueConstructor,
-    private defaultOptions?: TOptions,
-  ) {}
-
-  public create(schemaOptions: TOptions = this.defaultOptions) {
-    return (value: any, sanitizeOptions: ISanitizeOptions = {}) => {
-      return new this.octoValueClass(value, schemaOptions, sanitizeOptions) as TOctoValue;
-    };
-  }
-}
-
 export interface IOctoValueMap {
   [key: string]: OctoValue<any>;
 }
