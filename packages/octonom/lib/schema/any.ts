@@ -1,36 +1,49 @@
 import { cloneDeep } from 'lodash';
 
 import { ValidationError } from '../errors';
-import { ISanitizeOptions, ISchema, ISchemaOptions, OctoValue } from './value';
+import { ISanitizeOptions, ISchema, ISchemaInstance, ISchemaOptions, ISchemaParent, validate } from './schema';
 
-export interface IAnyOptions extends ISchemaOptions<OctoAny> {
+export type AnyInstance = ISchemaInstance<any>;
+
+export interface IAnyOptions extends ISchemaOptions<AnyInstance> {
   default?: any | (() => any);
 }
 
-export class OctoAny extends OctoValue<any> {
-  public value: any;
-
-  constructor(value: any, public schemaOptions: IAnyOptions = {}, sanitizeOptions: ISanitizeOptions = {}) {
-    super(schemaOptions, sanitizeOptions.parent);
-
-    if (value === undefined && sanitizeOptions.defaults) {
-      value = typeof this.schemaOptions.default === 'function'
-        ? this.schemaOptions.default()
-        : this.schemaOptions.default;
-    }
-
-    this.value = value;
-  }
-
-  public toObject() {
-    return cloneDeep(this.value);
-  }
-}
-
-export class AnySchema implements ISchema {
+export class AnySchema implements ISchema<any, AnyInstance> {
   constructor(public options: IAnyOptions = {}) {}
 
   public create(value: any, sanitizeOptions: ISanitizeOptions = {}) {
-    return new OctoAny(value, this.options, sanitizeOptions);
+    const sanitizedValue = this.sanitize(value, sanitizeOptions);
+
+    if (sanitizedValue === undefined) {
+      return undefined;
+    }
+
+    return {
+      parent: sanitizeOptions.parent,
+      value: sanitizedValue,
+    };
+  }
+
+  public toObject(instance: AnyInstance) {
+    return cloneDeep(instance.value);
+  }
+
+  public async validate(instance: AnyInstance) {
+    if (instance.value === undefined && this.options.required) {
+      throw new ValidationError('Required value is undefined.', 'required', instance.parent);
+    }
+
+    await validate(this.options, instance);
+  }
+
+  protected sanitize(value: any, sanitizeOptions: ISanitizeOptions) {
+    if (value === undefined && sanitizeOptions.defaults) {
+      value = typeof this.options.default === 'function'
+        ? this.options.default()
+        : this.options.default;
+    }
+
+    return value;
   }
 }
