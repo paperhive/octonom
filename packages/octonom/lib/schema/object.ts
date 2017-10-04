@@ -58,7 +58,7 @@ export function proxifyObject<T extends object>(
   return new Proxy(obj, {
     set(target, key: keyof T, value, receiver) {
       if (typeof key !== 'symbol' && schemaMap[key]) {
-        parentInstance.beforeChange([key], value, parentInstance);
+        parentInstance.beforeChange([], {[key]: value}, parentInstance);
 
         const oldOctoValue = instanceMap[key];
         if (oldOctoValue) {
@@ -71,7 +71,7 @@ export function proxifyObject<T extends object>(
         );
         target[key] = instanceMap[key].value;
 
-        parentInstance.afterChange([key], value, parentInstance);
+        parentInstance.afterChange([], {[key]: value}, parentInstance);
       } else {
         target[key] = value;
       }
@@ -79,7 +79,7 @@ export function proxifyObject<T extends object>(
     },
     deleteProperty(target, key: keyof T) {
       if (typeof key !== 'symbol' && schemaMap[key]) {
-        parentInstance.beforeChange([key], undefined, parentInstance);
+        parentInstance.beforeChange([], {[key]: undefined}, parentInstance);
 
         const oldOctoValue = instanceMap[key];
         if (oldOctoValue) {
@@ -89,7 +89,7 @@ export function proxifyObject<T extends object>(
         delete instanceMap[key];
         delete target[key];
 
-        parentInstance.afterChange([key], undefined, parentInstance);
+        parentInstance.afterChange([], {[key]: undefined}, parentInstance);
       } else {
         delete target[key];
       }

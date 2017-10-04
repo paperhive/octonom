@@ -3,10 +3,10 @@ import { spy } from 'sinon';
 import { ArrayCollection } from '../array-collection';
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { ObjectSchema, setObject, toObject, validateObject } from './object';
+import { ObjectInstance, ObjectSchema, proxifyObject, setObject, toObject, validateObject } from './object';
 import { ReferenceSchema } from './reference';
 import { ISchemaParent, ISchemaParentInstance, SchemaInstanceMap, SchemaMap } from './schema';
-import { StringSchema } from './string';
+import { StringInstance, StringSchema } from './string';
 import { testValidation } from './test-utils';
 
 /*
@@ -31,15 +31,19 @@ describe('helpers', () => {
     bar: new StringSchema(),
   };
 
-  let parentInstance: ISchemaParentInstance;
+  const beforeChangeSpy = spy();
+  const afterChangeSpy = spy();
+
+  const parentInstance: ISchemaParentInstance = {
+    value: {},
+    schema: new StringSchema(),
+    beforeChange: beforeChangeSpy,
+    afterChange: afterChangeSpy,
+  };
 
   beforeEach(() => {
-    parentInstance  = {
-      value: {},
-      schema: new StringSchema(),
-      beforeChange: spy(),
-      afterChange: spy(),
-    };
+    beforeChangeSpy.reset();
+    afterChangeSpy.reset();
   });
 
   /*
@@ -76,10 +80,43 @@ describe('helpers', () => {
   */
 
   describe('proxifyObject()', () => {
-    it('should call beforeSet and afterSet when assigning a key');
-    it('should call beforeSet and afterSet when deleting a key');
-    it('should call beforeSet and afterSet when assigning a nested key');
-    it('should call beforeSet and afterSet when deleting a nested key');
+    it('should get a value for a key', () => {
+      const obj = {foo: 'bar'};
+      const fooInstance = schemaMap.foo.create('bar');
+      const instanceMap: SchemaInstanceMap<IFooBar> = {foo: fooInstance};
+      const proxy = proxifyObject<IFooBar>(obj, instanceMap, parentInstance, schemaMap);
+      expect(proxy.foo).to.equal('bar');
+    });
+
+    it('should assign a value to a key', () => {
+      const obj = {};
+      const instanceMap: SchemaInstanceMap<IFooBar> = {};
+      const proxy = proxifyObject<IFooBar>(obj, instanceMap, parentInstance, schemaMap);
+      proxy.foo = 'bar';
+      expect(obj).to.eql({foo: 'bar'});
+      expect(instanceMap).to.eql({
+        foo: {value: 'bar', parent: {instance: parentInstance, path: 'foo'}, schema: schemaMap.foo},
+      });
+      expect(parentInstance.beforeChange).to.be.calledOnce.and
+        .calledWith([], {foo: 'bar'}, parentInstance);
+      expect(parentInstance.afterChange).to.be.calledOnce.and
+        .calledWith([], {foo: 'bar'}, parentInstance);
+    });
+
+    it('should delete a key', () => {
+      const obj = {foo: 'bar'};
+      const fooInstance = schemaMap.foo.create('bar');
+      const instanceMap: SchemaInstanceMap<IFooBar> = {foo: fooInstance};
+      const proxy = proxifyObject<IFooBar>(obj, instanceMap, parentInstance, schemaMap);
+      delete proxy.foo;
+      expect(obj).to.eql({});
+      expect(instanceMap).to.eql({});
+      expect(parentInstance.beforeChange).to.be.calledOnce.and
+        .calledWith([], {foo: undefined}, parentInstance);
+      expect(parentInstance.afterChange).to.be.calledOnce.and
+        .calledWith([], {foo: undefined}, parentInstance);
+      expect(fooInstance).to.not.have.property('parent');
+    });
   });
 
   describe('setObject', () => {
@@ -180,18 +217,22 @@ describe('helpers', () => {
 });
 
 describe('ObjectSchema', () => {
-  let parentInstance: ISchemaParentInstance;
-  let parent: ISchemaParent;
+  const beforeChangeSpy = spy();
+  const afterChangeSpy = spy();
+
+  const parentInstance: ISchemaParentInstance = {
+    value: {},
+    schema: new StringSchema(),
+    beforeChange: beforeChangeSpy,
+    afterChange: afterChangeSpy,
+  };
+  const parent: ISchemaParent = {instance: parentInstance, path: 'path'};
 
   beforeEach(() => {
-    parentInstance  = {
-      value: {},
-      schema: new StringSchema(),
-      beforeChange: spy(),
-      afterChange: spy(),
-    };
-    parent = {instance: parentInstance, path: 'path'};
+    beforeChangeSpy.reset();
+    afterChangeSpy.reset();
   });
+
   /*
   describe('populate()', () => {
     // note: details are tested in populateObject() above
@@ -231,7 +272,7 @@ describe('ObjectSchema', () => {
         .to.have.property('value').that.eql({});
     });
 
-    it('should return an object for undefined if required and defaults', () => {
+    it('should return an instance with an object for undefined if required and defaults', () => {
       const schema = new ObjectSchema({
         required: true,
         schemaMap: {foo: new StringSchema({default: 'bar'})},
@@ -240,10 +281,78 @@ describe('ObjectSchema', () => {
         .to.have.property('value').that.eql({foo: 'bar'});
     });
 
-    it('should return an object', () => {
+    it('should return an instance with an object', () => {
       const schema = new ObjectSchema({schemaMap: {foo: new StringSchema()}});
       expect(schema.create({foo: 'bar'}))
         .to.have.property('value').that.eql({foo: 'bar'});
+    });
+
+    describe('proxy', () => {
+      interface IProxyInner {
+        bar?: string;
+      }
+
+      interface IProxyOuter {
+        foo?: string;
+        nested?: IProxyInner;
+      }
+
+      const schema = new ObjectSchema<IProxyOuter>({
+        schemaMap: {
+          foo: new StringSchema(),
+          nested: new ObjectSchema<IProxyInner>({
+            schemaMap: {bar: new StringSchema()},
+          }),
+        },
+      });
+
+      it('should intercept assigning a value to a key', () => {
+        const instance = schema.create({}, {parent});
+        const obj = instance.value;
+
+        obj.foo = 'bar';
+        expect(instance.value).to.eql({foo: 'bar'});
+        expect(parentInstance.beforeChange).to.be.calledOnce.and
+          .calledWith(['path'], {foo: 'bar'}, instance);
+        expect(parentInstance.afterChange).to.be.calledOnce.and
+          .calledWith(['path'], {foo: 'bar'}, instance);
+      });
+
+      it('should intercept deleting a key', () => {
+        const instance = schema.create({foo: 'bar'}, {parent});
+        const obj = instance.value;
+
+        delete obj.foo;
+        expect(instance.value).to.eql({});
+        expect(parentInstance.beforeChange).to.be.calledOnce.and
+          .calledWith(['path'], {foo: undefined}, instance);
+        expect(parentInstance.afterChange).to.be.calledOnce.and
+          .calledWith(['path'], {foo: undefined}, instance);
+      });
+
+      it('should intercept assigning a value to a nested key', () => {
+        const instance = schema.create({nested: {}}, {parent});
+        const obj = instance.value;
+
+        obj.nested.bar = 'baz';
+        expect(instance.value).to.eql({nested: {bar: 'baz'}});
+        expect(parentInstance.beforeChange).to.be.calledOnce.and
+          .calledWith(['path', 'nested'], {bar: 'baz'}, instance.instanceMap.nested);
+        expect(parentInstance.afterChange).to.be.calledOnce.and
+          .calledWith(['path', 'nested'], {bar: 'baz'}, instance.instanceMap.nested);
+      });
+
+      it('should intercept assigning a value to a nested key', () => {
+        const instance = schema.create({nested: {bar: 'baz'}}, {parent});
+        const obj = instance.value;
+
+        delete obj.nested.bar;
+        expect(instance.value).to.eql({nested: {}});
+        expect(parentInstance.beforeChange).to.be.calledOnce.and
+          .calledWith(['path', 'nested'], {bar: undefined}, instance.instanceMap.nested);
+        expect(parentInstance.afterChange).to.be.calledOnce.and
+          .calledWith(['path', 'nested'], {bar: undefined}, instance.instanceMap.nested);
+      });
     });
   });
 
