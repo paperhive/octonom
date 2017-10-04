@@ -120,7 +120,7 @@ export function setObject<T extends object>(
 
   // sanitize all values before setting
   schemaKeys.forEach((key: keyof T) => {
-    if (data[key as any] === undefined && (!schemaMap[key].options.required || !sanitizeOptions.defaults)) {
+    if (data[key as any] === undefined && !schemaMap[key].options.required && !sanitizeOptions.defaults) {
       return;
     }
 
@@ -183,8 +183,12 @@ export async function validateObject<T extends object>(
 export class ObjectSchema<T extends object = object> implements ISchema<T, ObjectInstance<T>> {
   constructor(public options: IObjectOptions<T>) {}
 
-  public create(value: any, sanitizeOptions: ISanitizeOptions): ObjectInstance<T> {
+  public create(value: any, sanitizeOptions: ISanitizeOptions = {}): ObjectInstance<T> {
     const sanitizedValue = this.sanitize(value, sanitizeOptions);
+
+    if (sanitizedValue === undefined) {
+      return undefined;
+    }
 
     const instance: ObjectInstance<T> = {
       instanceMap: {} as SchemaInstanceMap<T>,
