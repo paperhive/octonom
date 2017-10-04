@@ -12,7 +12,7 @@ export interface IAnyOptions extends ISchemaOptions<AnyInstance> {
 export class AnySchema implements ISchema<any, AnyInstance> {
   constructor(public options: IAnyOptions = {}) {}
 
-  public create(value: any, sanitizeOptions: ISanitizeOptions = {}) {
+  public create(value: any, sanitizeOptions: ISanitizeOptions = {}): AnyInstance {
     const sanitizedValue = this.sanitize(value, sanitizeOptions);
 
     if (sanitizedValue === undefined) {
@@ -21,6 +21,7 @@ export class AnySchema implements ISchema<any, AnyInstance> {
 
     return {
       parent: sanitizeOptions.parent,
+      schema: this,
       value: sanitizedValue,
     };
   }

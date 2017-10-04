@@ -27,18 +27,21 @@ describe('AnySchema', () => {
     });
 
     it('should return a default value if undefined with defaults enabled', () => {
-      expect(new AnySchema({default: {foo: 'bar'}}).create(undefined, {defaults: true, parent}))
-        .to.eql({value: {foo: 'bar'}, parent});
+      const schema = new AnySchema({default: {foo: 'bar'}});
+      expect(schema.create(undefined, {defaults: true, parent}))
+        .to.eql({value: {foo: 'bar'}, parent, schema});
     });
 
     it('should return a default value from a function if undefined with defaults enabled', () => {
-      expect(new AnySchema({default: () => 'foo'}).create(undefined, {defaults: true, parent}))
-        .to.eql({value: 'foo', parent});
+      const schema = new AnySchema({default: () => 'foo'});
+      expect(schema.create(undefined, {defaults: true, parent}))
+        .to.eql({value: 'foo', parent, schema});
     });
 
     it('should return any value', () => {
+      const schema = new AnySchema();
       const obj = {foo: 'bar'};
-      expect(new AnySchema().create(obj, {parent})).to.eql({value: obj, parent});
+      expect(schema.create(obj, {parent})).to.eql({value: obj, parent, schema});
     });
   });
 
@@ -55,8 +58,9 @@ describe('AnySchema', () => {
 
   describe('validate()', () => {
     it('should throw if value is undefined but required', async () => {
+      const schema = new AnySchema({required: true});
       await testValidation(
-        new AnySchema({required: true}).validate({value: undefined, parent}),
+        schema.validate({value: undefined, parent, schema}),
         'Required value is undefined.',
         parent,
       );
@@ -70,9 +74,9 @@ describe('AnySchema', () => {
           }
         },
       });
-      await schema.validate({value: false, parent});
+      await schema.validate({value: false, parent, schema});
       await testValidation(
-        schema.validate({value: true, parent}),
+        schema.validate({value: true, parent, schema}),
         'true is not allowed.',
         parent,
       );
@@ -80,10 +84,10 @@ describe('AnySchema', () => {
 
     it('should validate anything', async () => {
       const schema = new AnySchema();
-      await schema.validate({value: undefined, parent});
-      await schema.validate({value: true, parent});
-      await schema.validate({value: ['foo'], parent});
-      await schema.validate({value: {foo: 'bar'}, parent});
+      await schema.validate({value: undefined, parent, schema});
+      await schema.validate({value: true, parent, schema});
+      await schema.validate({value: ['foo'], parent, schema});
+      await schema.validate({value: {foo: 'bar'}, parent, schema});
     });
   });
 });
