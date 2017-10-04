@@ -23,6 +23,7 @@ export class StringSchema implements ISchema<string, StringInstance> {
 
     return {
       value: sanitizedValue,
+      schema: this,
       parent: sanitizeOptions.parent,
     };
   }
