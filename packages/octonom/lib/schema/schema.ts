@@ -15,9 +15,9 @@ export interface ISanitizeOptions {
 
 export interface ISchema<T, TSchemaInstance extends ISchemaInstance<T>> {
   options: ISchemaOptions<TSchemaInstance>;
-  create(value: any, sanitizeOptions: ISanitizeOptions): TSchemaInstance;
+  create(value: any, sanitizeOptions?: ISanitizeOptions): TSchemaInstance;
   populate?(instance: TSchemaInstance, populateReference: PopulateReference): Promise<TSchemaInstance>;
-  toObject(instance: TSchemaInstance, toObjectOptions: IToObjectOptions): T;
+  toObject(instance: TSchemaInstance, toObjectOptions?: IToObjectOptions): T;
   validate(instance: TSchemaInstance): Promise<void>;
 }
 
