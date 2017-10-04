@@ -1,6 +1,7 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { ISchemaParent } from './schema';
 import { StringSchema } from './string';
+import { testValidation } from './test-utils';
 
 describe('StringSchema', () => {
   const parent: ISchemaParent = {
@@ -28,11 +29,13 @@ describe('StringSchema', () => {
     });
 
     it('should return a string if a string is provided (without sanitizeOptions)', () => {
-      expect(new StringSchema().create('bar')).to.eql({value: 'bar', parent: undefined});
+      const schema = new StringSchema();
+      expect(schema.create('bar')).to.eql({value: 'bar', parent: undefined, schema});
     });
 
     it('should return a string if a string is provided', () => {
-      expect(new StringSchema().create('bar', {parent})).to.eql({value: 'bar', parent});
+      const schema = new StringSchema();
+      expect(schema.create('bar', {parent})).to.eql({value: 'bar', parent, schema});
     });
 
     it('should return undefined if undefined is provided', () => {
@@ -40,65 +43,68 @@ describe('StringSchema', () => {
     });
 
     it('should return a default value if undefined is provided and defaults is enabled', () => {
-      expect(new StringSchema({default: 'bar'}).create(undefined, {defaults: true, parent}))
-        .to.eql({value: 'bar', parent});
+      const schema = new StringSchema({default: 'bar'});
+      expect(schema.create(undefined, {defaults: true, parent}))
+        .to.eql({value: 'bar', parent, schema});
     });
 
     it('should return a default value from a function', () => {
-      expect(new StringSchema({default: () => 'bar'}).create(undefined, {defaults: true, parent}))
-        .to.eql({value: 'bar', parent});
+      const schema = new StringSchema({default: () => 'bar'});
+      expect(schema.create(undefined, {defaults: true, parent}))
+        .to.eql({value: 'bar', parent, schema});
     });
   });
 
   describe('validate()', () => {
-    function testValidation(validationPromise: Promise<any>, expectedMsg: string, expectedParent: ISchemaParent) {
-      return expect(validationPromise).to.be.rejectedWith(ValidationError, expectedMsg)
-        .and.eventually.have.property('parent', expectedParent);
-    }
-
     it('should throw if value is undefined but required', async () => {
+      const schema = new StringSchema({required: true});
       await testValidation(
-        new StringSchema({required: true}).validate({value: undefined, parent}),
+        schema.validate({value: undefined, parent, schema}),
         'Required value is undefined.',
         parent,
       );
     });
 
     it('should throw if value is not a string', async () => {
+      const schema = new StringSchema();
       await testValidation(
-        new StringSchema().validate({value: 42 as any, parent}),
+        schema.validate({value: 42 as any, parent, schema}),
         'Value is not a string.',
         parent,
       );
     });
 
     it('should throw if value is not in enum', async () => {
+      const schema = new StringSchema({enum: ['foo', 'bar']});
       await testValidation(
-        new StringSchema({enum: ['foo', 'bar']}).validate({value: 'baz', parent}),
+        schema.validate({value: 'baz', parent, schema}),
         'String not in enum: foo, bar.',
         parent,
       );
     });
 
     it('should throw if value is shorter than min', async () => {
+      const schema = new StringSchema({min: 4});
       await testValidation(
-        new StringSchema({min: 4}).validate({value: 'foo', parent}),
+        schema.validate({value: 'foo', parent, schema}),
         'String must not have less than 4 characters',
         parent,
       );
     });
 
     it('should throw if value is longer than max', async () => {
+      const schema = new StringSchema({max: 5});
       await testValidation(
-        new StringSchema({max: 5}).validate({value: 'foobar', parent}),
+        schema.validate({value: 'foobar', parent, schema}),
         'String must not have more than 5 characters',
         parent,
       );
     });
 
     it('should throw if value does not match regex', async () => {
+      const schema = new StringSchema({regex: /foo/});
       await testValidation(
-        new StringSchema({regex: /foo/}).validate({value: 'bar', parent}),
+        schema.validate({value: 'bar', parent, schema}),
         'String does not match regex.',
         parent,
       );
@@ -112,20 +118,22 @@ describe('StringSchema', () => {
           }
         },
       });
-      await schema.validate({value: 'bar', parent});
+      await schema.validate({value: 'bar', parent, schema});
       await testValidation(
-        schema.validate({value: 'foo', parent}),
+        schema.validate({value: 'foo', parent, schema}),
         'foo is not allowed.',
         parent,
       );
     });
 
     it('should validate undefined', async () => {
-      await new StringSchema().validate({value: undefined, parent});
+      const schema = new StringSchema();
+      await schema.validate({value: undefined, parent, schema});
     });
 
     it('should validate a string', async () => {
-      await new StringSchema().validate({value: 'foo'});
+      const schema = new StringSchema();
+      await schema.validate({value: 'foo', parent, schema});
     });
   });
 });
