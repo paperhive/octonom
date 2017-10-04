@@ -23,15 +23,8 @@ export interface ISchema<T, TSchemaInstance extends ISchemaInstance<T>> {
 
 export interface ISchemaInstance<T = any> {
   parent?: ISchemaParent;
+  schema: ISchema<T, ISchemaInstance<T>>;
   value: T;
-}
-
-export interface ISchemaInstanceMap {
-  [key: string]: ISchemaInstance<any>;
-}
-
-export interface ISchemaMap {
-  [key: string]: ISchema<any, any>;
 }
 
 export interface ISchemaOptions<TSchemaInstance extends ISchemaInstance<any>> {
@@ -57,6 +50,10 @@ export interface IToObjectOptions {
 export type Path = Array<string | number>;
 
 export type PopulateReference = IPopulateMap | true;
+
+export type SchemaInstanceMap<T extends object = object> = {[key in keyof T]: ISchemaInstance};
+
+export type SchemaMap<T extends object = object> = {[key in keyof T]: ISchema<any, any>};
 
 export async function validate<TSchemaInstance extends ISchemaInstance>(
   schemaOptions: ISchemaOptions<TSchemaInstance>,
