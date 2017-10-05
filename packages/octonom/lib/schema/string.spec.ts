@@ -56,6 +56,7 @@ describe('StringSchema', () => {
   });
 
   describe('validate()', () => {
+    // TODO remove? should never happen...
     it('should throw if value is undefined but required', async () => {
       const schema = new StringSchema({required: true});
       await testValidation(

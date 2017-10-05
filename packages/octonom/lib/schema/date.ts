@@ -8,6 +8,8 @@ export interface IDateOptions extends ISchemaOptions<Date> {
   max?: Date;
 }
 
+// TODO: catch date changes (it's an object!)
+
 export class DateSchema<TModel extends Model = Model> implements ISchema<Date, TModel> {
   constructor(public options: IDateOptions = {}) {}
 
