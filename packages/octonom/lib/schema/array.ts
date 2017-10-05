@@ -216,7 +216,7 @@ export function proxifyArray<T>(
   }) as T[];
 }
 
-export class ArraySchema<T> implements ISchema<T[], ArrayInstance<T>> {
+export class ArraySchema<T> implements ISchema<T[], ArrayInstance<T>, T[]> {
   constructor(public options: IArrayOptions<T>) {}
 
   public create(value: any, sanitizeOptions: ISanitizeOptions = {}): ArrayInstance<T> {

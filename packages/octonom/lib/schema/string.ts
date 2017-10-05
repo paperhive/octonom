@@ -11,7 +11,7 @@ export interface IStringOptions extends ISchemaOptions<StringInstance> {
   regex?: RegExp;
 }
 
-export class StringSchema implements ISchema<string, StringInstance> {
+export class StringSchema implements ISchema<string, StringInstance, string> {
   constructor(public readonly options: IStringOptions = {}) {}
 
   public create(value: any, sanitizeOptions: ISanitizeOptions = {}): StringInstance {
@@ -33,6 +33,7 @@ export class StringSchema implements ISchema<string, StringInstance> {
   }
 
   public async validate(instance: StringInstance) {
+    // TODO: remove?
     if (instance.value === undefined) {
       if (this.options.required) {
         throw new ValidationError('Required value is undefined.', 'no-string', instance.parent);
