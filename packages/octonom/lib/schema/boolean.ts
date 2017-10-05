@@ -1,16 +1,40 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { ISanitizeOptions, ISchema, ISchemaOptions, Path, runValidator } from './schema';
+import { ISanitizeOptions, ISchema, ISchemaInstance, ISchemaOptions, ISchemaParent, Path, validate } from './schema';
 
-export interface IBooleanOptions extends ISchemaOptions<boolean> {
+export type BooleanInstance = ISchemaInstance<boolean>;
+
+export interface IBooleanOptions extends ISchemaOptions<BooleanInstance> {
   default?: boolean | (() => boolean);
 }
 
-export class BooleanSchema<TModel extends Model = Model> implements ISchema<boolean, TModel> {
-  constructor(public options: IBooleanOptions = {}) {}
+export class BooleanSchema implements ISchema<boolean, BooleanInstance, boolean> {
+  constructor(public readonly options: IBooleanOptions = {}) {}
 
-  public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
-    if (options.defaults && value === undefined) {
+  public create(value: any, sanitizeOptions: ISanitizeOptions = {}): BooleanInstance {
+    const sanitizedValue = this.sanitize(value, sanitizeOptions);
+
+    if (sanitizedValue === undefined) {
+      return undefined;
+    }
+
+    return {
+      parent: sanitizeOptions.parent,
+      schema: this,
+      value: this.sanitize(value, sanitizeOptions),
+    };
+  }
+
+  public toObject(instance: BooleanInstance) {
+    return instance.value;
+  }
+
+  public async validate(instance: BooleanInstance) {
+    await validate(this.options, instance);
+  }
+
+  protected sanitize(value: any, sanitizeOptions: ISanitizeOptions = {}) {
+    if (value === undefined && sanitizeOptions.defaults) {
       return typeof this.options.default === 'function'
         ? this.options.default()
         : this.options.default;
@@ -21,26 +45,9 @@ export class BooleanSchema<TModel extends Model = Model> implements ISchema<bool
     }
 
     if (value !== true && value !== false) {
-      throw new SanitizationError('Value is not a boolean.', 'no-boolean', value, path, instance);
+      throw new SanitizationError('Value is not a boolean.', 'no-boolean', sanitizeOptions.parent);
     }
 
     return value;
-  }
-
-  public async validate(value: boolean, path: Path, instance: TModel) {
-    if (value === undefined) {
-      if (this.options.required) {
-        throw new ValidationError('Required value is undefined.', 'required', value, path, instance);
-      }
-      return;
-    }
-
-    if (value !== true && value !== false) {
-      throw new ValidationError('Value is not a boolean.', 'no-boolean', value, path, instance);
-    }
-
-    if (this.options.validate) {
-      await runValidator(this.options.validate, value, path, instance);
-    }
   }
 }
