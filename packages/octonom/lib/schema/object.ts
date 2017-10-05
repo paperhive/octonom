@@ -11,9 +11,9 @@ export interface IObjectInstance<T extends object> extends ISchemaParentInstance
 }
 export type ObjectInstance<T extends object> = IObjectInstance<T>;
 
-// export interface IArrayOptions<T = any> extends ISchemaOptions<OctoArray<T>> {}
 export interface IObjectOptions<T extends object = object> extends ISchemaOptions<ObjectInstance<T>> {
   schemaMap: SchemaMap<T>;
+  callParentHooks?: boolean;
 }
 
 /*
@@ -146,7 +146,10 @@ export function setObject<T extends object>(
   });
 }
 
-export function toObject<T extends object>(instanceMap: SchemaInstanceMap<T>, options?: IToObjectOptions) {
+export function toObject<T extends object>(
+  instanceMap: SchemaInstanceMap<T>,
+  options?: IToObjectOptions,
+) {
   const newObj = {} as T;
   Object.keys(instanceMap).forEach((key: keyof T) => {
     const instance = instanceMap[key];
@@ -191,17 +194,17 @@ export class ObjectSchema<T extends object = object> implements ISchema<T, Objec
     }
 
     const instance: ObjectInstance<T> = {
-      instanceMap: {} as SchemaInstanceMap<T>,
+      instanceMap: {},
       parent: sanitizeOptions.parent,
       schema: this,
       value: undefined,
-      beforeChange(path: Path, newValue: any, oldInstance: ISchemaInstance) {
-        if (instance.parent) {
+      beforeChange: (path: Path, newValue: any, oldInstance: ISchemaInstance) => {
+        if (this.options.callParentHooks !== false && instance.parent) {
           instance.parent.instance.beforeChange([instance.parent.path].concat(path), newValue, oldInstance);
         }
       },
-      afterChange(path: Path, newValue: any, newInstance: ISchemaInstance) {
-        if (instance.parent) {
+      afterChange: (path: Path, newValue: any, newInstance: ISchemaInstance) => {
+        if (this.options.callParentHooks !== false && instance.parent) {
           instance.parent.instance.afterChange([instance.parent.path].concat(path), newValue, newInstance);
         }
       },
@@ -221,7 +224,7 @@ export class ObjectSchema<T extends object = object> implements ISchema<T, Objec
   //   ) as Promise<T>;
   // }
 
-  public toObject(instance: ObjectInstance<T>, options?: IToObjectOptions) {
+  public toObject(instance: ObjectInstance<T>, options: IToObjectOptions = {}) {
     return toObject<T>(instance.instanceMap, options);
   }
 
