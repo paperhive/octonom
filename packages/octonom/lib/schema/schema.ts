@@ -13,11 +13,15 @@ export interface ISanitizeOptions {
   parent?: ISchemaParent;
 }
 
-export interface ISchema<T, TSchemaInstance extends ISchemaInstance<T>> {
+export interface ISchema<
+  T,
+  TSchemaInstance extends ISchemaInstance<T>,
+  TToObject = any,
+> {
   options: ISchemaOptions<TSchemaInstance>;
   create(value: any, sanitizeOptions?: ISanitizeOptions): TSchemaInstance;
   populate?(instance: TSchemaInstance, populateReference: PopulateReference): Promise<TSchemaInstance>;
-  toObject(instance: TSchemaInstance, toObjectOptions?: IToObjectOptions): T;
+  toObject(instance: TSchemaInstance, toObjectOptions?: IToObjectOptions): TToObject;
   validate(instance: TSchemaInstance): Promise<void>;
 }
 
