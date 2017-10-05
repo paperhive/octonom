@@ -2,6 +2,7 @@ import { spy } from 'sinon';
 
 import { CatModel } from '../test/data/models/cat';
 import { Hooks, IChangeHookOptions } from './hooks';
+import { StringSchema } from './schema/string';
 
 describe('Hooks', () => {
   const cat = new CatModel();
@@ -17,7 +18,13 @@ describe('Hooks', () => {
     const hooks = new Hooks<CatModel>();
     const handler = spy();
     hooks.register('beforeChange', handler);
-    const options = {modelPath: {instance: cat, path: ['name']}, data: 'Yllim'};
+    const stringSchema = new StringSchema();
+    const options: IChangeHookOptions<CatModel> = {
+      path: ['name'],
+      value: 'Yllim',
+      modelInstance: cat,
+      schemaInstance: stringSchema.create('name'),
+    };
     hooks.run('beforeChange', options);
     expect(handler).to.be.calledOnce.and.calledWith(options);
   });
