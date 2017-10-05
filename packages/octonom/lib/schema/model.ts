@@ -14,7 +14,7 @@ export interface IModelOptions<T extends Model = Model> extends ISchemaOptions<M
 }
 
 export class ModelSchema<T extends Model = Model> implements ISchema<T, ModelInstance<T>, Partial<T>> {
-  constructor(public options: IModelOptions<T>) {}
+  constructor(public readonly options: IModelOptions<T>) {}
 
   public create(value: any, sanitizeOptions: ISanitizeOptions = {}) {
     if (value === undefined && !this.options.required) {
