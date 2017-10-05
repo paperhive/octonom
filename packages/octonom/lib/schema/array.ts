@@ -217,7 +217,7 @@ export function proxifyArray<T>(
 }
 
 export class ArraySchema<T> implements ISchema<T[], ArrayInstance<T>, T[]> {
-  constructor(public options: IArrayOptions<T>) {}
+  constructor(public readonly options: IArrayOptions<T>) {}
 
   public create(value: any, sanitizeOptions: ISanitizeOptions = {}): ArrayInstance<T> {
     const sanitizedValue = this.sanitize(value, sanitizeOptions);

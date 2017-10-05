@@ -10,7 +10,7 @@ export interface IAnyOptions extends ISchemaOptions<AnyInstance> {
 }
 
 export class AnySchema implements ISchema<any, AnyInstance> {
-  constructor(public options: IAnyOptions = {}) {}
+  constructor(public readonly options: IAnyOptions = {}) {}
 
   public create(value: any, sanitizeOptions: ISanitizeOptions = {}): AnyInstance {
     const sanitizedValue = this.sanitize(value, sanitizeOptions);

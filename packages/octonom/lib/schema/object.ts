@@ -184,7 +184,7 @@ export async function validateObject<T extends object>(
 }
 
 export class ObjectSchema<T extends object = object> implements ISchema<T, ObjectInstance<T>> {
-  constructor(public options: IObjectOptions<T>) {}
+  constructor(public readonly options: IObjectOptions<T>) {}
 
   public create(value: any, sanitizeOptions: ISanitizeOptions = {}): ObjectInstance<T> {
     const sanitizedValue = this.sanitize(value, sanitizeOptions);
