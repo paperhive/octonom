@@ -285,7 +285,7 @@ export class ArraySchema<T> implements ISchema<T[], ArrayInstance<T>> {
   protected sanitize(value: any, sanitizeOptions: ISanitizeOptions) {
     if (value === undefined) {
       if (this.options.required && sanitizeOptions.defaults) {
-        value = [];
+        return [];
       }
       return undefined;
     }
