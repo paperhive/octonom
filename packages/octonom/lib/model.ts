@@ -1,3 +1,4 @@
+import { SanitizationError } from './errors';
 import { HookHandlersMap, Hooks } from './hooks';
 import {
          ObjectInstance, ObjectSchema, /* populateObject,*/
@@ -5,7 +6,7 @@ import {
        } from './schema/object';
 import {
          IPopulateMap, ISanitizeOptions, ISchema,
-         ISchemaInstance, ISchemaParentInstance,
+         ISchemaInstance, ISchemaOptions, ISchemaParentInstance,
          IToObjectOptions, Path, SchemaInstanceMap, SchemaMap,
        } from './schema/schema';
 
@@ -34,6 +35,22 @@ const shadowInstanceProperty = Symbol();
 const getShadowInstance = Symbol();
 const setShadowInstance = Symbol();
 
+// TODO: think about model instances
+function sanitize(value: any, sanitizeOptions: ISanitizeOptions) {
+  if (value === undefined) {
+    if (sanitizeOptions.defaults) {
+      return {};
+    }
+    return undefined;
+  }
+
+  if (typeof value !== 'object') {
+    throw new SanitizationError('Value is not an object.', 'no-object', sanitizeOptions.parent);
+  }
+
+  return value;
+}
+
 // TODO: Model can be made an abstract class but the type Constructor<Model>
 //       doesn't work anymore (e.g., used in mixins)
 export class Model {
@@ -50,9 +67,11 @@ export class Model {
   }
 
   // TODO: ideally we'd also use Partial<this> as the type for data
-  constructor(data?, sanitizeOptions: ISanitizeOptions = {}) {
+  constructor(value?, sanitizeOptions: ISanitizeOptions = {defaults: true}) {
     const constructor = this.constructor as typeof Model;
     const schemaMap = constructor.schemaMap as SchemaMap<this>;
+
+    const sanitizedValue = sanitize(value, sanitizeOptions);
 
     const objectSchema = new ObjectSchema<this>({schemaMap});
 
@@ -63,22 +82,30 @@ export class Model {
       parent: sanitizeOptions.parent,
       schema: objectSchema,
       value: this,
-      beforeChange: (path: Path, value: any, oldInstance: ISchemaInstance) => {
-        constructor.hooks.run('beforeChange', {path, value, modelInstance: this, schemaInstance: oldInstance});
+      beforeChange: (path: Path, newValue: any, oldInstance: ISchemaInstance) => {
+        constructor.hooks.run(
+          'beforeChange',
+          {path, value: newValue, modelInstance: this, schemaInstance: oldInstance},
+        );
+
         if (shadowInstance.parent) {
-          shadowInstance.parent.instance.beforeChange([shadowInstance.parent.path].concat(path), value, oldInstance);
+          shadowInstance.parent.instance.beforeChange([shadowInstance.parent.path].concat(path), newValue, oldInstance);
         }
       },
-      afterChange: (path: Path, value: any, newInstance: ISchemaInstance) => {
-        constructor.hooks.run('afterChange', {path, value, modelInstance: this, schemaInstance: newInstance});
+      afterChange: (path: Path, newValue: any, newInstance: ISchemaInstance) => {
+        constructor.hooks.run(
+          'afterChange',
+          {path, value: newValue, modelInstance: this, schemaInstance: newInstance},
+        );
+
         if (shadowInstance.parent) {
-          shadowInstance.parent.instance.afterChange([shadowInstance.parent.path].concat(path), value, newInstance);
+          shadowInstance.parent.instance.afterChange([shadowInstance.parent.path].concat(path), newValue, newInstance);
         }
       },
     };
     this[setShadowInstance](shadowInstance);
 
-    setObject(data || {}, this, shadowInstance.instanceMap, shadowInstance, schemaMap, sanitizeOptions);
+    setObject(sanitizedValue, this, shadowInstance.instanceMap, shadowInstance, schemaMap, sanitizeOptions);
 
     return proxifyObject(this, shadowInstance.instanceMap, shadowInstance, schemaMap);
   }
