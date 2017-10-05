@@ -1,6 +1,6 @@
 import { Collection } from './collection';
 import { Model } from './model';
-import { IOctoInstance, Path } from './schema/value';
+import { ISchemaInstance, Path } from './schema/schema';
 
 /* Hook handlers are always called with instance set to the
  * instance where the hook is registered
@@ -8,8 +8,8 @@ import { IOctoInstance, Path } from './schema/value';
 export interface IChangeHookOptions<TModel extends Model> {
   path: Path;
   value: any;
-  instance: Model;
-  octoInstance: IOctoInstance;
+  modelInstance: Model;
+  schemaInstance: ISchemaInstance;
 }
 
 export interface IChangeHooks<TModel extends Model = Model> {
