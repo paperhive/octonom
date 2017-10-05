@@ -1,8 +1,10 @@
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { ISanitizeOptions, ISchema, ISchemaOptions, Path, runValidator } from './schema';
+import { ISanitizeOptions, ISchema, ISchemaInstance, ISchemaOptions, ISchemaParent, Path, validate } from './schema';
 
-export interface IDateOptions extends ISchemaOptions<Date> {
+export type DateInstance = ISchemaInstance<Date>;
+
+export interface IDateOptions extends ISchemaOptions<DateInstance> {
   default?: Date | (() => Date);
   min?: Date;
   max?: Date;
@@ -10,11 +12,47 @@ export interface IDateOptions extends ISchemaOptions<Date> {
 
 // TODO: catch date changes (it's an object!)
 
-export class DateSchema<TModel extends Model = Model> implements ISchema<Date, TModel> {
-  constructor(public options: IDateOptions = {}) {}
+export class DateSchema implements ISchema<Date, DateInstance, Date> {
+  constructor(public readonly options: IDateOptions = {}) {}
 
-  public sanitize(value: any, path: Path, instance: TModel, options: ISanitizeOptions = {}) {
-    if (options.defaults && value === undefined) {
+  public create(value: any, sanitizeOptions: ISanitizeOptions = {}): DateInstance {
+    const sanitizedValue = this.sanitize(value, sanitizeOptions);
+
+    if (sanitizedValue === undefined) {
+      return undefined;
+    }
+
+    return {
+      parent: sanitizeOptions.parent,
+      schema: this,
+      value: new Date(sanitizedValue),
+    };
+  }
+
+  public toObject(instance: DateInstance) {
+    return instance.value;
+  }
+
+  public async validate(instance: DateInstance) {
+    if (this.options.min !== undefined && instance.value < this.options.min) {
+      throw new ValidationError(
+        `Date must not be before ${this.options.min.toISOString()}.`, 'date-min',
+        instance.parent,
+      );
+    }
+
+    if (this.options.max !== undefined && instance.value > this.options.max) {
+      throw new ValidationError(
+        `Date must not be after ${this.options.max.toISOString()}.`, 'date-max',
+        instance.parent,
+      );
+    }
+
+    await validate(this.options, instance);
+  }
+
+  protected sanitize(value: any, sanitizeOptions: ISanitizeOptions = {}) {
+    if (value === undefined && sanitizeOptions.defaults) {
       return typeof this.options.default === 'function'
         ? this.options.default()
         : this.options.default;
@@ -25,40 +63,9 @@ export class DateSchema<TModel extends Model = Model> implements ISchema<Date, T
     }
 
     if (!(value instanceof Date)) {
-      throw new SanitizationError('Value is not a date.', 'no-date', value, path, instance);
+      throw new SanitizationError('Value is not a date.', 'no-date', sanitizeOptions.parent);
     }
 
     return value;
-  }
-
-  public async validate(value: Date, path: Path, instance: TModel) {
-    if (value === undefined) {
-      if (this.options.required) {
-        throw new ValidationError('Required value is undefined.', 'required', value, path, instance);
-      }
-      return;
-    }
-
-    if (!(value instanceof Date)) {
-      throw new ValidationError('Value is not a date.', 'no-date', value, path, instance);
-    }
-
-    if (this.options.min !== undefined && value < this.options.min) {
-      throw new ValidationError(
-        `Date must not be before ${this.options.min.toISOString()}.`, 'date-min',
-        value, path, instance,
-      );
-    }
-
-    if (this.options.max !== undefined && value > this.options.max) {
-      throw new ValidationError(
-        `Date must not be after ${this.options.max.toISOString()}.`, 'date-max',
-        value, path, instance,
-      );
-    }
-
-    if (this.options.validate) {
-      await runValidator(this.options.validate, value, path, instance);
-    }
   }
 }
