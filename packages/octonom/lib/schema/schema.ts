@@ -33,7 +33,7 @@ export interface ISchemaOptions<TSchemaInstance extends ISchemaInstance<any>> {
 }
 
 export interface ISchemaParent<T = any> {
-  instance: ISchemaParentInstance<any>;
+  instance: ISchemaParentInstance<T>;
   path: string | number;
 }
 
@@ -51,7 +51,7 @@ export type Path = Array<string | number>;
 
 export type PopulateReference = IPopulateMap | true;
 
-export type SchemaInstanceMap<T extends object = object> = {[key in keyof T]: ISchemaInstance};
+export type SchemaInstanceMap<T extends object = object> = {[key in keyof T]?: ISchemaInstance};
 
 export type SchemaMap<T extends object = object> = {[key in keyof T]: ISchema<any, any>};
 
