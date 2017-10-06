@@ -20,7 +20,7 @@
     "chai-as-promised": "^7.0.0",
     "codecov": "^2.3.0",
     "lerna": "^2.1.2",
-    "mocha": "^3.5.0",
+    "mocha": "^4.0.0",
     "nyc": "^11.2.1",
     "sinon": "^4.0.0",
     "sinon-chai": "^2.13.0",
