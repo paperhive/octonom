@@ -2,7 +2,7 @@ import { difference } from 'lodash';
 
 import { SanitizationError, ValidationError } from '../errors';
 import { ISanitizeOptions, ISchema, ISchemaInstance, ISchemaOptions, ISchemaParentInstance,
-         IToObjectOptions, Path, PopulateReference, SchemaInstanceMap, SchemaMap,
+         IToObjectOptions, Path, PopulateMap, SchemaInstanceMap, SchemaMap,
          validate,
        } from './schema';
 
@@ -16,37 +16,33 @@ export interface IObjectOptions<T extends object = object> extends ISchemaOption
   callParentHooks?: boolean;
 }
 
-/*
-// populate an object and octoValueMap simultaneously
-export async function populateObject(
-  obj: object,
-  octoValueMap: IOctoValueMap,
-  schemaMap: SchemaMap,
-  populateReference: PopulateReference,
+// populate an object and instanceMap simultaneously
+export async function populateObject<T extends object>(
+  obj: T,
+  instanceMap: SchemaInstanceMap<T>,
+  schemaMap: SchemaMap<T>,
+  populateReference: PopulateMap<T>,
 ) {
-  const newObj = {};
+  const newObj: {[key in keyof T]?: any} = {};
 
-  await Promise.all(Object.keys(populateReference).map(async key => {
+  await Promise.all(Object.keys(populateReference).map(async (key: keyof T) => {
     const schema = schemaMap[key];
     if (!schema) {
       throw new Error(`Key ${key} not found in schema.`);
     }
 
-    if (octoValueMap[key] === undefined) {
+    const instance = instanceMap[key];
+    if (instanceMap === undefined) {
       return;
     }
 
-    newObj[key] = await octoValueMap[key].populate(populateReference[key]);
+    newObj[key] = await schema.populate(instance, populateReference[key]);
   }));
 
-  Object.keys(newObj).forEach(key => {
-    obj[key] = newObj[key];
-    octoValueMap[key].value = newObj[key];
-  });
+  Object.assign(obj, newObj);
 
   return newObj;
 }
-*/
 
 // proxify an object to sync changes to an octoValueMap
 export function proxifyObject<T extends object>(
