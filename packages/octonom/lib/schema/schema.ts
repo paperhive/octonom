@@ -1,9 +1,5 @@
 import { ValidationError } from '../errors';
 
-export interface IPopulateMap {
-  [k: string]: PopulateReference;
-}
-
 export interface ISanitizeOptions {
   /** Set undefined values to defaults (if configured). Default is false. */
   defaults?: boolean;
@@ -53,7 +49,11 @@ export interface IToObjectOptions {
 
 export type Path = Array<string | number>;
 
-export type PopulateReference = IPopulateMap | true;
+export type PopulateMap<T extends object = object> = {
+  [key in keyof T]?: PopulateReference;
+};
+
+export type PopulateReference<T extends object = object> = PopulateMap<T> | true;
 
 export type SchemaInstanceMap<T extends object = object> = {[key in keyof T]?: ISchemaInstance};
 
