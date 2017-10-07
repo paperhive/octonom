@@ -20,7 +20,7 @@ export abstract class Collection<T extends Model> {
     this.modelIdField = options.modelIdField || 'id';
 
     // check id field in schema
-    const idSchema = model.schema[this.modelIdField];
+    const idSchema = model.schemaMap[this.modelIdField];
     if (!idSchema) {
       throw new Error(`Id field ${this.modelIdField} not found in model schema.`);
     }
