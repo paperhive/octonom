@@ -1,13 +1,13 @@
 import { SanitizationError } from './errors';
 import { HookHandlersMap, Hooks } from './hooks';
 import {
-         ObjectInstance, ObjectSchema, /* populateObject,*/
+         ObjectInstance, ObjectSchema, populateObject,
          proxifyObject, setObject, validateObject,
        } from './schema/object';
 import {
-         IPopulateMap, ISanitizeOptions, ISchema,
+         ISanitizeOptions, ISchema,
          ISchemaInstance, ISchemaOptions, ISchemaParentInstance,
-         IToObjectOptions, Path, SchemaInstanceMap, SchemaMap,
+         IToObjectOptions, Path, PopulateMap, SchemaInstanceMap, SchemaMap,
        } from './schema/schema';
 
 export type Constructor<T = {}> = new (...args: any[]) => T;
@@ -114,12 +114,11 @@ export class Model {
     return this.toObject();
   }
 
-  public async populate(populateMap: IPopulateMap) {
-    /*
+  public async populate(populateMap: PopulateMap<this>) {
     const constructor = this.constructor as typeof Model;
+    const schemaMap = constructor.schemaMap as SchemaMap<this>;
     const shadow = this[getShadowInstance]() as ObjectInstance<this>;
-    await populateObject(shadow.value, shadow.instanceMap, constructor.schemaMap, populateMap);
-    */
+    await populateObject(shadow.value, shadow.instanceMap, schemaMap, populateMap);
     return this;
   }
 
