@@ -54,7 +54,7 @@ describe('ReferenceSchema', () => {
     }
 
     FriendModel.setSchema('id', new StringSchema({required: true}));
-    const schema = new ReferenceSchema({collection: () => friendCollection});
+    const schema = new ReferenceSchema<FriendModel>({collection: () => friendCollection});
     FriendModel.setSchema('friend', schema);
 
     const friendCollection = new ArrayCollection<FriendModel>(FriendModel, {modelIdField: 'id'});
