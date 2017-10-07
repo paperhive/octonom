@@ -43,7 +43,7 @@ export class ReferenceSchema<TModel extends Model = Model> implements
     return instance;
   }
 
-  public async populate(instance: ReferenceInstance<TModel>, populateReference: PopulateReference) {
+  public async populate(instance: ReferenceInstance<TModel>, populateReference: PopulateReference<TModel>) {
     const modelInstance = await this.options.collection().findById(instance.id);
 
     if (populateReference !== true) {
