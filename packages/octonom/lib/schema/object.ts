@@ -2,7 +2,7 @@ import { difference } from 'lodash';
 
 import { SanitizationError, ValidationError } from '../errors';
 import { ISanitizeOptions, ISchema, ISchemaInstance, ISchemaOptions, ISchemaParentInstance,
-         IToObjectOptions, Path, PopulateMap, SchemaInstanceMap, SchemaMap,
+         IToObjectOptions, Path, PopulateMap, PopulateReference, SchemaInstanceMap, SchemaMap,
          validate,
        } from './schema';
 
@@ -41,7 +41,7 @@ export async function populateObject<T extends object>(
 
   Object.assign(obj, newObj);
 
-  return newObj;
+  return newObj as T;
 }
 
 // proxify an object to sync changes to an octoValueMap
@@ -214,11 +214,13 @@ export class ObjectSchema<T extends object = object> implements ISchema<T, Objec
     return instance;
   }
 
-  // public async populate(populateReference: PopulateReference) {
-  //   return populateObject(
-  //     this.value, this.octoValueMap, this.schemaOptions.schemaMap, populateReference
-  //   ) as Promise<T>;
-  // }
+  public async populate(instance: ObjectInstance<T>, populateReference: PopulateReference<T>) {
+    if (populateReference === true) {
+      throw new Error('populateReference must be an object.');
+    }
+
+    return populateObject(instance.value, instance.instanceMap, this.options.schemaMap, populateReference);
+  }
 
   public toObject(instance: ObjectInstance<T>, options: IToObjectOptions = {}) {
     return toObject<T>(instance.instanceMap, options);
