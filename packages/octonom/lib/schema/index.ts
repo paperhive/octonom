@@ -6,7 +6,7 @@ import { DateSchema, IDateOptions } from './date';
 import { IModelOptions, ModelSchema } from './model';
 import { INumberOptions, NumberSchema } from './number';
 import { IObjectOptions, ObjectSchema } from './object';
-// import { IReferenceOptions, ReferenceSchema } from './reference';
+import { IReferenceOptions, ReferenceSchema } from './reference';
 import { ISanitizeOptions, ISchema, ISchemaInstance } from './schema';
 import { IStringOptions, StringSchema } from './string';
 
@@ -23,7 +23,7 @@ export const Property = {
   Model: (options: IModelOptions) => getSchemaDecorator(() => new ModelSchema(options)),
   Number: (options: INumberOptions = {}) => getSchemaDecorator(() => new NumberSchema(options)),
   Object: (options: IObjectOptions) => getSchemaDecorator(() => new ObjectSchema(options)),
-  // Reference: (options: IReferenceOptions) => getSchemaDecorator(() => new ReferenceSchema(options)),
+  Reference: (options: IReferenceOptions) => getSchemaDecorator(() => new ReferenceSchema(options)),
   String: (options: IStringOptions = {}) => getSchemaDecorator(() => new StringSchema(options)),
 };
 
@@ -35,7 +35,7 @@ export const Schema = {
   Model: ModelSchema,
   Number: NumberSchema,
   Object: ObjectSchema,
-  // Reference: ReferenceSchema,
+  Reference: ReferenceSchema,
   String: StringSchema,
 };
 /* tslint:enable:variable-name */
