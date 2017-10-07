@@ -20,7 +20,7 @@ export interface ISchema<
 > {
   options: ISchemaOptions<TSchemaInstance>;
   create(value: any, sanitizeOptions?: ISanitizeOptions): TSchemaInstance;
-  populate?(instance: TSchemaInstance, populateReference: PopulateReference): Promise<TSchemaInstance>;
+  populate?(instance: TSchemaInstance, populateReference: PopulateReference): Promise<T>;
   toObject(instance: TSchemaInstance, toObjectOptions?: IToObjectOptions): TToObject;
   validate(instance: TSchemaInstance): Promise<void>;
 }
