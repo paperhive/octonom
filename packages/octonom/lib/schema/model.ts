@@ -42,15 +42,14 @@ export class ModelSchema<T extends Model = Model> implements ISchema<T, ModelIns
     return instance;
   }
 
-  /*
-  public async populate(populateReference: PopulateReference) {
+  public async populate(instance: ModelInstance<T>, populateReference: PopulateReference) {
     if (typeof populateReference !== 'object') {
       throw new Error('populateReference must be an object.');
     }
 
-    return this.value.populate(populateReference);
+    return instance.value.populate(populateReference);
   }
-  */
+
   public toObject(instance: ModelInstance<T>, options?: IToObjectOptions) {
     return instance.value.toObject();
   }
