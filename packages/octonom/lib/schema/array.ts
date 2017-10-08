@@ -6,6 +6,7 @@ import { ISanitizeOptions, ISchema, ISchemaInstance, ISchemaOptions,
 
 export interface IArrayInstance<T> extends ISchemaParentInstance<T[]> {
   instanceArray: Array<ISchemaInstance<T>>;
+  rawArray: T[];
 }
 export type ArrayInstance<T> = IArrayInstance<T>;
 
@@ -185,7 +186,7 @@ export function proxifyArray<T>(
         }
 
         instanceArray[numKey] = newInstance;
-        target[numKey] = newInstance.value;
+        target[numKey] = newInstance ? newInstance.value : undefined;
 
         parentInstance.afterChange([numKey], value, newInstance);
       } else {
@@ -228,6 +229,7 @@ export class ArraySchema<T> implements ISchema<T[], ArrayInstance<T>, T[]> {
 
     const instance: ArrayInstance<T> = {
       instanceArray: undefined,
+      rawArray: undefined,
       parent: sanitizeOptions.parent,
       schema: this,
       value: undefined,
@@ -249,21 +251,21 @@ export class ArraySchema<T> implements ISchema<T[], ArrayInstance<T>, T[]> {
         {...sanitizeOptions, parent: {instance, path: index}},
       ),
     );
-    const array = instance.instanceArray.map(element => element.value);
-    instance.value = proxifyArray<T>(array, instance.instanceArray, instance, this.options.elementSchema);
+    instance.rawArray = instance.instanceArray.map(element => element.value);
+    instance.value = proxifyArray<T>(instance.rawArray, instance.instanceArray, instance, this.options.elementSchema);
 
     return instance;
   }
 
   public async populate(instance: ArrayInstance<T>, populateReference: PopulateReference) {
     await Promise.all(instance.instanceArray.map(async (element, index) => {
-      instance.value[index] = await this.options.elementSchema.populate(element, populateReference);
+      instance.rawArray[index] = await this.options.elementSchema.populate(element, populateReference);
     }));
     return instance.value;
   }
 
   public toObject(instance: ArrayInstance<T>, options: IToObjectOptions = {}): T[] {
-    return instance.instanceArray.map(element => element.schema.toObject(element));
+    return instance.instanceArray.map(element => element ? element.schema.toObject(element, options) : undefined);
   }
 
   public async validate(instance: ArrayInstance<T>): Promise<void> {

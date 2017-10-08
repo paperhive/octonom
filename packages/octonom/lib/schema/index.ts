@@ -7,8 +7,10 @@ import { IModelOptions, ModelSchema } from './model';
 import { INumberOptions, NumberSchema } from './number';
 import { IObjectOptions, ObjectSchema } from './object';
 import { IReferenceOptions, ReferenceSchema } from './reference';
-import { ISanitizeOptions, ISchema, ISchemaInstance } from './schema';
+import { ISanitizeOptions, ISchema, ISchemaInstance, SchemaMap } from './schema';
 import { IStringOptions, StringSchema } from './string';
+
+export { SchemaMap };
 
 export function getSchemaDecorator(createSchema: () => ISchema<any, ISchemaInstance>): PropertyDecorator {
   return (target: IModel, key: string) => target.constructor.setSchema(key, createSchema());
