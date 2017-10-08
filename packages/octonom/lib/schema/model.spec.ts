@@ -1,13 +1,26 @@
+import { ArrayCollection } from '../array-collection';
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
 import { ModelSchema } from './model';
+import { ReferenceSchema } from './reference';
 import { StringSchema } from './string';
 
 describe('ModelSchema', () => {
+  class ReferencedModel extends Model {
+    public id: string;
+  }
+  ReferencedModel.setSchema('id', new StringSchema());
+
   class TestModel extends Model {
     public foo: string;
+    public reference: string | ReferencedModel;
   }
   TestModel.setSchema('foo', new StringSchema());
+  TestModel.setSchema('reference', new ReferenceSchema({collection: () => collection}));
+
+  const collection = new ArrayCollection<ReferencedModel>(ReferencedModel, {modelIdField: 'id'});
+  const referencedInstance = new  ReferencedModel({id: '0xACAB'});
+  collection.insert(referencedInstance);
 
   describe('constructor()', () => {
     it('should be instantiatable with options', () => {
@@ -54,15 +67,22 @@ describe('ModelSchema', () => {
     });
   });
 
-  /*
   describe('populate()', () => {
     it('should throw if populateReference is not an object', async () => {
-      const  schema = new ModelSchema({model: TestModel});
-      await expect(schema.populate(new TestModel(), true))
+      const schema = new ModelSchema({model: TestModel});
+      await expect(schema.populate(schema.create(new TestModel()), true))
         .to.be.rejectedWith(Error, 'populateReference must be an object.');
     });
+
+    it('should populate a reference', async () => {
+      const schema = new ModelSchema<TestModel>({model: TestModel});
+      const instance = schema.create({reference: '0xACAB'});
+      const result = await schema.populate(instance, {reference: true});
+      expect(result).to.equal(instance.value);
+      expect(result).to.eql({reference: {id: '0xACAB'}});
+      expect(result.reference).to.be.an.instanceOf(ReferencedModel);
+    });
   });
-  */
 
   describe('toObject()', () => {
     it('should return an object', () => {
