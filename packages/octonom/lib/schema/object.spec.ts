@@ -239,19 +239,6 @@ describe('ObjectSchema', () => {
     afterChangeSpy.reset();
   });
 
-  /*
-  describe('populate()', () => {
-    // note: details are tested in populateObject() above
-    it('should populate a key', async () => {
-      const  schema = new ObjectSchema({schema: {foo: new ReferenceSchema({collection: () => collection})}});
-      const obj = {foo: '0xACAB', bar: 'test'};
-      const result = await schema.populate(obj, {foo: true});
-      expect(result).to.not.equal(obj);
-      expect(result).to.eql({foo: {id: '0xACAB'}, bar: 'test'});
-    });
-  });
-  */
-
   describe('constructor()', () => {
     it('should be instantiatable with options', () => {
       const schema = new ObjectSchema({schemaMap: {foo: new StringSchema()}});
@@ -373,10 +360,10 @@ describe('ObjectSchema', () => {
 
     it('should populate a reference', async () => {
       const schema = new ObjectSchema<IOuter>({schemaMap: outerSchemaMap});
-      const instance = schema.create({foo: '0xACAB'});
+      const instance = schema.create({foo: '0xACAB', bar: 'test'});
       const result = await schema.populate(instance, {foo: true});
       expect(result).to.equal(instance.value);
-      expect(result).to.eql({foo: {id: '0xACAB'}});
+      expect(result).to.eql({foo: {id: '0xACAB'}, bar: 'test'});
       expect(result.foo).to.be.an.instanceOf(ReferencedModel);
     });
   });
