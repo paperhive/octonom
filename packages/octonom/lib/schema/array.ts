@@ -255,6 +255,13 @@ export class ArraySchema<T> implements ISchema<T[], ArrayInstance<T>, T[]> {
     return instance;
   }
 
+  public async populate(instance: ArrayInstance<T>, populateReference: PopulateReference) {
+    await Promise.all(instance.instanceArray.map(async (element, index) => {
+      instance.value[index] = await this.options.elementSchema.populate(element, populateReference);
+    }));
+    return instance.value;
+  }
+
   public toObject(instance: ArrayInstance<T>, options: IToObjectOptions = {}): T[] {
     return instance.instanceArray.map(element => element.schema.toObject(element));
   }
