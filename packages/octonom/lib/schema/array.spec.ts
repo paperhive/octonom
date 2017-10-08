@@ -43,19 +43,19 @@ describe('ArraySchema', () => {
       expect(schema.create(['bar'])).to.have.property('value').that.eql(['bar']);
     });
 
-    // TODO
-    // it('should return an array of models with object input', () => {
-    //   const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel})});
-    //   const array = schema.sanitize([{foo: 'bar'}], ['key'], {} as Model) as Array<Partial<TestModel>>;
-    //   expect(array).to.be.an('array').and.to.eql([{foo: 'bar'}]);
-    //   expect(array[0]).to.be.an.instanceOf(TestModel).and.to.eql({foo: 'bar'});
-    // });
+    it('should return an array of models with object input', () => {
+      const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel})});
+      const instance = schema.create([{foo: 'bar'}]);
+      expect(instance.value).to.be.an('array').and.to.eql([{foo: 'bar'}]);
+      expect(instance.value[0]).to.be.an.instanceOf(TestModel);
+    });
 
-    // it('should return an array of models with model input', () => {
-    //   const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel})});
-    //   const array = [new TestModel({foo: 'bar'})];
-    //   expect(schema.sanitize(array, ['key'], {} as Model)).to.eql(array);
-    // });
+    it('should return an array of models with model input', () => {
+      const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel})});
+      const instance = schema.create([new TestModel({foo: 'bar'})]);
+      expect(instance.value).to.be.an('array').and.to.eql([{foo: 'bar'}]);
+      expect(instance.value[0]).to.be.an.instanceOf(TestModel);
+    });
 
     describe('proxifyArray()', () => {
       const schema = new ArraySchema<string>({elementSchema: new StringSchema()});
