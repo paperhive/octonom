@@ -148,53 +148,54 @@ describe('ArraySchema', () => {
       });
     });
   });
-/*
+
   describe('populate()', () => {
-    class ReferenceModel extends Model {
+    class ReferencedModel extends Model {
       public id: string;
     }
-    ReferenceModel.setSchema('id', new StringSchema());
+    ReferencedModel.setSchema('id', new StringSchema());
 
-    const collection = new ArrayCollection<ReferenceModel>(ReferenceModel, {modelIdField: 'id'});
-    collection.insert(new ReferenceModel({id: '0xACAB'}));
-    collection.insert(new ReferenceModel({id: '4711'}));
-
-    it('should throw if elements are not populatable', async () => {
-      const schema = new ArraySchema({elementSchema: new StringSchema()});
-      await expect(schema.populate(['0xACAB'], true))
-        .to.be.rejectedWith(Error, 'Array elements are not populatable.');
-    });
+    const collection = new ArrayCollection<ReferencedModel>(ReferencedModel, {modelIdField: 'id'});
+    collection.insert(new ReferencedModel({id: '0xACAB'}));
+    collection.insert(new ReferencedModel({id: '4711'}));
 
     it('should populate an array of strings', async () => {
       const schema = new ArraySchema({
         elementSchema: new ReferenceSchema({collection: () => collection}),
       });
-      const instances = await schema.populate(['0xACAB', '4711'], true);
-      expect(instances).to.eql([{id: '0xACAB'}, {id: '4711'}]);
+      const instance = schema.create(['0xACAB', '4711']);
+      const result = await schema.populate(instance, true);
+      expect(result).to.equal(instance.value).and.to.eql([{id: '0xACAB'}, {id: '4711'}]);
+    });
+
+    it('should populate an array of mixed strings and populated models', async () => {
+      const schema = new ArraySchema({
+        elementSchema: new ReferenceSchema({collection: () => collection}),
+      });
+      const instance = schema.create(['0xACAB', new ReferencedModel({id: '4711'})]);
+      const result = await schema.populate(instance, true);
+      expect(result).to.equal(instance.value).and.to.eql([{id: '0xACAB'}, {id: '4711'}]);
     });
 
     it('should populate an array of models', async () => {
       class ElementModel extends Model {
-        public reference: string | ReferenceModel;
+        public reference: string | ReferencedModel;
       }
       ElementModel.setSchema('reference', new ReferenceSchema({collection: () => collection}));
 
       const schema = new ArraySchema({
         elementSchema: new ModelSchema({model: ElementModel}),
       });
-      const array = [
+
+      const instance = schema.create([
         new ElementModel({reference: '0xACAB'}),
         new ElementModel({reference: '4711'}),
-      ];
-      const instances = await schema.populate(array, {reference: true});
-      expect(instances).to.be.an('array').and.to.not.equal(array);
-      expect(instances).to.eql([
-        {reference: {id: '0xACAB'}},
-        {reference: {id: '4711'}},
       ]);
+      const result = await schema.populate(instance, {reference: true});
+      expect(result).to.equal(instance.value).and.to.be.an('array')
+        .and.to.eql([{reference: {id: '0xACAB'}}, {reference: {id: '4711'}}]);
     });
   });
-  */
 
   describe('toObject()', () => {
     it('should return a new array', () => {
