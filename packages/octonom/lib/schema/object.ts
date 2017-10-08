@@ -31,8 +31,12 @@ export async function populateObject<T extends object>(
       throw new Error(`Key ${key} not found in schema.`);
     }
 
+    if (!schema.populate) {
+      throw new Error(`Key ${key} is not populatable.`);
+    }
+
     const instance = instanceMap[key];
-    if (instanceMap === undefined) {
+    if (instance === undefined) {
       return;
     }
 
@@ -41,7 +45,7 @@ export async function populateObject<T extends object>(
 
   Object.assign(obj, newObj);
 
-  return newObj as T;
+  return obj as T;
 }
 
 // proxify an object to sync changes to an octoValueMap

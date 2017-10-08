@@ -3,22 +3,32 @@ import { spy } from 'sinon';
 import { ArrayCollection } from '../array-collection';
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { ObjectInstance, ObjectSchema, proxifyObject, setObject, toObject, validateObject } from './object';
+import { ObjectInstance, ObjectSchema, populateObject, proxifyObject,
+         setObject, toObject, validateObject,
+       } from './object';
 import { ReferenceSchema } from './reference';
 import { ISchemaParent, ISchemaParentInstance, SchemaInstanceMap, SchemaMap } from './schema';
 import { StringInstance, StringSchema } from './string';
 import { testValidation } from './test-utils';
 
-/*
-class TestModel extends Model {
+class ReferencedModel extends Model {
   public id: string;
 }
-TestModel.setSchema('id', new StringSchema());
+ReferencedModel.setSchema('id', new StringSchema());
 
-const collection = new ArrayCollection<TestModel>(TestModel, {modelIdField: 'id'});
-const instance = new  TestModel({id: '0xACAB'});
-collection.insert(instance);
-*/
+const collection = new ArrayCollection<ReferencedModel>(ReferencedModel, {modelIdField: 'id'});
+const referencedInstance = new  ReferencedModel({id: '0xACAB'});
+collection.insert(referencedInstance);
+
+interface IOuter {
+  foo?: string | ReferencedModel;
+  bar?: string;
+}
+
+const outerSchemaMap: SchemaMap<IOuter> = {
+  foo: new ReferenceSchema({collection: () => collection}),
+  bar: new StringSchema(),
+};
 
 describe('helpers', () => {
   interface IFooBar {
@@ -46,38 +56,34 @@ describe('helpers', () => {
     afterChangeSpy.reset();
   });
 
-  /*
   describe('populateObject()', () => {
-    const schemaMap = {
-      foo: new ReferenceSchema({collection: () => collection}),
-      bar: new StringSchema(),
-    };
-
-    it('should throw if populateReference is not an object', async () => {
-      await expect(populateObject(schemaMap, {foo: '0xACAB', bar: 'baz'}, true))
-        .to.be.rejectedWith(Error, 'populateReference must be an object.');
+    it('should throw if a key is not in schema.', async () => {
+      await expect(populateObject({}, {}, outerSchemaMap, {baz: true} as any))
+        .to.be.rejectedWith(Error, 'Key baz not found in schema.');
     });
 
-    it('should throw if a key is not populatable', async () => {
-      await expect(populateObject(schemaMap, {foo: '0xACAB', bar: 'baz'}, {bar: true}))
+    it('should throw if a key is not in schema.', async () => {
+      await expect(populateObject({bar: 'foo'}, {bar: outerSchemaMap.bar.create('foo')}, outerSchemaMap, {bar: true}))
         .to.be.rejectedWith(Error, 'Key bar is not populatable.');
     });
 
-    it('should ignore a key if it\'s undefined', async () => {
-      const obj = {bar: 'test'};
-      const result = await populateObject(schemaMap, obj, {foo: true});
-      expect(result).to.not.equal(obj);
-      expect(result).to.eql({bar: 'test'});
+    it('should ignore a key if it is undefined', async () => {
+      const obj: IOuter = {bar: 'foo'};
+      const result = await populateObject(obj, {bar: outerSchemaMap.bar.create('foo')}, outerSchemaMap, {foo: true});
+      expect(result).to.equal(obj).and.to.eql({bar: 'foo'});
     });
 
     it('should populate a key', async () => {
       const obj = {foo: '0xACAB', bar: 'test'};
-      const result = await populateObject(schemaMap, obj, {foo: true});
-      expect(result).to.not.equal(obj);
-      expect(result).to.eql({foo: {id: '0xACAB'}, bar: 'test'});
+      const instanceMap = {
+        foo: outerSchemaMap.foo.create('0xACAB'),
+        bar: outerSchemaMap.bar.create('test'),
+      };
+      const result = await populateObject(obj, instanceMap, outerSchemaMap, {foo: true});
+      expect(result).to.equal(obj).and.to.eql({foo: {id: '0xACAB'}, bar: 'test'});
+      expect(result.foo).to.be.an.instanceOf(ReferencedModel);
     });
   });
-  */
 
   describe('proxifyObject()', () => {
     it('should get a value for a key', () => {
@@ -353,6 +359,25 @@ describe('ObjectSchema', () => {
         expect(parentInstance.afterChange).to.be.calledOnce.and
           .calledWith(['path', 'nested'], {bar: undefined}, instance.instanceMap.nested);
       });
+    });
+  });
+
+  describe('populate()', () => {
+    // note: OctoObject.populate() wraps populateObject() (see above)
+
+    it('should throw if populateReference is not an object', async () => {
+      const schema = new ObjectSchema<IOuter>({schemaMap: outerSchemaMap});
+      await expect(schema.populate(schema.create({}), true))
+        .to.be.rejectedWith('populateReference must be an object');
+    });
+
+    it('should populate a reference', async () => {
+      const schema = new ObjectSchema<IOuter>({schemaMap: outerSchemaMap});
+      const instance = schema.create({foo: '0xACAB'});
+      const result = await schema.populate(instance, {foo: true});
+      expect(result).to.equal(instance.value);
+      expect(result).to.eql({foo: {id: '0xACAB'}});
+      expect(result.foo).to.be.an.instanceOf(ReferencedModel);
     });
   });
 
