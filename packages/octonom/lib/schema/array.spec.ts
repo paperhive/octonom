@@ -4,8 +4,8 @@ import { ArrayCollection } from '../array-collection';
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
 import { ArrayInstance, ArraySchema } from './array';
-// import { ModelSchema } from './model';
-// import { ReferenceSchema } from './reference';
+import { ModelSchema } from './model';
+import { ReferenceSchema } from './reference';
 import { ISchemaParentInstance } from './schema';
 import { StringSchema } from './string';
 
@@ -238,11 +238,10 @@ describe('ArraySchema', () => {
       await schema.validate(schema.create(['foo']));
     });
 
-    // TODO
-    // it('should validate an array of models', async () => {
-    //   const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel})});
-    //   const array = [new TestModel({foo: 'bar'})];
-    //   await schema.validate(array, ['key'], {} as Model);
-    // });
+    it('should validate an array of models', async () => {
+      const schema = new ArraySchema({elementSchema: new ModelSchema({model: TestModel})});
+      const array = [new TestModel({foo: 'bar'})];
+      await schema.validate(schema.create(array));
+    });
   });
 });
