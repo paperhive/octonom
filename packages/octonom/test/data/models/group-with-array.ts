@@ -7,7 +7,7 @@ export class GroupWithArrayModel extends Model {
   public id: string;
 
   @Property.Array({elementSchema: new Schema.Model({model: PersonModel})})
-  public members: ModelArray<PersonModel> | Array<Partial<PersonModel>>;
+  public members: Array<Partial<PersonModel>>;
 
   constructor(data?: Partial<GroupWithArrayModel>) {
     super(data);

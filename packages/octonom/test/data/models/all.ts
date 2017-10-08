@@ -29,7 +29,7 @@ export class AllModel extends Model {
   @Property.Number()
   public number: number;
 
-  @Property.Object({schema: {enabled: new Schema.Boolean()}})
+  @Property.Object({schemaMap: {enabled: new Schema.Boolean()}})
   public object: {enabled: boolean};
 
   @Property.Reference({collection: () => nestedCollection})
