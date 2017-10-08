@@ -56,12 +56,19 @@ export class ReferenceSchema<TModel extends Model = Model> implements
   }
 
   public toObject(instance: ReferenceInstance<TModel>, options: IToObjectOptions = {}): Partial<TModel> | string {
+    if (options.unpopulate) {
+      return instance.id;
+    }
+
+    if (instance.value === undefined) {
+      return undefined;
+    }
+
     if (typeof instance.value === 'string') {
       return instance.value;
     }
-    return options.unpopulate
-      ? instance.value[this.options.collection().modelIdField]
-      : instance.value.toObject(options);
+
+    return instance.value.toObject(options);
   }
 
   public async validate(instance: ReferenceInstance<TModel>) {

@@ -154,6 +154,7 @@ export function toObject<T extends object>(
   Object.keys(instanceMap).forEach((key: keyof T) => {
     const instance = instanceMap[key];
     const value = instance.schema.toObject(instance, options);
+
     if (value === undefined) {
       return;
     }
