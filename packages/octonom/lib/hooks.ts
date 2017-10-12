@@ -1,4 +1,3 @@
-import { Collection } from './collection';
 import { Model } from './model';
 import { ISchemaInstance, Path } from './schema/schema';
 
@@ -8,7 +7,7 @@ import { ISchemaInstance, Path } from './schema/schema';
 export interface IChangeHookOptions<TModel extends Model> {
   path: Path;
   value: any;
-  modelInstance: Model;
+  modelInstance: TModel;
   schemaInstance: ISchemaInstance;
 }
 

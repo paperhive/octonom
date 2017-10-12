@@ -1,4 +1,3 @@
-import { Model } from './model';
 import { ISchemaParent } from './schema/schema';
 
 export class ExtendableError extends Error {

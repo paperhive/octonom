@@ -6,7 +6,6 @@ import { Model } from '../model';
 import { ArrayInstance, ArraySchema } from './array';
 import { ModelSchema } from './model';
 import { ReferenceSchema } from './reference';
-import { ISchemaParentInstance } from './schema';
 import { StringSchema } from './string';
 
 describe('ArraySchema', () => {
@@ -135,25 +134,21 @@ describe('ArraySchema', () => {
       });
 
       it('should intercept splice(start)', () => {
-        const array = arrayInstance.value;
         expect(arrayInstance.value.splice(3)).to.eql(['bla']);
         testArrayProxy(['foo', 'bar', 'bar', 'bla'], ['foo', 'bar', 'bar']);
       });
 
       it('should intercept splice(start, deleteCount)', () => {
-        const array = arrayInstance.value;
         expect(arrayInstance.value.splice(2, 1)).to.eql(['bar']);
         testArrayProxy(['foo', 'bar', 'bar', 'bla'], ['foo', 'bar', 'bla']);
       });
 
       it('should intercept splice(start, deleteCount, ...elements)', () => {
-        const array = arrayInstance.value;
         expect(arrayInstance.value.splice(1, 1, 'boo', 'baz')).to.eql(['bar']);
         testArrayProxy(['foo', 'bar', 'bar', 'bla'], ['foo', 'boo', 'baz', 'bar', 'bla']);
       });
 
       it('should intercept unshift()', () => {
-        const array = arrayInstance.value;
         expect(arrayInstance.value.unshift('boo', 'baz')).to.equal(6);
         testArrayProxy(['foo', 'bar', 'bar', 'bla'], ['boo', 'baz', 'foo', 'bar', 'bar', 'bla']);
       });

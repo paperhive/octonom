@@ -67,6 +67,7 @@ describe('Hook decorator', () => {
     describe('on root model', () => {
       it('should not run handlers when constructed', () => {
         const hooked = new Hooked({foo: 'bar', object: {name: 'foo'}});
+        expect(hooked).to.not.equal(undefined);
         expect(beforeChange).to.have.callCount(0);
         expect(afterChange).to.have.callCount(0);
       });

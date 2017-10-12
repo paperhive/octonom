@@ -1,6 +1,7 @@
 import { SanitizationError, ValidationError } from '../errors';
-import { Model } from '../model';
-import { ISanitizeOptions, ISchema, ISchemaInstance, ISchemaOptions, ISchemaParent, Path, validate } from './schema';
+import { ISanitizeOptions, ISchema, ISchemaInstance,
+         ISchemaOptions, validate,
+       } from './schema';
 
 export type DateInstance = ISchemaInstance<Date>;
 

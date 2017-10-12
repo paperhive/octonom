@@ -1,4 +1,4 @@
-import { Model, ModelArray, Property, Schema, utils } from '../../../lib/main';
+import { Model, Property, Schema, utils } from '../../../lib/main';
 
 import { PersonModel } from './person';
 

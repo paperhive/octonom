@@ -1,9 +1,7 @@
-import { SanitizationError, ValidationError } from '../errors';
 import { getShadowInstance, IModelConstructor, Model } from '../model';
 import { ObjectInstance } from './object';
-import { ISanitizeOptions, ISchema, ISchemaInstance, ISchemaOptions,
-         ISchemaParentInstance, IToObjectOptions,
-         Path, PopulateReference, validate,
+import { ISanitizeOptions, ISchema, ISchemaOptions,
+         IToObjectOptions, PopulateReference, validate,
        } from './schema';
 
 export interface IModelInstance<T extends Model = Model> extends ObjectInstance<T> {

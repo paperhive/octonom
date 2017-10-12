@@ -1,14 +1,11 @@
 import { SanitizationError } from './errors';
 import { HookHandlersMap, Hooks } from './hooks';
 import { ModelInstance, ModelSchema } from './schema/model';
-import {
-         ObjectSchema, populateObject,
-         proxifyObject, setObject, toObject, validateObject,
+import { populateObject, proxifyObject, setObject, toObject,
+         validateObject,
        } from './schema/object';
-import {
-         ISanitizeOptions, ISchema,
-         ISchemaInstance, ISchemaOptions, ISchemaParentInstance,
-         IToObjectOptions, Path, PopulateMap, SchemaInstanceMap, SchemaMap,
+import { ISanitizeOptions, ISchema, ISchemaInstance,
+         IToObjectOptions, Path, PopulateMap, SchemaMap,
        } from './schema/schema';
 
 export type Constructor<T = {}> = new (...args: any[]) => T;
@@ -83,7 +80,6 @@ export class Model {
           {path, value: newValue, modelInstance: this, schemaInstance: oldInstance},
         );
 
-        const schema = shadowInstance.schema as ModelSchema;
         if (shadowInstance.schema.options.callParentHooks !== false && shadowInstance.parent) {
           shadowInstance.parent.instance.beforeChange([shadowInstance.parent.path].concat(path), newValue, oldInstance);
         }
@@ -135,7 +131,6 @@ export class Model {
   }
 
   public toObject(options?: IToObjectOptions): Partial<this> {
-    const constructor = this.constructor as typeof Model;
     const shadowInstance = this[getShadowInstance]() as ModelInstance<this>;
     return toObject(shadowInstance.instanceMap, options);
   }
@@ -145,7 +140,6 @@ export class Model {
   }
 
   public async validate() {
-    const constructor = this.constructor as typeof Model;
     const shadowInstance = this[getShadowInstance]() as ModelInstance<this>;
     await validateObject(
       shadowInstance.instanceMap,

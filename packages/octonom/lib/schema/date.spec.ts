@@ -1,5 +1,4 @@
 import { SanitizationError, ValidationError } from '../errors';
-import { Model } from '../model';
 import { DateSchema } from './date';
 
 describe('DateSchema', () => {
