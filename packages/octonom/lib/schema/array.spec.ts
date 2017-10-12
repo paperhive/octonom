@@ -93,6 +93,10 @@ describe('ArraySchema', () => {
         expect(arrayInstance.value).to.be.an('array').and.an.instanceOf(Array);
       });
 
+      it.skip('should intercept copyWithin()');
+
+      it.skip('should intercept fill()');
+
       it('should intercept pop()', () => {
         const instance = arrayInstance.instanceArray[arrayInstance.instanceArray.length - 1];
         expect(arrayInstance.value.pop()).to.equal('bla');
