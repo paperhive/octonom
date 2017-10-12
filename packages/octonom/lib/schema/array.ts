@@ -31,8 +31,10 @@ export function proxifyArray<T>(
   return new Proxy(array, {
     get(target, key, receiver) {
       switch (key) {
+        /* istanbul ignore next */
         case 'copyWithin':
           throw new Error('not yet implemented');
+        /* istanbul ignore next */
         case 'fill':
           throw new Error('not yet implemented');
         case 'pop':
