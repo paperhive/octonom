@@ -1,5 +1,5 @@
 import { ArrayCollection } from '../array-collection';
-import { PopulationError, SanitizationError, ValidationError } from '../errors';
+import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
 import { ReferenceSchema } from './reference';
 import { StringSchema } from './string';
@@ -25,6 +25,12 @@ describe('ReferenceSchema', () => {
     it('should throw a SanitizationError if value is not a string or model', () => {
       expect(() => schema.create(42))
         .to.throw(SanitizationError, 'Value is not an instance or an id.');
+    });
+
+    it('should throw a SanitizationError if reference id is undefined', () => {
+      const modelInstance  = new TestModel();
+      expect(() => schema.create(modelInstance))
+        .to.throw(SanitizationError, 'Reference id is undefined.');
     });
 
     it('should return undefined', () => {

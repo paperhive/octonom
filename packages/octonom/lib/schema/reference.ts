@@ -1,5 +1,5 @@
 import { Collection } from '../collection';
-import { PopulationError, SanitizationError, ValidationError } from '../errors';
+import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
 import { ISanitizeOptions, ISchema, ISchemaInstance, ISchemaOptions, IToObjectOptions,
          Path, PopulateReference, validate,
@@ -58,10 +58,6 @@ export class ReferenceSchema<TModel extends Model = Model> implements
   public toObject(instance: ReferenceInstance<TModel>, options: IToObjectOptions = {}): Partial<TModel> | string {
     if (options.unpopulate) {
       return instance.id;
-    }
-
-    if (instance.value === undefined) {
-      return undefined;
     }
 
     if (typeof instance.value === 'string') {
