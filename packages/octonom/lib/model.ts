@@ -1,8 +1,9 @@
 import { SanitizationError } from './errors';
 import { HookHandlersMap, Hooks } from './hooks';
+import { ModelInstance, ModelSchema } from './schema/model';
 import {
-         ObjectInstance, ObjectSchema, populateObject,
-         proxifyObject, setObject, validateObject,
+         ObjectSchema, populateObject,
+         proxifyObject, setObject, toObject, validateObject,
        } from './schema/object';
 import {
          ISanitizeOptions, ISchema,
@@ -31,9 +32,9 @@ export function Hook<TModel extends Model, K extends keyof HookHandlersMap<TMode
   };
 }
 
-const shadowInstanceProperty = Symbol();
-const getShadowInstance = Symbol();
-const setShadowInstance = Symbol();
+const shadowInstanceProperty = Symbol('shadowInstanceProperty');
+export const getShadowInstance = Symbol('getShadowInstance');
+const setShadowInstance = Symbol('setShadowInstance');
 
 // TODO: think about model instances
 function sanitize(value: any, sanitizeOptions: ISanitizeOptions) {
@@ -68,24 +69,22 @@ export class Model {
     const constructor = this.constructor as typeof Model;
     const schemaMap = constructor.schemaMap as SchemaMap<this>;
 
-    const sanitizedValue = sanitize(value, sanitizeOptions);
-
-    const objectSchema = new ObjectSchema<this>({schemaMap});
-
     // The shadow property holds data that is required to allow methods to operate on both
-    // the instance and the OctoValue hierarchy that is hidden from the user.
-    const shadowInstance: ObjectInstance<this> = {
+    // the model instance and the instanceMap that is hidden from the user.
+    const shadowInstance: ModelInstance<this> = {
       instanceMap: {},
       parent: sanitizeOptions.parent,
-      schema: objectSchema,
-      value: this,
+      schema: new ModelSchema<this>({model: constructor as any}),
+      value: undefined,
+      rawObject: this,
       beforeChange: (path: Path, newValue: any, oldInstance: ISchemaInstance) => {
         constructor.hooks.run(
           'beforeChange',
           {path, value: newValue, modelInstance: this, schemaInstance: oldInstance},
         );
 
-        if (shadowInstance.parent) {
+        const schema = shadowInstance.schema as ModelSchema;
+        if (shadowInstance.schema.options.callParentHooks !== false && shadowInstance.parent) {
           shadowInstance.parent.instance.beforeChange([shadowInstance.parent.path].concat(path), newValue, oldInstance);
         }
       },
@@ -95,16 +94,19 @@ export class Model {
           {path, value: newValue, modelInstance: this, schemaInstance: newInstance},
         );
 
-        if (shadowInstance.parent) {
+        if (shadowInstance.schema.options.callParentHooks !== false && shadowInstance.parent) {
           shadowInstance.parent.instance.afterChange([shadowInstance.parent.path].concat(path), newValue, newInstance);
         }
       },
     };
     this[setShadowInstance](shadowInstance);
 
+    const sanitizedValue = sanitize(value, sanitizeOptions);
     setObject(sanitizedValue, this, shadowInstance.instanceMap, shadowInstance, schemaMap, sanitizeOptions);
 
-    return proxifyObject(this, shadowInstance.instanceMap, shadowInstance, schemaMap);
+    shadowInstance.value = proxifyObject(this, shadowInstance.instanceMap, shadowInstance, schemaMap);
+
+    return shadowInstance.value;
   }
 
   public inspect() {
@@ -114,8 +116,8 @@ export class Model {
   public async populate(populateMap: PopulateMap<this>) {
     const constructor = this.constructor as typeof Model;
     const schemaMap = constructor.schemaMap as SchemaMap<this>;
-    const shadow = this[getShadowInstance]() as ObjectInstance<this>;
-    await populateObject(shadow.value, shadow.instanceMap, schemaMap, populateMap);
+    const shadowInstance = this[getShadowInstance]() as ModelInstance<this>;
+    await populateObject(shadowInstance.rawObject, shadowInstance.instanceMap, schemaMap, populateMap);
     return this;
   }
 
@@ -126,16 +128,16 @@ export class Model {
   public set(data: Partial<this>, options: ISanitizeOptions = {}) {
     const constructor = this.constructor as typeof Model;
     const schemaMap = constructor.schemaMap as SchemaMap<this>;
-    const shadowInstance = this[getShadowInstance]() as ObjectInstance<this>;
+    const shadowInstance = this[getShadowInstance]() as ModelInstance<this>;
     shadowInstance.beforeChange([], data, shadowInstance);
-    setObject(data, shadowInstance.value, shadowInstance.instanceMap, shadowInstance, schemaMap, options);
+    setObject(data, shadowInstance.rawObject, shadowInstance.instanceMap, shadowInstance, schemaMap, options);
     shadowInstance.afterChange([], data, shadowInstance);
   }
 
   public toObject(options?: IToObjectOptions): Partial<this> {
     const constructor = this.constructor as typeof Model;
-    const shadowInstance = this[getShadowInstance]() as ObjectInstance<this>;
-    return shadowInstance.schema.toObject(shadowInstance, options);
+    const shadowInstance = this[getShadowInstance]() as ModelInstance<this>;
+    return toObject(shadowInstance.instanceMap, options);
   }
 
   public toJSON() {
@@ -144,11 +146,15 @@ export class Model {
 
   public async validate() {
     const constructor = this.constructor as typeof Model;
-    const shadowInstance = this[getShadowInstance]() as ObjectInstance<this>;
-    await shadowInstance.schema.validate(shadowInstance);
+    const shadowInstance = this[getShadowInstance]() as ModelInstance<this>;
+    await validateObject(
+      shadowInstance.instanceMap,
+      shadowInstance,
+      shadowInstance.schema.options.model.schemaMap as SchemaMap<this>,
+    );
   }
 
-  protected [setShadowInstance](instance: ObjectInstance<this>) {
+  protected [setShadowInstance](instance: ModelInstance<this>) {
     this[shadowInstanceProperty] = instance;
   }
 
