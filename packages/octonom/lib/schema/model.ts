@@ -1,12 +1,16 @@
 import { SanitizationError, ValidationError } from '../errors';
-import { IModelConstructor, Model } from '../model';
+import { getShadowInstance, IModelConstructor, Model } from '../model';
 import { ObjectInstance } from './object';
 import { ISanitizeOptions, ISchema, ISchemaInstance, ISchemaOptions,
          ISchemaParentInstance, IToObjectOptions,
          Path, PopulateReference, validate,
        } from './schema';
 
-export type ModelInstance<T extends Model = Model> = ISchemaParentInstance<T>;
+export interface IModelInstance<T extends Model = Model> extends ObjectInstance<T> {
+  schema: ModelSchema<T>;
+  rawObject: T;
+}
+export type ModelInstance<T extends Model> = IModelInstance<T>;
 
 export interface IModelOptions<T extends Model = Model> extends ISchemaOptions<ModelInstance<T>> {
   model: IModelConstructor<T>;
@@ -21,24 +25,9 @@ export class ModelSchema<T extends Model = Model> implements ISchema<T, ModelIns
       return undefined;
     }
 
-    const instance: ModelInstance<T> = {
-      parent: sanitizeOptions.parent,
-      schema: this,
-      value: undefined,
-      beforeChange: (path: Path, newValue: any, oldInstance: ISchemaInstance) => {
-        if (this.options.callParentHooks !== false && instance.parent) {
-          instance.parent.instance.beforeChange([instance.parent.path].concat(path), newValue, oldInstance);
-        }
-      },
-      afterChange: (path: Path, newValue: any, newInstance: ISchemaInstance) => {
-        if (this.options.callParentHooks !== false && instance.parent) {
-          instance.parent.instance.afterChange([instance.parent.path].concat(path), newValue, newInstance);
-        }
-      },
-    };
+    const modelInstance = new this.options.model(value || {}, sanitizeOptions);
 
-    instance.value = new this.options.model(value || {}, sanitizeOptions);
-
+    const instance = modelInstance[getShadowInstance]() as ModelInstance<T>;
     return instance;
   }
 
