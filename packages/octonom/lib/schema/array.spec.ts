@@ -93,6 +93,13 @@ describe('ArraySchema', () => {
         expect(arrayInstance.value).to.be.an('array').and.an.instanceOf(Array);
       });
 
+      it('should allow setting, getting, and deleting a non-number key', () => {
+        (arrayInstance.value as any).test = true;
+        expect(arrayInstance.value).to.have.property('test', true);
+        delete (arrayInstance.value as any).test;
+        expect(arrayInstance.value).to.not.have.property('test');
+      });
+
       it.skip('should intercept copyWithin()');
 
       it.skip('should intercept fill()');
