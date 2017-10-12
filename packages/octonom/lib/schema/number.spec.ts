@@ -46,6 +46,13 @@ describe('NumberSchema', () => {
     });
   });
 
+  describe('toObject()', () => {
+    it('should return a number', () => {
+      const schema = new NumberSchema();
+      expect(schema.toObject(schema.create(13.37))).to.equal(13.37);
+    });
+  });
+
   describe('validate()', () => {
     it('should throw if value is not an integer', async () => {
       const schema = new NumberSchema({integer: true});

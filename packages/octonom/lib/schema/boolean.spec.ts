@@ -33,6 +33,13 @@ describe('BooleanSchema', () => {
     });
   });
 
+  describe('toObject()', () => {
+    it('should return a boolean', () => {
+      const schema = new BooleanSchema();
+      expect(schema.toObject(schema.create(true))).to.equal(true);
+    });
+  });
+
   describe('validate()', () => {
     it('should run custom validator', async () => {
       const schema = new BooleanSchema({
