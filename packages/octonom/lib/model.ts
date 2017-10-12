@@ -38,10 +38,7 @@ const setShadowInstance = Symbol();
 // TODO: think about model instances
 function sanitize(value: any, sanitizeOptions: ISanitizeOptions) {
   if (value === undefined) {
-    if (sanitizeOptions.defaults) {
-      return {};
-    }
-    return undefined;
+    return {};
   }
 
   if (typeof value !== 'object') {
