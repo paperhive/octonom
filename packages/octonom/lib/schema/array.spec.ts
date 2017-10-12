@@ -68,7 +68,7 @@ describe('ArraySchema', () => {
       let arrayInstance: ArrayInstance<string>;
 
       beforeEach(() => {
-        arrayInstance = schema.create(['foo', 'bar', 'bla']);
+        arrayInstance = schema.create(['foo', 'bar', 'bar', 'bla']);
         beforeChangeStub = stub(arrayInstance, 'beforeChange').callsFake(
           (path, value, oldInstance) => beforeChangeArray = schema.toObject(oldInstance),
         );
@@ -96,55 +96,55 @@ describe('ArraySchema', () => {
       it('should intercept pop()', () => {
         const instance = arrayInstance.instanceArray[arrayInstance.instanceArray.length - 1];
         expect(arrayInstance.value.pop()).to.equal('bla');
-        testArrayProxy(['foo', 'bar', 'bla'], ['foo', 'bar']);
+        testArrayProxy(['foo', 'bar', 'bar', 'bla'], ['foo', 'bar', 'bar']);
         expect(instance).to.not.have.property('parent');
       });
 
       it('should intercept push()', () => {
-        expect(arrayInstance.value.push('baz', 'boo')).to.equal(5);
-        testArrayProxy(['foo', 'bar', 'bla'], ['foo', 'bar', 'bla', 'baz', 'boo']);
+        expect(arrayInstance.value.push('baz', 'boo')).to.equal(6);
+        testArrayProxy(['foo', 'bar', 'bar', 'bla'], ['foo', 'bar', 'bar', 'bla', 'baz', 'boo']);
       });
 
       it('should intercept reverse()', () => {
         const array = arrayInstance.value;
         expect(arrayInstance.value.reverse()).to.equal(array);
-        testArrayProxy(['foo', 'bar', 'bla'], ['bla', 'bar', 'foo']);
+        testArrayProxy(['foo', 'bar', 'bar', 'bla'], ['bla', 'bar', 'bar', 'foo']);
       });
 
       it('should intercept sort()', () => {
         const array = arrayInstance.value;
         expect(arrayInstance.value.sort()).to.equal(array);
-        testArrayProxy(['foo', 'bar', 'bla'], ['bar', 'bla', 'foo']);
+        testArrayProxy(['foo', 'bar', 'bar', 'bla'], ['bar', 'bar', 'bla', 'foo']);
       });
 
       it('should intercept sort() with custom compare function', () => {
         const array = arrayInstance.value;
         expect(arrayInstance.value.sort((a, b) => a < b ? 1 : -1)).to.equal(array);
-        testArrayProxy(['foo', 'bar', 'bla'], ['foo', 'bla', 'bar']);
+        testArrayProxy(['foo', 'bar', 'bar', 'bla'], ['foo', 'bla', 'bar', 'bar']);
       });
 
       it('should intercept splice(start)', () => {
         const array = arrayInstance.value;
-        expect(arrayInstance.value.splice(2)).to.eql(['bla']);
-        testArrayProxy(['foo', 'bar', 'bla'], ['foo', 'bar']);
+        expect(arrayInstance.value.splice(3)).to.eql(['bla']);
+        testArrayProxy(['foo', 'bar', 'bar', 'bla'], ['foo', 'bar', 'bar']);
       });
 
       it('should intercept splice(start, deleteCount)', () => {
         const array = arrayInstance.value;
-        expect(arrayInstance.value.splice(1, 1)).to.eql(['bar']);
-        testArrayProxy(['foo', 'bar', 'bla'], ['foo', 'bla']);
+        expect(arrayInstance.value.splice(2, 1)).to.eql(['bar']);
+        testArrayProxy(['foo', 'bar', 'bar', 'bla'], ['foo', 'bar', 'bla']);
       });
 
       it('should intercept splice(start, deleteCount, ...elements)', () => {
         const array = arrayInstance.value;
         expect(arrayInstance.value.splice(1, 1, 'boo', 'baz')).to.eql(['bar']);
-        testArrayProxy(['foo', 'bar', 'bla'], ['foo', 'boo', 'baz', 'bla']);
+        testArrayProxy(['foo', 'bar', 'bar', 'bla'], ['foo', 'boo', 'baz', 'bar', 'bla']);
       });
 
       it('should intercept unshift()', () => {
         const array = arrayInstance.value;
-        expect(arrayInstance.value.unshift('boo', 'baz')).to.equal(5);
-        testArrayProxy(['foo', 'bar', 'bla'], ['boo', 'baz', 'foo', 'bar', 'bla']);
+        expect(arrayInstance.value.unshift('boo', 'baz')).to.equal(6);
+        testArrayProxy(['foo', 'bar', 'bar', 'bla'], ['boo', 'baz', 'foo', 'bar', 'bar', 'bla']);
       });
     });
   });
