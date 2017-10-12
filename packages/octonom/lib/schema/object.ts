@@ -153,13 +153,7 @@ export function toObject<T extends object>(
   const newObj = {} as T;
   Object.keys(instanceMap).forEach((key: keyof T) => {
     const instance = instanceMap[key];
-    const value = instance.schema.toObject(instance, options);
-
-    if (value === undefined) {
-      return;
-    }
-
-    newObj[key] = value;
+    newObj[key] = instance.schema.toObject(instance, options);
   });
 
   return newObj;
