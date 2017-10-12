@@ -38,6 +38,15 @@ describe('DateSchema', () => {
     });
   });
 
+  describe('toObject()', () => {
+    it('should return a date', () => {
+      const schema = new DateSchema();
+      const date = new Date();
+      const value = schema.toObject(schema.create(date));
+      expect(value.getTime()).to.equal(date.getTime());
+    });
+  });
+
   describe('validate()', () => {
     it('should throw if value is before min', async () => {
       const schema = new DateSchema({min: new Date('2010-01-01T00:00:00.000Z')});

@@ -33,10 +33,6 @@ export class NumberSchema implements ISchema<number, NumberInstance, number> {
   }
 
   public async validate(instance: NumberInstance) {
-    if (typeof instance.value !== 'number' || !Number.isFinite(instance.value)) {
-      throw new ValidationError('Value is not a number.', 'no-number', instance.parent);
-    }
-
     if (this.options.integer && !Number.isInteger(instance.value)) {
       throw new ValidationError('Number is not an integer.', 'no-integer', instance.parent);
     }
