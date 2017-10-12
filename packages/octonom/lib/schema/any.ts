@@ -1,7 +1,9 @@
 import { cloneDeep } from 'lodash';
 
 import { ValidationError } from '../errors';
-import { ISanitizeOptions, ISchema, ISchemaInstance, ISchemaOptions, ISchemaParent, validate } from './schema';
+import { ISanitizeOptions, ISchema, ISchemaInstance,
+         ISchemaOptions, validate,
+       } from './schema';
 
 export type AnyInstance = ISchemaInstance<any>;
 

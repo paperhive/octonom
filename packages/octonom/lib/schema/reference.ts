@@ -1,8 +1,8 @@
 import { Collection } from '../collection';
-import { SanitizationError, ValidationError } from '../errors';
+import { SanitizationError } from '../errors';
 import { Model } from '../model';
-import { ISanitizeOptions, ISchema, ISchemaInstance, ISchemaOptions, IToObjectOptions,
-         Path, PopulateReference, validate,
+import { ISanitizeOptions, ISchema, ISchemaInstance, ISchemaOptions,
+         IToObjectOptions, PopulateReference, validate,
        } from './schema';
 
 export interface IReferenceInstance<TModel extends Model = Model> extends ISchemaInstance<TModel | string> {

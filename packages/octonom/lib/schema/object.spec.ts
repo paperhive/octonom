@@ -3,13 +3,12 @@ import { spy } from 'sinon';
 import { ArrayCollection } from '../array-collection';
 import { SanitizationError, ValidationError } from '../errors';
 import { Model } from '../model';
-import { ObjectInstance, ObjectSchema, populateObject, proxifyObject,
+import { ObjectSchema, populateObject, proxifyObject,
          setObject, toObject, validateObject,
        } from './object';
 import { ReferenceSchema } from './reference';
 import { ISchemaParent, ISchemaParentInstance, SchemaInstanceMap, SchemaMap } from './schema';
-import { StringInstance, StringSchema } from './string';
-import { testValidation } from './test-utils';
+import { StringSchema } from './string';
 
 class ReferencedModel extends Model {
   public id: string;

@@ -1,4 +1,7 @@
-import { IModel, Model } from '../model';
+import {
+  IModel,
+  Model, // tslint:disable-line:no-unused-variable
+} from '../model';
 import { AnySchema, IAnyOptions } from './any';
 import { ArraySchema, IArrayOptions } from './array';
 import { BooleanSchema, IBooleanOptions } from './boolean';
@@ -7,7 +10,7 @@ import { IModelOptions, ModelSchema } from './model';
 import { INumberOptions, NumberSchema } from './number';
 import { IObjectOptions, ObjectSchema } from './object';
 import { IReferenceOptions, ReferenceSchema } from './reference';
-import { ISanitizeOptions, ISchema, ISchemaInstance, SchemaMap } from './schema';
+import { ISchema, ISchemaInstance, SchemaMap } from './schema';
 import { IStringOptions, StringSchema } from './string';
 
 export { SchemaMap };
