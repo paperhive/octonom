@@ -65,11 +65,14 @@ describe('Hook decorator', () => {
 
   describe('set handlers', () => {
     describe('on root model', () => {
-      it('should not run handlers when constructed', () => {
+      it('should run handlers when constructed', () => {
         const hooked = new Hooked({foo: 'bar', object: {name: 'foo'}});
-        expect(hooked).to.not.equal(undefined);
-        expect(beforeChange).to.have.callCount(0);
-        expect(afterChange).to.have.callCount(0);
+        expect(beforeChange).to.be.calledOnce.and
+          .calledWithMatch({modelInstance: hooked, path: [], value: {foo: 'bar', object: {name: 'foo'}}});
+        expect(beforeObj).to.eql({});
+        expect(afterChange).to.be.calledOnce.and
+          .calledWithMatch({modelInstance: hooked, path: [], value: {foo: 'bar', object: {name: 'foo'}}});
+        expect(afterObj).to.eql({foo: 'bar', object: {name: 'foo'}});
       });
 
       it('should run handlers when calling set()', () => {
@@ -86,6 +89,7 @@ describe('Hook decorator', () => {
 
       it('should run handlers when setting a value', () => {
         const hooked = new Hooked({});
+        resetSpies();
         hooked.foo = 'bar';
         expect(beforeChange).to.be.calledOnce.and
           .calledWithMatch({modelInstance: hooked, path: [], value: {foo: 'bar'}});
