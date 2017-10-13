@@ -48,7 +48,7 @@ export async function populateObject<T extends object>(
   return obj as T;
 }
 
-// proxify an object to sync changes to an octoValueMap
+// proxify an object to sync changes to an instanceMap
 export function proxifyObject<T extends object>(
   obj: T,
   instanceMap: SchemaInstanceMap<T>,
@@ -60,9 +60,9 @@ export function proxifyObject<T extends object>(
       if (typeof key !== 'symbol' && schemaMap[key]) {
         parentInstance.beforeChange([], {[key]: value}, parentInstance);
 
-        const oldOctoValue = instanceMap[key];
-        if (oldOctoValue) {
-          delete oldOctoValue.parent;
+        const oldInstance = instanceMap[key];
+        if (oldInstance) {
+          delete oldInstance.parent;
         }
 
         instanceMap[key] = schemaMap[key].create(
@@ -81,9 +81,9 @@ export function proxifyObject<T extends object>(
       if (typeof key !== 'symbol' && schemaMap[key]) {
         parentInstance.beforeChange([], {[key]: undefined}, parentInstance);
 
-        const oldOctoValue = instanceMap[key];
-        if (oldOctoValue) {
-          delete oldOctoValue.parent;
+        const oldInstance = instanceMap[key];
+        if (oldInstance) {
+          delete oldInstance.parent;
         }
 
         delete instanceMap[key];
@@ -98,7 +98,7 @@ export function proxifyObject<T extends object>(
   }) as T;
 }
 
-// set an object and octoValueMap simultaneously
+// set an object and instanceMap simultaneously
 export function setObject<T extends object>(
   data: object,
   obj: T,
@@ -116,7 +116,7 @@ export function setObject<T extends object>(
     );
   }
 
-  const newOctoValueMap = {} as SchemaInstanceMap<T>;
+  const newInstanceMap = {} as SchemaInstanceMap<T>;
 
   // sanitize all values before setting
   schemaKeys.forEach((key: keyof T) => {
@@ -124,7 +124,7 @@ export function setObject<T extends object>(
       return;
     }
 
-    newOctoValueMap[key] = schemaMap[key].create(
+    newInstanceMap[key] = schemaMap[key].create(
       data[key as any],
       {...sanitizeOptions, parent: {instance: parentInstance, path: key}},
     );
@@ -139,9 +139,9 @@ export function setObject<T extends object>(
       delete obj[key];
     }
 
-    if (newOctoValueMap[key]) {
-      instanceMap[key] = newOctoValueMap[key];
-      obj[key] = newOctoValueMap[key].value;
+    if (newInstanceMap[key]) {
+      instanceMap[key] = newInstanceMap[key];
+      obj[key] = newInstanceMap[key].value;
     }
   });
 }

@@ -206,7 +206,7 @@ describe('helpers', () => {
       afterChange: spy(),
     };
 
-    it('should throw if required key is undefined in the OctoValueMap', async () => {
+    it('should throw if required key is undefined in the instanceMap', async () => {
       const instanceMap: SchemaInstanceMap<IFooBar> = {};
       await expect(validateObject(instanceMap, instance, schemaMap))
         .to.be.rejectedWith(ValidationError, 'Key foo is required.');
