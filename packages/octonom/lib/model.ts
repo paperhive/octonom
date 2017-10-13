@@ -95,12 +95,14 @@ export class Model {
         }
       },
     };
+    shadowInstance.value = proxifyObject(this, shadowInstance.instanceMap, shadowInstance, schemaMap);
     this[setShadowInstance](shadowInstance);
 
     const sanitizedValue = sanitize(value, sanitizeOptions);
-    setObject(sanitizedValue, this, shadowInstance.instanceMap, shadowInstance, schemaMap, sanitizeOptions);
 
-    shadowInstance.value = proxifyObject(this, shadowInstance.instanceMap, shadowInstance, schemaMap);
+    shadowInstance.beforeChange([], sanitizedValue, shadowInstance);
+    setObject(sanitizedValue, this, shadowInstance.instanceMap, shadowInstance, schemaMap, sanitizeOptions);
+    shadowInstance.afterChange([], sanitizedValue, shadowInstance);
 
     return shadowInstance.value;
   }
@@ -121,13 +123,20 @@ export class Model {
   //       the hooks will be called with the unproxied instance as well.
   //       This prevents recursion when handlers set properties.
   //       The set hooks are called by the proxy.
-  public set(data: Partial<this>, options: ISanitizeOptions = {}) {
+  public set(data: Partial<this>, options: ISanitizeOptions = {}, runHooks = true) {
     const constructor = this.constructor as typeof Model;
     const schemaMap = constructor.schemaMap as SchemaMap<this>;
     const shadowInstance = this[getShadowInstance]() as ModelInstance<this>;
-    shadowInstance.beforeChange([], data, shadowInstance);
+
+    if (runHooks) {
+      shadowInstance.beforeChange([], data, shadowInstance);
+    }
+
     setObject(data, shadowInstance.rawObject, shadowInstance.instanceMap, shadowInstance, schemaMap, options);
-    shadowInstance.afterChange([], data, shadowInstance);
+
+    if (runHooks) {
+      shadowInstance.afterChange([], data, shadowInstance);
+    }
   }
 
   public toObject(options?: IToObjectOptions): Partial<this> {
