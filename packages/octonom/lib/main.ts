@@ -4,6 +4,5 @@ export { ArrayCollection } from './array-collection';
 export { Collection, ICollectionInsertOptions, ICollectionOptions } from './collection';
 export { ValidationError } from './errors';
 export { Hook, IModelConstructor, Model } from './model';
-export { ModelArray } from './model-array';
 export { Property, Schema } from './schema/index';
 export { utils };

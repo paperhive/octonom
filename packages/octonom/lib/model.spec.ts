@@ -12,7 +12,6 @@ import { PersonAccountModel } from '../test/data/models/person-account';
 
 import { ValidationError } from './errors';
 import { Hook, Model } from './model';
-import { ModelArray } from './model-array';
 import { Property, Schema, SchemaMap } from './schema/index';
 
 describe('Hook decorator', () => {
@@ -423,7 +422,7 @@ describe('Model', () => {
         person.set({account: {username: 'alice'}});
         expect(person.account).to.be.an.instanceOf(PersonAccountModel);
         const personObj = person.toObject();
-        expect(personObj).to.deep.equal({id: personObj.id, name: 'Alice', account: {username: 'alice'}});
+        expect(personObj).to.deep.equal({name: 'Alice', account: {username: 'alice'}});
       });
 
       it('should set an account instance with set()', () => {
@@ -432,7 +431,7 @@ describe('Model', () => {
         person.set({account});
         expect(person.account).to.be.an.instanceOf(PersonAccountModel).and.eql(account);
         const personObj = person.toObject();
-        expect(personObj).to.deep.equal({id: personObj.id, name: 'Alice', account: {username: 'alice'}});
+        expect(personObj).to.deep.equal({name: 'Alice', account: {username: 'alice'}});
       });
     });
 
@@ -442,7 +441,7 @@ describe('Model', () => {
         person.account = {username: 'alice'};
         expect(person.account).to.be.an.instanceOf(PersonAccountModel);
         const personObj = person.toObject();
-        expect(personObj).to.deep.equal({id: personObj.id, name: 'Alice', account: {username: 'alice'}});
+        expect(personObj).to.deep.equal({name: 'Alice', account: {username: 'alice'}});
       });
 
       it('should set an account instance directly', () => {
@@ -451,7 +450,7 @@ describe('Model', () => {
         person.account = account;
         expect(person.account).to.be.an.instanceOf(PersonAccountModel).and.eql(account);
         const personObj = person.toObject();
-        expect(personObj).to.deep.equal({id: personObj.id, name: 'Alice', account: {username: 'alice'}});
+        expect(personObj).to.deep.equal({name: 'Alice', account: {username: 'alice'}});
       });
     });
   });
@@ -503,7 +502,7 @@ describe('Model', () => {
       });
 
       it('should set a model array with a person instance', () => {
-        const members = new ModelArray<PersonModel>(PersonModel, [{name: 'Alice'}, {name: 'Bob'}]);
+        const members = [{name: 'Alice'}, {name: 'Bob'}];
         const group = new GroupWithArrayModel();
         group.members = members;
         expect(group.members).to.eql(members);
