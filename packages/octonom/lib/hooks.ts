@@ -1,7 +1,7 @@
 import { Model } from './model';
 import { ISchemaInstance, Path } from './schema/schema';
 
-/* Hook handlers are always called with instance set to the
+/* Hook handlers are always called with instance set to the *unproxied*
  * instance where the hook is registered
  **/
 export interface IChangeHookOptions<TModel extends Model> {
