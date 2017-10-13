@@ -43,7 +43,7 @@ describe('MongoCollection', () => {
     });
 
     it('should throw if cat is invalid', async () => {
-      const cats = [new CatModel(catObj), new CatModel({age: -1})];
+      const cats = [new CatModel(catObj), new CatModel({id: '23', age: -1})];
       await expect(catCollection.insertMany(cats))
         .to.be.rejectedWith('Number must not be less than 0.');
     });
@@ -69,7 +69,7 @@ describe('MongoCollection', () => {
     });
 
     it('should throw if cat is invalid', async () => {
-      const cat = new CatModel({age: -1});
+      const cat = new CatModel({id: '23', age: -1});
       await expect(catCollection.insertOne(cat))
         .to.be.rejectedWith('Number must not be less than 0.');
     });
