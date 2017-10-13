@@ -62,7 +62,7 @@ export class Model {
   }
 
   // TODO: ideally we'd also use Partial<this> as the type for data
-  constructor(value?, sanitizeOptions: ISanitizeOptions = {defaults: true}) {
+  constructor(value?, sanitizeOptions: ISanitizeOptions = {defaults: value === undefined}) {
     const constructor = this.constructor as typeof Model;
     const schemaMap = constructor.schemaMap as SchemaMap<this>;
 
