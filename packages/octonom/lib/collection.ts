@@ -1,5 +1,4 @@
 import { IModelConstructor, Model } from './model';
-import { ModelArray } from './model-array';
 
 export interface ICollectionOptions<T extends Model> {
   modelIdField?: keyof T;
@@ -29,11 +28,8 @@ export abstract class Collection<T extends Model> {
   public abstract async findById(id: string): Promise<T>;
 
   // trivial implementation, should be implemented efficiently for specific database
-  public async findByIds(ids: string[]): Promise<ModelArray<T>> {
-    return new ModelArray<T>(
-      this.model,
-      await Promise.all(ids.map(id => this.findById(id))),
-    );
+  public async findByIds(ids: string[]): Promise<T[]> {
+    return Promise.all(ids.map(id => this.findById(id)));
   }
 
   public toDb(model: T): object {

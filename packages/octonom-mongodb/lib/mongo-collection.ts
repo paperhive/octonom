@@ -3,7 +3,7 @@ import { Collection as DbCollection, CollectionInsertManyOptions,
        } from 'mongodb';
 
 import { Collection, ICollectionInsertOptions, ICollectionOptions,
-         IModelConstructor, Model, ModelArray, utils,
+         IModelConstructor, Model, utils,
        } from 'octonom';
 
 export interface IMongoCollectionInsertOptions extends ICollectionInsertOptions {
@@ -62,7 +62,7 @@ export class MongoCollection<T extends Model> extends Collection<T> {
     const idInstanceMap: {[k: string]: T} = {};
     // note: ids that could not be found won't be present in the docs result array
     docs.forEach(doc => idInstanceMap[doc._id] = this.fromDb(doc));
-    return new ModelArray<T>(this.model, ids.map(id => idInstanceMap[id]));
+    return ids.map(id => idInstanceMap[id]);
   }
 
   public async findOne(query: object, options?: FindOneOptions) {

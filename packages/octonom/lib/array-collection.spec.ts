@@ -2,7 +2,6 @@ import { CatModel } from '../test/data/models/cat';
 
 import { ArrayCollection } from './array-collection';
 import { ValidationError } from './errors';
-import { ModelArray } from './model-array';
 
 describe('Collection (ArrayCollection)', () => {
   class CatCollection extends ArrayCollection<CatModel> {
@@ -24,24 +23,24 @@ describe('Collection (ArrayCollection)', () => {
 
   describe('insert()', () => {
     it('should insert a valid cat', async () => {
-      const cat = new CatModel({name: 'Yllim'});
+      const cat = new CatModel({id: '42', name: 'Yllim'});
       await catCollection.insert(cat);
       expect(catCollection.array).to.eql([cat.toObject()]);
     });
 
     it('should throw if cat is invalid', async () => {
-      const cat = new CatModel({age: -1});
+      const cat = new CatModel({id: '42', age: -1});
       await expect(catCollection.insert(cat))
         .to.be.rejectedWith(ValidationError, 'Number must not be less than 0.');
     });
 
     it('should insert an invalid cat if validate is false', async () => {
-      const cat = new CatModel({age: -1});
+      const cat = new CatModel({id: '42', age: -1});
       await catCollection.insert(cat, {validate: false});
     });
 
     it('should throw on duplicate keys', async () => {
-      const cat = new CatModel({name: 'Yllim'});
+      const cat = new CatModel({id: '42', name: 'Yllim'});
       await catCollection.insert(cat);
       await expect(catCollection.insert(cat)).to.be.rejectedWith('duplicate');
     });
@@ -54,7 +53,7 @@ describe('Collection (ArrayCollection)', () => {
     });
 
     it('should find a cat', async () => {
-      const cat = new CatModel({name: 'Yllim'});
+      const cat = new CatModel({id: '42', name: 'Yllim'});
       await catCollection.insert(cat);
       const foundCat = await catCollection.findById(cat.id);
       expect(foundCat).to.be.an.instanceOf(CatModel);
@@ -63,11 +62,11 @@ describe('Collection (ArrayCollection)', () => {
   });
 
   describe('findByIds()', async () => {
-    it('should return a ModelArray with instances (or undefined)', async () => {
+    it('should return an array with instances (or undefined)', async () => {
       await catCollection.insert(new CatModel({id: '42', name: 'Yllim'}));
       await catCollection.insert(new CatModel({id: '1337', name: 'Kilf'}));
       const cats = await catCollection.findByIds(['1337', '23', '42']);
-      expect(cats).to.be.an.instanceOf(ModelArray).and.have.lengthOf(3);
+      expect(cats).to.be.an('array').and.have.lengthOf(3);
       expect(cats[0].toObject()).to.eql({id: '1337', name: 'Kilf'});
       expect(cats[1]).to.equal(undefined);
       expect(cats[2].toObject()).to.eql({id: '42', name: 'Yllim'});
