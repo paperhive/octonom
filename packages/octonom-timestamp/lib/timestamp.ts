@@ -24,15 +24,17 @@ export function Timestamp<T extends Constructor<Model>>(base: T): ITimestampStat
   // https://github.com/Microsoft/TypeScript/issues/7342
   Property.Date()(newClass.prototype, 'createdAt');
   Property.Date()(newClass.prototype, 'updatedAt');
-  Hook<ITimestamp & Model, 'afterSet'>('afterSet', ({instance, data}) => {
+  Hook<ITimestamp & Model, 'afterChange'>('afterChange', ({modelInstance, path, value}) => {
     const date = new Date();
 
-    if (!instance.createdAt) {
-      instance.createdAt = date;
+    if (!modelInstance.createdAt) {
+      modelInstance.set({createdAt: date}, {}, false);
     }
 
-    if (data.updatedAt === undefined) {
-      instance.updatedAt = date;
+    if ((path.length !== 1 || path[0] !== 'updatedAt') &&
+        (path.length > 0 || typeof value !== 'object' || value.updatedAt === undefined)
+    ) {
+      modelInstance.set({updatedAt: date}, {}, false);
     }
   })(newClass as any);
 
