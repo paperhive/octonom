@@ -120,7 +120,7 @@ export function setObject<T extends object>(
 
   // sanitize all values before setting
   schemaKeys.forEach((key: keyof T) => {
-    if (data[key as any] === undefined && !schemaMap[key].options.required && !sanitizeOptions.defaults) {
+    if (data[key as any] === undefined && !sanitizeOptions.defaults) {
       return;
     }
 
