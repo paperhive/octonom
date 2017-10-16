@@ -10,12 +10,25 @@ import { IModelOptions, ModelSchema } from './model';
 import { INumberOptions, NumberSchema } from './number';
 import { IObjectOptions, ObjectSchema } from './object';
 import { IReferenceOptions, ReferenceSchema } from './reference';
-import { ISchema, ISchemaInstance, SchemaMap } from './schema';
+import * as SchemaBase from './schema';
 import { IStringOptions, StringSchema } from './string';
 
-export { SchemaMap };
+export {
+  IAnyOptions,
+  IArrayOptions,
+  IBooleanOptions,
+  IDateOptions,
+  IModelOptions,
+  INumberOptions,
+  IObjectOptions,
+  IReferenceOptions,
+  IStringOptions,
+  SchemaBase,
+};
 
-export function getSchemaDecorator(createSchema: () => ISchema<any, ISchemaInstance>): PropertyDecorator {
+export function getSchemaDecorator(
+  createSchema: () => SchemaBase.ISchema<any, SchemaBase.ISchemaInstance>,
+): PropertyDecorator {
   return (target: IModel, key: string) => target.constructor.setSchema(key, createSchema());
 }
 
