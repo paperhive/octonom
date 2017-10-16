@@ -1,4 +1,35 @@
-import { Hook, Model, Property } from 'octonom';
+import { Hook, IDateOptions, IModel, Model, Property, Schema, SchemaBase } from 'octonom';
+
+export function CreatedAt(options: IDateOptions = {}): PropertyDecorator {
+  return (target: IModel, key: string) => {
+    const newSchema = new Schema.Date(options);
+    target.constructor.setSchema(key, newSchema);
+    target.constructor.hooks.register('afterChange', ({modelInstance, path, value}) => {
+      const date = new Date();
+
+      if (!modelInstance[key]) {
+        modelInstance.set({[key]: date}, {}, false);
+      }
+    });
+  };
+}
+
+export function UpdatedAt(options: IDateOptions = {}): PropertyDecorator {
+  return (target: IModel, key: string) => {
+    const newSchema = new Schema.Date(options);
+    target.constructor.setSchema(key, newSchema);
+    target.constructor.hooks.register('afterChange', ({modelInstance, path, value}) => {
+      const date = new Date();
+
+      if (
+        (path.length !== 1 || path[0] !== key) &&
+        (path.length > 0 || typeof value !== 'object' || value[key] === undefined)
+      ) {
+        modelInstance.set({[key]: date}, {}, false);
+      }
+    });
+  };
+}
 
 export type Constructor<T = {}> = new (...args: any[]) => T;
 
