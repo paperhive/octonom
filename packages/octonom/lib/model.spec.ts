@@ -23,8 +23,8 @@ describe('Hook decorator', () => {
   function resetSpies() {
     beforeObj = undefined;
     afterObj = undefined;
-    beforeChange.reset();
-    afterChange.reset();
+    beforeChange.resetHistory();
+    afterChange.resetHistory();
   }
 
   beforeEach(resetSpies);
