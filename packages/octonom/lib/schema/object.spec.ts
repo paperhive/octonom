@@ -40,19 +40,15 @@ describe('helpers', () => {
     bar: new StringSchema(),
   };
 
-  const beforeChangeSpy = spy();
-  const afterChangeSpy = spy();
-
-  const parentInstance: ISchemaParentInstance = {
-    value: {},
-    schema: new StringSchema(),
-    beforeChange: beforeChangeSpy,
-    afterChange: afterChangeSpy,
-  };
+  let parentInstance: ISchemaParentInstance;
 
   beforeEach(() => {
-    beforeChangeSpy.reset();
-    afterChangeSpy.reset();
+    parentInstance = {
+      value: {},
+      schema: new StringSchema(),
+      beforeChange: spy(),
+      afterChange: spy(),
+    };
   });
 
   describe('populateObject()', () => {
@@ -222,20 +218,17 @@ describe('helpers', () => {
 });
 
 describe('ObjectSchema', () => {
-  const beforeChangeSpy = spy();
-  const afterChangeSpy = spy();
-
-  const parentInstance: ISchemaParentInstance = {
-    value: {},
-    schema: new StringSchema(),
-    beforeChange: beforeChangeSpy,
-    afterChange: afterChangeSpy,
-  };
-  const parent: ISchemaParent = {instance: parentInstance, path: 'path'};
+  let parentInstance: ISchemaParentInstance;
+  let parent: ISchemaParent = {instance: parentInstance, path: 'path'};
 
   beforeEach(() => {
-    beforeChangeSpy.reset();
-    afterChangeSpy.reset();
+    parentInstance = {
+      value: {},
+      schema: new StringSchema(),
+      beforeChange: spy(),
+      afterChange: spy(),
+    };
+    parent = {instance: parentInstance, path: 'path'};
   });
 
   describe('constructor()', () => {

@@ -23,8 +23,8 @@
   "repository": "paperhive/octonom",
   "bugs": "https://github.com/paperhive/octonom/issues",
   "dependencies": {
-    "@types/mongodb": "^2.2.6",
-    "mongodb": "^2.2.29",
+    "@types/mongodb": "^3.0.2",
+    "mongodb": "^3.0.1",
     "octonom": "^1.0.0-alpha.19",
     "ts-node": "^3.3.0"
   }
