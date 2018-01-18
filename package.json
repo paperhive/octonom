@@ -31,6 +31,6 @@
     "typescript": "^2.5.2"
   },
   "dependencies": {
-    "mongodb": "^2.2.31"
+    "mongodb": "^3.0.0"
   }
 }
