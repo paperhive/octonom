@@ -9,11 +9,13 @@ describe('MongoCollection', () => {
   class CatCollection extends MongoCollection<CatModel> {}
   const catObj = {id: '42', name: 'Yllim'};
 
+  let client: MongoClient;
   let db: Db;
   let catCollection: CatCollection;
 
   beforeEach(async () => {
-    db = await MongoClient.connect('mongodb://localhost:27017/octonom');
+    client = await MongoClient.connect('mongodb://localhost:27017/');
+    db = client.db('test');
     catCollection = new CatCollection('cats', CatModel, {modelIdField: 'id'});
     await catCollection.init(db);
   });
@@ -21,7 +23,7 @@ describe('MongoCollection', () => {
   afterEach(async () => {
     // nuke database
     await db.dropDatabase();
-    await db.close();
+    await client.close();
   });
 
   describe('init()', () => {

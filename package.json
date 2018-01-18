@@ -29,8 +29,5 @@
     "ts-node": "^4.0.0",
     "tslint": "^5.7.0",
     "typescript": "^2.5.2"
-  },
-  "dependencies": {
-    "mongodb": "^2.2.31"
   }
 }
