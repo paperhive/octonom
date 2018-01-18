@@ -1,4 +1,4 @@
-import { SinonSpy, spy } from 'sinon';
+import { spy } from 'sinon';
 
 import { ArrayCollection } from '../array-collection';
 import { SanitizationError, ValidationError } from '../errors';
