@@ -31,7 +31,7 @@ export function Hook<TModel extends Model, K extends keyof HookHandlersMap<TMode
 
 const shadowInstanceProperty = Symbol('shadowInstanceProperty');
 export const getShadowInstance = Symbol('getShadowInstance');
-const setShadowInstance = Symbol('setShadowInstance');
+export const setShadowInstance = Symbol('setShadowInstance');
 
 // TODO: think about model instances
 function sanitize(value: any, sanitizeOptions: ISanitizeOptions) {
