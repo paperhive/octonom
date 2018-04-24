@@ -21,7 +21,7 @@
     "chai-as-promised": "^7.0.0",
     "chai-subset": "^1.6.0",
     "codecov": "^3.0.0",
-    "lerna": "^2.1.2",
+    "lerna": "^2.11.0",
     "mocha": "^5.0.0",
     "nyc": "^11.2.1",
     "sinon": "^5.0.0",
